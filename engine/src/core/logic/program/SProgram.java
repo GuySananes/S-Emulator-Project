@@ -8,7 +8,7 @@ public interface SProgram {
 
     String getName();
     void addInstruction(SInstruction instruction);
-    List<SInstruction> getInstructions();
+    List<SInstruction> getInstructionList();
 
     boolean validate();
     int calculateMaxDegree();

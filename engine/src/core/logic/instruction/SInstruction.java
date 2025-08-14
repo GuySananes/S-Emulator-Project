@@ -4,10 +4,14 @@ import core.logic.execution.ExecutionContext;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
+/**
+ * Represents a single instruction in the system.
+ * Each instruction has a name, can be executed in a given context,
+ * and may have associated cycles and labels.
+ */
 public interface SInstruction {
 
     String getName();
-
     Label execute(ExecutionContext context);
     int cycles();
     Label getLabel();

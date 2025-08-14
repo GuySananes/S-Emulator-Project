@@ -21,15 +21,17 @@ public class ProgramExecutorImpl implements ProgramExecutor{
 
         ExecutionContext context = null; // create the context with inputs.
 
-        SInstruction currentInstruction = program.getInstructions().get(0);
+        SInstruction currentInstruction = program.getInstructionList().get(0);
         Label nextLabel;
         do {
             nextLabel = currentInstruction.execute(context);
 
             if (nextLabel == FixedLabel.EMPTY) {
                 // set currentInstruction to the next instruction in line
+                // todo: implement getting next instruction (SProgram.getNextInstruction(currentInstruction))
             } else if (nextLabel != FixedLabel.EXIT) {
                 // need to find the instruction at 'nextLabel' and set current instruction to it
+                // todo: implement finding instruction by label (SProgram.getInstructionByLabel(nextLabel))
             }
         } while (nextLabel != FixedLabel.EXIT);
 
@@ -37,7 +39,7 @@ public class ProgramExecutorImpl implements ProgramExecutor{
     }
 
     @Override
-    public Map<Variable, Long> variableState() {
+    public Map<Variable, ExecutionContext> variableState() {
         return Map.of();
     }
 }

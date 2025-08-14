@@ -10,10 +10,22 @@ public abstract class AbstractInstruction implements SInstruction {
     private final Label label;
     private final Variable variable;
 
+    /**
+     * Constructs an instruction with the given instruction data and variable.
+     * Without a label, it defaults to an empty label.
+     * @param instructionData the data for the instruction
+     * @param variable        the variable associated with this instruction
+     */
     public AbstractInstruction(InstructionData instructionData, Variable variable) {
         this(instructionData, variable, FixedLabel.EMPTY);
     }
 
+    /**
+     * Constructs an instruction with the given instruction data, variable, and label.
+     * @param instructionData the data for the instruction
+     * @param variable        the variable associated with this instruction
+     * @param label           the label for this instruction
+     */
     public AbstractInstruction(InstructionData instructionData, Variable variable, Label label) {
         this.instructionData = instructionData;
         this.label = label;

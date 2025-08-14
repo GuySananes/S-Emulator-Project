@@ -8,11 +8,11 @@ import java.util.List;
 public class SProgramImpl implements SProgram{
 
     private final String name;
-    private final List<SInstruction> instructions;
+    private final List<SInstruction> instructionList;
 
     public SProgramImpl(String name) {
         this.name = name;
-        instructions = new ArrayList<>();
+        instructionList = new ArrayList<>();
     }
 
     @Override
@@ -22,12 +22,12 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public void addInstruction(SInstruction instruction) {
-        instructions.add(instruction);
+        instructionList.add(instruction);
     }
 
     @Override
-    public List<SInstruction> getInstructions() {
-        return instructions;
+    public List<SInstruction> getInstructionList() {
+        return instructionList;
     }
 
     @Override
