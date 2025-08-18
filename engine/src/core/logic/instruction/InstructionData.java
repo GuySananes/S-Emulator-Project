@@ -3,43 +3,33 @@ package core.logic.instruction;
 
 public enum InstructionData {
 
-    INCREASE("INCREASE", 1),
-    DECREASE("DECREASE", 1),
-    NO_OP("NO_OP", 0),
-    JUMP_NOT_ZERO("JNZ", 3)
+    INCREASE("INCREASE", 1, "B"),
+    DECREASE("DECREASE", 1, "B"),
+    NO_OP("NO_OP", 0, "B"),
+    JUMP_NOT_ZERO("JNZ", 3, "B");
 
-    ;
+
 
 
     private final String name;
     private final int cycles;
+    private final String instructionType;
 
-    /**
-     * Constructor for InstructionData enum.
-     *
-     * @param name   the name of the instruction
-     * @param cycles the number of cycles the instruction takes to execute
-     */
-    InstructionData(String name, int cycles) {
+    InstructionData(String name, int cycles, String instructionType) {
         this.name = name;
         this.cycles = cycles;
+        this.instructionType = instructionType;
     }
 
-    /**
-     * Gets the name of the instruction.
-     *
-     * @return the name of the instruction
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Gets the number of cycles the instruction takes to execute.
-     *
-     * @return the number of cycles
-     */
     public int getCycles() {
         return cycles;
+    }
+
+    public String getInstructionType() {
+        return instructionType;
     }
 }

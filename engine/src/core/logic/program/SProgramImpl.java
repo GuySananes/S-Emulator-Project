@@ -1,9 +1,10 @@
 package core.logic.program;
 
 import core.logic.instruction.SInstruction;
+import core.logic.label.Label;
+import core.logic.variable.Variable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class SProgramImpl implements SProgram{
 
@@ -46,4 +47,34 @@ public class SProgramImpl implements SProgram{
         // traverse all commands and calculate cycles
         return 0;
     }
+
+    @Override
+    public String getProgramRepresentation() {
+        return "";
+    }
+
+    @Override
+    public Set<Variable> getXs() {
+        Set<Variable> Xs = new LinkedHashSet<>();
+        for (SInstruction instruction : instructionList) {
+            Xs.addAll(instruction.getXs());
+        }
+
+        return Xs;
+    }
+
+    @Override
+    public Set<Label> getLabels() {
+        Set<Label> labels = new LinkedHashSet<>();
+        for (SInstruction instruction : instructionList) {
+            labels.add(instruction.getLabel());
+        }
+
+        return labels;
+    }
+
+
+
+
+
 }

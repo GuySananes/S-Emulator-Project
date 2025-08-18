@@ -24,4 +24,9 @@ public class IncreaseInstruction extends AbstractInstruction {
 
         return FixedLabel.EMPTY;
     }
+
+    @Override
+    public String getInstructionRepresentation() {
+        return "";
+    }
 }

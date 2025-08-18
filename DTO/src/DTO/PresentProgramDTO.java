@@ -1,0 +1,21 @@
+package DTO;
+
+import core.logic.variable.Variable;
+import core.logic.label.Label;
+
+import java.util.List;
+import java.util.Set;
+
+public class PresentProgramDTO {
+    private final String programName;
+    private final Set<Variable> Xs;
+    private final Set<Label> labels;
+    private final List<PresentInstructionDTO> instructionList;
+
+    public PresentProgramDTO(String programName, Set<Variable> Xs, Set<Label> labels, List<PresentInstructionDTO> instructionList) {
+        this.programName = programName;
+        this.Xs = Xs;
+        this.labels = labels;
+        this.instructionList = instructionList;
+    }
+}

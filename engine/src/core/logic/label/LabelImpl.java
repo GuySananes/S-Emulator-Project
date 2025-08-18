@@ -8,6 +8,7 @@ public class LabelImpl implements Label{
         label = "L" + number;
     }
 
+    @Override
     public String getLabelRepresentation() {
         return label;
     }

@@ -35,6 +35,8 @@ public class ProgramExecutorImpl implements ProgramExecutor{
             }
         } while (nextLabel != FixedLabel.EXIT);
 
+        long l = context.getVariableValue(V);
+
         return context.getVariableValue(Variable.RESULT);
     }
 
