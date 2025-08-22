@@ -26,7 +26,7 @@ public class IncreaseInstruction extends AbstractInstruction {
     }
 
     @Override
-    public String getInstructionRepresentation() {
+    public String getRepresentation() {
         return "";
     }
 }

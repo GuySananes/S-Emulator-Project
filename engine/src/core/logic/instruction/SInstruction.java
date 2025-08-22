@@ -15,10 +15,12 @@ public interface SInstruction {
 
     String getName();
     Label execute(ExecutionContext context);
-    int cycles();
+    int getCycles();
     Label getLabel();
     Variable getVariable();
-    Set<Variable> getXs();
+    Set<Variable> getXsCopy();
     Set<Label> getLabels();
-    String getInstructionRepresentation();
+    String getRepresentation();
+    InstructionData getInstructionData();
+    public Variable getVariableCopy();
 }

@@ -49,18 +49,18 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public String getProgramRepresentation() {
+    public String getRepresentation() {
         return "";
     }
 
     @Override
-    public Set<Variable> getXs() {
-        Set<Variable> Xs = new LinkedHashSet<>();
+    public Set<Variable> getXsCopy() {
+        Set<Variable> XsCopy = new LinkedHashSet<>();
         for (SInstruction instruction : instructionList) {
-            Xs.addAll(instruction.getXs());
+            XsCopy.addAll(instruction.getXsCopy());
         }
 
-        return Xs;
+        return XsCopy;
     }
 
     @Override

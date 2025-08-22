@@ -9,7 +9,9 @@ public class LabelImpl implements Label{
     }
 
     @Override
-    public String getLabelRepresentation() {
+    public String getRepresentation() {
         return label;
     }
+
+
 }

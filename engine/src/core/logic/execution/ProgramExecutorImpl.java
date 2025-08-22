@@ -1,3 +1,4 @@
+
 package core.logic.execution;
 
 import core.logic.instruction.SInstruction;
@@ -5,43 +6,52 @@ import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
+import exception.NoProgramException;
 
 import java.util.Map;
 
-public class ProgramExecutorImpl implements ProgramExecutor{
+public class ProgramExecutorImpl implements ProgramExecutor {
 
     private final SProgram program;
+    private int currentInstructionIndex;
 
     public ProgramExecutorImpl(SProgram program) {
         this.program = program;
+        this.currentInstructionIndex = 0;
     }
 
     @Override
-    public long run(Long... input) {
-
-        ExecutionContext context = null; // create the context with inputs.
-
-        SInstruction currentInstruction = program.getInstructionList().get(0);
+    public long run(java.lang.Long... input)  {
+        ExecutionContext context = new ExecutionContextImpl();
+        currentInstructionIndex = 0;
+        SInstruction currentInstruction = program.getInstructionList().get(currentInstructionIndex);
         Label nextLabel;
         do {
             nextLabel = currentInstruction.execute(context);
 
             if (nextLabel == FixedLabel.EMPTY) {
-                // set currentInstruction to the next instruction in line
-                // todo: implement getting next instruction (SProgram.getNextInstruction(currentInstruction))
+                currentInstructionIndex++;
+                currentInstruction = currentInstructionIndex < program.getInstructionList().size()
+                        ? program.getInstructionList().get(currentInstructionIndex)
+                        : null;
             } else if (nextLabel != FixedLabel.EXIT) {
-                // need to find the instruction at 'nextLabel' and set current instruction to it
-                // todo: implement finding instruction by label (SProgram.getInstructionByLabel(nextLabel))
+                currentInstruction = program.getInstructionByLabel(nextLabel);
+                currentInstructionIndex = program.getInstructionList().indexOf(currentInstruction);
             }
-        } while (nextLabel != FixedLabel.EXIT);
-
-        long l = context.getVariableValue(V);
+        } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
         return context.getVariableValue(Variable.RESULT);
     }
 
     @Override
-    public Map<Variable, ExecutionContext> variableState() {
-        return Map.of();
+    public Map<Variable, Long> variableState() {
+        Map<Variable, Long> variableValues = new java.util.HashMap<>();
+        for (SInstruction instruction : program.getInstructionList()) {
+            Variable variable = instruction.getVariable();
+            if (variable != null) {
+                variableValues.put(variable, variable.getValue());
+            }
+        }
+        return variableValues;
     }
 }

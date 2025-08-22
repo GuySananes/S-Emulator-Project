@@ -7,7 +7,6 @@ import core.logic.variable.VariableType;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.HashSet;
 
 public abstract class AbstractInstruction implements SInstruction {
 
@@ -31,8 +30,13 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public int cycles() {
+    public int getCycles() {
         return instructionData.getCycles();
+    }
+
+    @Override
+    public InstructionData getInstructionData() {
+        return instructionData;
     }
 
     @Override
@@ -46,10 +50,15 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public Set<Variable> getXs() {
-        Set<Variable> Xs = new HashSet<Variable>();
+    public Variable getVariableCopy() {
+        return variable != null ? variable.copy() : null;
+    }
+
+    @Override
+    public Set<Variable> getXsCopy() {
+        Set<Variable> Xs = new LinkedHashSet<>();
         if (variable != null && variable.getType() == VariableType.INPUT) {
-            Xs.add(variable);
+            Xs.add(variable.copy());
         }
 
         return Xs;
