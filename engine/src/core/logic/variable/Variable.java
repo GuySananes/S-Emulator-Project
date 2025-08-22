@@ -9,4 +9,8 @@ public interface Variable {
     * Therefore -> public static object in the interface
     * */
     Variable RESULT = new VariableImpl(VariableType.RESULT, 0);
+
+    long getValue();
+    void setValue(long value);
+
 }

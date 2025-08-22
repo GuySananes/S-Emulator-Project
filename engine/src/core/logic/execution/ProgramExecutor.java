@@ -19,5 +19,5 @@ public interface ProgramExecutor {
      *
      * @return A map where keys are variables and values are their current values.
      */
-    Map<Variable, ExecutionContext> variableState();
+    Map<Variable, Long> variableState();
 }

@@ -6,6 +6,7 @@ import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ProgramExecutorImpl implements ProgramExecutor{
@@ -19,27 +20,45 @@ public class ProgramExecutorImpl implements ProgramExecutor{
     @Override
     public long run(Long... input) {
 
-        ExecutionContext context = null; // create the context with inputs.
+        ExecutionContext context = new ExecutionContextImpl();
 
-        SInstruction currentInstruction = program.getInstructionList().get(0);
+        // Start from the first instruction
+        int currentInstructionIndex = 0;
+        SInstruction currentInstruction = program.getInstructionList().get(currentInstructionIndex);
         Label nextLabel;
         do {
             nextLabel = currentInstruction.execute(context);
 
             if (nextLabel == FixedLabel.EMPTY) {
-                // set currentInstruction to the next instruction in line
-                // todo: implement getting next instruction (SProgram.getNextInstruction(currentInstruction))
+                // Move to next instruction by index
+                currentInstructionIndex++;
+                currentInstruction = currentInstructionIndex < program.getInstructionList().size()
+                        ? program.getInstructionList().get(currentInstructionIndex)
+                        : null;
             } else if (nextLabel != FixedLabel.EXIT) {
-                // need to find the instruction at 'nextLabel' and set current instruction to it
-                // todo: implement finding instruction by label (SProgram.getInstructionByLabel(nextLabel))
+                // Find instruction by label
+                currentInstruction = program.getInstructionByLabel(nextLabel);
+                if (currentInstruction == null) {
+                    throw new IllegalStateException("No instruction found for label: " + nextLabel);
+                }
+                // Update the current index to match the found instruction
+                currentInstructionIndex = program.getInstructionList().indexOf(currentInstruction);
             }
-        } while (nextLabel != FixedLabel.EXIT);
+        } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
         return context.getVariableValue(Variable.RESULT);
     }
 
     @Override
-    public Map<Variable, ExecutionContext> variableState() {
-        return Map.of();
+    public Map<Variable, Long> variableState() {
+        Map<Variable, Long> variableValues = new HashMap<Variable, Long>();
+
+        for (SInstruction instruction : program.getInstructionList()) {
+            Variable variable = instruction.getVariable();
+            if (variable != null) {
+                variableValues.put(variable, variable.getValue());
+            }
+        }
+        return variableValues;
     }
 }

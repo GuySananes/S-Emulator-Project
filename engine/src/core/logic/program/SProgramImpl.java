@@ -1,6 +1,7 @@
 package core.logic.program;
 
 import core.logic.instruction.SInstruction;
+import core.logic.label.Label;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,5 +46,24 @@ public class SProgramImpl implements SProgram{
     public int calculateCycles() {
         // traverse all commands and calculate cycles
         return 0;
+    }
+
+    @Override
+    public SInstruction getInstructionAtIndex(int index) {
+        if (index < 0 || index >= instructionList.size()) {
+            return null;
+        }
+        return instructionList.get(index);
+    }
+
+    @Override
+    public SInstruction getInstructionByLabel(Label label) {
+        // Find the first instruction with matching label
+        for (SInstruction instruction : instructionList) {
+            if (instruction.getLabel().equals(label)) {
+                return instruction;
+            }
+        }
+        return null;
     }
 }
