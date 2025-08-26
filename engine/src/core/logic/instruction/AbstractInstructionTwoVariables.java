@@ -27,6 +27,13 @@ public abstract class AbstractInstructionTwoVariables extends AbstractInstructio
     }
 
     @Override
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = super.getVariables();
+        variables.add(secondaryVariable);
+        return variables;
+    }
+
+    @Override
     public Set<Variable> getVariablesCopy() {
         Set<Variable> variables = super.getVariablesCopy();
         variables.add(secondaryVariable.copy());

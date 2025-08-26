@@ -6,4 +6,5 @@ public interface ExecutionContext {
 
     long getVariableValue(Variable variable);
     void updateVariable(Variable variable, long value);
+    void updateInputVariables(Long ... inputVariables);
 }

@@ -64,6 +64,16 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = new HashSet<>();
+        if (variable != null) {
+            variables.add(variable);
+        }
+
+        return variables;
+    }
+
+    @Override
     public Set<Variable> getVariablesCopy() {
         Set<Variable> variables = new HashSet<>();
         if (variable != null) {

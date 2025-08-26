@@ -11,24 +11,16 @@ public class EngineImpl implements Engine {
     SProgram program;
 
     @Override
-    //implement a method that loads the program
     public void laodProgram(String fullPath) {
 
     }
-
 
     @Override
     public PresentProgramDTO presentProgram() throws NoProgramException {
         if (program == null) {
             throw new NoProgramException();
         }
-
         return PresentProgramDTOCreator.create(program);
-
-
-
-
-
     }
 
     @Override
@@ -42,7 +34,7 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        return new RunProgramDTO();
+        return new RunProgramDTO(program);
 
     }
 

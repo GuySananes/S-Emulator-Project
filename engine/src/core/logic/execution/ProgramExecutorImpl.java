@@ -17,27 +17,36 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     private int currentInstructionIndex;
 
     public ProgramExecutorImpl(SProgram program) {
+        if(program == null){
+            throw new IllegalArgumentException("Program cannot " +
+                    "be null when creating ProgramExecutorImpl");
+        }
         this.program = program;
         this.currentInstructionIndex = 0;
     }
 
     @Override
-    public long run(java.lang.Long... input)  {
-        ExecutionContext context = new ExecutionContextImpl();
+    public long run(Long... input)  {
+
+        ExecutionContext context = new ExecutionContextImpl(program);
+        context.updateInputVariables(input);
         currentInstructionIndex = 0;
-        SInstruction currentInstruction = program.getInstructionList().get(currentInstructionIndex);
+        SInstruction currentInstruction = program.getInstructionList()
+                .get(currentInstructionIndex);
         Label nextLabel;
         do {
             nextLabel = currentInstruction.execute(context);
 
             if (nextLabel == FixedLabel.EMPTY) {
                 currentInstructionIndex++;
-                currentInstruction = currentInstructionIndex < program.getInstructionList().size()
+                currentInstruction = currentInstructionIndex <
+                        program.getInstructionList().size()
                         ? program.getInstructionList().get(currentInstructionIndex)
                         : null;
             } else if (nextLabel != FixedLabel.EXIT) {
                 currentInstruction = program.getInstructionByLabel(nextLabel);
-                currentInstructionIndex = program.getInstructionList().indexOf(currentInstruction);
+                currentInstructionIndex = program.getInstructionList().
+                        indexOf(currentInstruction);
             }
         } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
