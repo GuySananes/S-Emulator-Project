@@ -41,19 +41,6 @@ public class VariableImpl implements Variable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        VariableImpl variable = (VariableImpl) o;
-        return number == variable.number && type == variable.type;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(type, number);
-    }
-
-    @Override
     public int compareTo(Variable other) {
         if (this.type != other.getType()) {
             return this.type.ordinal() - other.getType().ordinal();
