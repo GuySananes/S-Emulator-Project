@@ -16,11 +16,12 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     @Override
     public long getVariableValue(Variable variable) {
-        return 0;
+        return -1;
 
     }
 
     @Override
     public void updateVariable(Variable variable, long value) {
+
     }
 }
