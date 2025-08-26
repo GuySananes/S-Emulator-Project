@@ -4,8 +4,9 @@ import core.logic.instruction.SInstruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.*;
-
 public class SProgramImpl implements SProgram{
 
     private final String name;
@@ -38,7 +39,7 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public int calculateMaxDegree() {
-        // traverse all commands and find maximum degree
+        // traverse all commands and find the maximum degree
         return 0;
     }
 
@@ -77,4 +78,23 @@ public class SProgramImpl implements SProgram{
 
 
 
+
+    @Override
+    public SInstruction getInstructionAtIndex(int index) {
+        if (index < 0 || index >= instructionList.size()) {
+            return null;
+        }
+        return instructionList.get(index);
+    }
+
+    @Override
+    public SInstruction getInstructionByLabel(Label label) {
+        // Find the first instruction with a matching label
+        for (SInstruction instruction : instructionList) {
+            if (instruction.getLabel().equals(label)) {
+                return instruction;
+            }
+        }
+        return null;
+    }
 }

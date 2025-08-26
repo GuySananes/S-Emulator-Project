@@ -20,4 +20,7 @@ public interface SProgram {
     int calculateCycles();
     String getRepresentation();
 
+    SInstruction getInstructionAtIndex(int index);
+    SInstruction getInstructionByLabel(Label label);
+
 }

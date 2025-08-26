@@ -2,26 +2,23 @@ package core.logic.execution;
 
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
-import java.util.Map;
-import java.util.Set;
 
 public class ExecutionContextImpl implements ExecutionContext {
 
-    private Map<Variable, Long> variableValues;
-
-    public ExecutionContextImpl(SProgram program){
-
-
+    @Override
+    public long getVariableValue(Variable v) {
+        if (v == null) {
+            throw new IllegalArgumentException("Variable cannot be null");
+        }
+        return v.getValue();
     }
 
     @Override
-    public long getVariableValue(Variable variable) {
-        return -1;
-
-    }
-
-    @Override
-    public void updateVariable(Variable variable, long value) {
+    public void updateVariable(Variable v, long value) {
+        if (v == null) {
+            throw new IllegalArgumentException("Variable cannot be null");
+        }
+        v.setValue(value);
 
     }
 }
