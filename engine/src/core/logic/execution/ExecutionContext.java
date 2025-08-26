@@ -4,6 +4,6 @@ import core.logic.variable.Variable;
 
 public interface ExecutionContext {
 
-    long getVariableValue(Variable v);
-    void updateVariable(Variable v, long value);
+    long getVariableValue(Variable variable);
+    void updateVariable(Variable variable, long value);
 }

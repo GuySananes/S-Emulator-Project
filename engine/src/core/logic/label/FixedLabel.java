@@ -17,4 +17,15 @@ public enum FixedLabel implements Label{
 
     @Override
     public abstract String getRepresentation();
+
+    @Override
+    public int compareTo(Label other) {
+        if(other instanceof LabelImpl) {
+            return -1;
+        }
+
+        return 0;
+    }
+
+
 }

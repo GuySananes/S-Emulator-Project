@@ -8,6 +8,7 @@ import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.NoProgramException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ProgramExecutorImpl implements ProgramExecutor {
@@ -41,17 +42,5 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
         return context.getVariableValue(Variable.RESULT);
-    }
-
-    @Override
-    public Map<Variable, Long> variableState() {
-        Map<Variable, Long> variableValues = new java.util.HashMap<>();
-        for (SInstruction instruction : program.getInstructionList()) {
-            Variable variable = instruction.getVariable();
-            if (variable != null) {
-                variableValues.put(variable, variable.getValue());
-            }
-        }
-        return variableValues;
     }
 }

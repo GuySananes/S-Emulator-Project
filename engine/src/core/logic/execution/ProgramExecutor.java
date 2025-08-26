@@ -8,6 +8,4 @@ import java.util.Map;
 public interface ProgramExecutor {
 
     long run(java.lang.Long... input);
-
-    Map<Variable, Long> variableState();
 }

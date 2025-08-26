@@ -1,20 +1,25 @@
 package core.logic.execution;
 
+import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import java.util.Map;
+import java.util.Set;
 
 public class ExecutionContextImpl implements ExecutionContext {
 
     private Map<Variable, Long> variableValues;
 
-    @Override
-    public long getVariableValue(Variable v) {
-        // Implementation to retrieve the value of the variable
-        return 0; // Placeholder return value
+    public ExecutionContextImpl(SProgram program){
+
+
     }
 
     @Override
-    public void updateVariable(Variable v, long value) {
-        // Implementation to update the variable with the new value
+    public long getVariableValue(Variable variable) {
+
+    }
+
+    @Override
+    public void updateVariable(Variable variable, long value) {
     }
 }

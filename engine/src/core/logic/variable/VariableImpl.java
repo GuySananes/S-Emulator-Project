@@ -51,7 +51,6 @@ public class VariableImpl implements Variable {
         return Objects.hash(type, number);
     }
 
-    // Variables are ordered first by type, then by number, where RESULT < INPUT < WORK
     @Override
     public int compareTo(Variable other) {
         if (this.type != other.getType()) {
