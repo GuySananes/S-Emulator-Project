@@ -16,6 +16,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     @Override
     public long getVariableValue(Variable variable) {
+        return 0;
 
     }
 
