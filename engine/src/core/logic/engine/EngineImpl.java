@@ -1,14 +1,12 @@
-package core.logic.system;
+package core.logic.engine;
 
 import DTO.PresentProgramDTO;
 import DTO.RunProgramDTO;
 import DTOcreate.PresentProgramDTOCreator;
-import core.logic.execution.ProgramExecutor;
-import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
 
-public class SystemImpl implements System {
+public class EngineImpl implements Engine {
 
     SProgram program;
 
@@ -44,12 +42,7 @@ public class SystemImpl implements System {
             throw new NoProgramException();
         }
 
-        ProgramExecutor programExecutor = new ProgramExecutorImpl(program);
-
-
-
-
-
+        return new RunProgramDTO();
 
     }
 

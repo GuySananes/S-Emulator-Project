@@ -1,11 +1,11 @@
-package core.logic.system;
+package core.logic.engine;
 
 
 import DTO.PresentProgramDTO;
 import DTO.RunProgramDTO;
 import exception.NoProgramException;
 
-public interface System {
+public interface Engine {
 
     void laodProgram(String fullPath);
     PresentProgramDTO presentProgram() throws NoProgramException;

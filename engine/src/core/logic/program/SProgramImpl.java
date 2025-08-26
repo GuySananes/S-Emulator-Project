@@ -54,18 +54,18 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getXsCopy() {
-        Set<Variable> XsCopy = new LinkedHashSet<>();
+    public Set<Variable> getOrderedVariablesCopy() {
+        Set<Variable> variables = new TreeSet<>();
         for (SInstruction instruction : instructionList) {
-            XsCopy.addAll(instruction.getXsCopy());
+            variables.addAll(instruction.getVariablesCopy());
         }
 
-        return XsCopy;
+        return variables;
     }
 
     @Override
-    public Set<Label> getLabels() {
-        Set<Label> labels = new LinkedHashSet<>();
+    public Set<Label> getOrderedLabels() {
+        Set<Label> labels = new TreeSet<>();
         for (SInstruction instruction : instructionList) {
             labels.add(instruction.getLabel());
         }

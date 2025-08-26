@@ -18,7 +18,7 @@ public interface SInstruction {
     int getCycles();
     Label getLabel();
     Variable getVariable();
-    Set<Variable> getXsCopy();
+    Set<Variable> getVariablesCopy();
     Set<Label> getLabels();
     String getRepresentation();
     InstructionData getInstructionData();

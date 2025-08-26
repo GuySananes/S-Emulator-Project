@@ -4,7 +4,6 @@ import DTO.PresentInstructionDTO;
 import DTO.PresentProgramDTO;
 import core.logic.program.SProgram;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,8 +19,8 @@ public class PresentProgramDTOCreator {
 
         return new PresentProgramDTO(
                 program.getName(),
-                program.getXsCopy(),
-                program.getLabels(),
+                program.getOrderedVariablesCopy(),
+                program.getOrderedLabels(),
                 presentInstructionDTOList);
 
     }

@@ -1,8 +1,11 @@
 package core.logic.execution;
 
+import core.logic.variable.Variable;
+import java.util.Map;
+
 public class ExecutionContextImpl implements ExecutionContext {
 
-    private Map<Variable, long> variableValues;
+    private Map<Variable, Long> variableValues;
 
     @Override
     public long getVariableValue(Variable v) {

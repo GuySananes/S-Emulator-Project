@@ -18,11 +18,10 @@ public class NoOpInstruction extends AbstractInstruction {
     @Override
     public Label execute(ExecutionContext context) {
         return FixedLabel.EMPTY;
-
     }
 
     @Override
     public String getRepresentation() {
-        return "";
+        return getVariable().getRepresentation() + " <- " + getVariable().getRepresentation();
     }
 }

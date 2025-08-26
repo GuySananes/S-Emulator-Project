@@ -26,8 +26,9 @@ public class DecreaseInstruction extends AbstractInstruction {
     }
 
     @Override
-    public String getRepresentation() {
-        return "";
+    public String getRepresentation() {;
+        return getVariable().getRepresentation() + " <-" +
+                getVariable().getRepresentation() + " - 1";
     }
 
 }

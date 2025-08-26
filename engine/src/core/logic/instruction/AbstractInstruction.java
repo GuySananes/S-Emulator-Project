@@ -5,6 +5,7 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -14,8 +15,16 @@ public abstract class AbstractInstruction implements SInstruction {
     private final Label label;
     private final Variable variable;
 
+    public AbstractInstruction(InstructionData instructionData) {
+        this(instructionData, null, FixedLabel.EMPTY);
+    }
+
     public AbstractInstruction(InstructionData instructionData, Variable variable) {
         this(instructionData, variable, FixedLabel.EMPTY);
+    }
+
+    public AbstractInstruction(InstructionData instructionData, Label label) {
+        this(instructionData, null, label);
     }
 
     public AbstractInstruction(InstructionData instructionData, Variable variable, Label label) {
@@ -55,18 +64,18 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public Set<Variable> getXsCopy() {
-        Set<Variable> Xs = new LinkedHashSet<>();
-        if (variable != null && variable.getType() == VariableType.INPUT) {
-            Xs.add(variable.copy());
+    public Set<Variable> getVariablesCopy() {
+        Set<Variable> variables = new HashSet<>();
+        if (variable != null) {
+            variables.add(variable.copy());
         }
 
-        return Xs;
+        return variables;
     }
 
     @Override
     public Set<Label> getLabels() {
-        Set<Label> labels = new LinkedHashSet<>();
+        Set<Label> labels = new HashSet<>();
         if (label != FixedLabel.EMPTY) {
             labels.add(label);
         }

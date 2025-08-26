@@ -13,6 +13,12 @@ public class VariableImpl implements Variable {
     }
 
     @Override
+    public int getNumber() {
+        return number;
+    }
+
+
+    @Override
     public VariableType getType() {
         return type;
     }
@@ -45,5 +51,13 @@ public class VariableImpl implements Variable {
         return Objects.hash(type, number);
     }
 
+    // Variables are ordered first by type, then by number, where RESULT < INPUT < WORK
+    @Override
+    public int compareTo(Variable other) {
+        if (this.type != other.getType()) {
+            return this.type.ordinal() - other.getType().ordinal();
+        }
 
+        return Integer.compare(this.number, other.getNumber());
+    }
 }

@@ -12,8 +12,8 @@ public interface SProgram {
     String getName();
     void addInstruction(SInstruction instruction);
     List<SInstruction> getInstructionList();
-    Set<Variable> getXsCopy();
-    Set<Label> getLabels();
+    Set<Variable> getOrderedVariablesCopy();
+    Set<Label> getOrderedLabels();
 
     boolean validate();
     int calculateMaxDegree();

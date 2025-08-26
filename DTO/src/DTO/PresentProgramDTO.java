@@ -18,4 +18,9 @@ public class PresentProgramDTO {
         this.labels = labels;
         this.instructionList = instructionList;
     }
+
+    public String getProgramName() { return programName;}
+    public Set<Variable> getXs() { return Xs; }
+    public Set<Label> getLabels() { return labels; }
+    public List<PresentInstructionDTO> getInstructionList() { return instructionList; }
 }

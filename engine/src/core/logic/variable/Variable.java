@@ -1,6 +1,7 @@
 package core.logic.variable;
 
-public interface Variable {
+public interface Variable extends Comparable<Variable> {
+    int getNumber();
     VariableType getType();
     String getRepresentation();
     Variable copy();

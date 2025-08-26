@@ -1,0 +1,35 @@
+package core.logic.instruction;
+
+import core.logic.label.Label;
+import core.logic.variable.Variable;
+
+import java.util.Set;
+
+public abstract class AbstractInstructionTwoVariables extends AbstractInstruction {
+
+    private final Variable secondaryVariable;
+
+    public AbstractInstructionTwoVariables(InstructionData instructionData,
+                                           Variable variable, Variable secondaryVariable) {
+        super(instructionData, variable);
+        this.secondaryVariable = secondaryVariable;
+    }
+
+    public AbstractInstructionTwoVariables(InstructionData instructionData,
+                                           Variable variable, Variable secondaryVariable,
+                                           Label label) {
+        super(instructionData, variable, label);
+        this.secondaryVariable = secondaryVariable;
+    }
+
+    public Variable getSecondaryVariable() {
+        return secondaryVariable;
+    }
+
+    @Override
+    public Set<Variable> getVariablesCopy() {
+        Set<Variable> variables = super.getVariablesCopy();
+        variables.add(secondaryVariable.copy());
+        return variables;
+    }
+}
