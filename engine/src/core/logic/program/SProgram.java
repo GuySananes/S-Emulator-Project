@@ -12,6 +12,8 @@ public interface SProgram {
     String getName();
     void addInstruction(SInstruction instruction);
     List<SInstruction> getInstructionList();
+    int getRunNumber();
+    void incrementRunNumber();
     Set<Variable> getOrderedVariables();
     Set<Variable> getOrderedVariablesCopy();
     Set<Label> getOrderedLabels();

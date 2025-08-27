@@ -12,6 +12,8 @@ public class SProgramImpl implements SProgram{
 
     private final String name;
     private final List<SInstruction> instructionList;
+    private int runNumber = 0;
+
     public SProgramImpl(String name) {
         this.name = name;
         instructionList = new ArrayList<>();
@@ -33,6 +35,16 @@ public class SProgramImpl implements SProgram{
     @Override
     public List<SInstruction> getInstructionList() {
         return instructionList;
+    }
+
+    @Override
+    public int getRunNumber() {
+        return runNumber;
+    }
+
+    @Override
+    public void incrementRunNumber() {
+        runNumber++;
     }
 
     @Override

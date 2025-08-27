@@ -5,13 +5,27 @@ import DTO.RunProgramDTO;
 import DTOcreate.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
+import statistic.SingleRunStatistic;
+import statistic.StatisticManager;
+import statistic.StatisticManagerImpl;
+
+import java.util.List;
 
 public class EngineImpl implements Engine {
 
-    SProgram program;
+    private static final Engine instance = new EngineImpl();
+
+    private SProgram program = null;
+    private final StatisticManager statisticManager = new StatisticManagerImpl();
+
+    private EngineImpl() { }
+
+    public static Engine getInstance() {
+        return instance;
+    }
 
     @Override
-    public void laodProgram(String fullPath) {
+    public void loadProgram(String fullPath) {
 
     }
 
@@ -39,7 +53,13 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public void presentProgramStats() {
+    public List<SingleRunStatistic> presentProgramStats() throws NoProgramException {
+        if (program == null) {
+            throw new NoProgramException();
+        }
+
+        return statisticManager.getStatisticsForProgramCopy(program);
+
 
     }
 }
