@@ -17,7 +17,6 @@ public class VariableImpl implements Variable {
         return number;
     }
 
-
     @Override
     public VariableType getType() {
         return type;
@@ -31,11 +30,6 @@ public class VariableImpl implements Variable {
     @Override
     public Variable copy() {
         return new VariableImpl(type, number);
-    }
-
-    @Override
-    public String toString() {
-        return getRepresentation();
     }
 
     @Override

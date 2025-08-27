@@ -33,6 +33,8 @@ public abstract class AbstractInstruction implements SInstruction {
         this.variable = variable;
     }
 
+
+
     @Override
     public String getName() {
         return instructionData.getName();

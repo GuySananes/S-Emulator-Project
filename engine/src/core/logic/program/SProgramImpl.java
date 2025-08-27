@@ -2,6 +2,7 @@ package core.logic.program;
 
 import core.logic.instruction.SInstruction;
 import core.logic.label.Label;
+import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
 
@@ -67,6 +68,16 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
+    public Set<Variable> getOrderedVariablesCopy() {
+        Set<Variable> variables = new TreeSet<>();
+        for (SInstruction instruction : instructionList) {
+            variables.addAll(instruction.getVariablesCopy());
+        }
+
+        return variables;
+    }
+
+    @Override
     public Set<Variable> getInputVariables() {
         Set<Variable> allVariables = getOrderedVariables();
         Set<Variable> outputVariables = new HashSet<>();
@@ -80,20 +91,23 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getOrderedVariablesCopy() {
-        Set<Variable> variables = new TreeSet<>();
-        for (SInstruction instruction : instructionList) {
-            variables.addAll(instruction.getVariablesCopy());
+    public Set<Variable> getInputVariablesCopy(){
+        Set<Variable> allVariables = getOrderedVariablesCopy();
+        Set<Variable> inputVariablesCopy = new HashSet<>();
+        for(Variable variable : allVariables) {
+            if(variable.getType() == VariableType.INPUT){
+                inputVariablesCopy.add(variable);
+            }
         }
 
-        return variables;
+        return inputVariablesCopy;
     }
 
     @Override
     public Set<Label> getOrderedLabels() {
-        Set<Label> labels = new TreeSet<>();
+        Set<Label> labels = new TreeSet<>(new LabelComparator());
         for (SInstruction instruction : instructionList) {
-            labels.add(instruction.getLabel());
+            labels.addAll(instruction.getLabels());
         }
 
         return labels;

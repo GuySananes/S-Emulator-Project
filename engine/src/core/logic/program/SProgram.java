@@ -14,8 +14,9 @@ public interface SProgram {
     List<SInstruction> getInstructionList();
     Set<Variable> getOrderedVariables();
     Set<Variable> getOrderedVariablesCopy();
-    Set<Variable> getInputVariables();
     Set<Label> getOrderedLabels();
+    Set<Variable> getInputVariables();
+    Set<Variable> getInputVariablesCopy();
 
 
     boolean validate();
