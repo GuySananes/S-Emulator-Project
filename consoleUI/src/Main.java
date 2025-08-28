@@ -8,7 +8,7 @@ import static java.sql.DriverManager.println;
 
 public class Main {
 
-        Engine engine = new EngineImpl();
+        Engine engine = EngineImpl.getInstance();
         Scanner scanner = new Scanner(System.in);
 
         public void runProgram() {

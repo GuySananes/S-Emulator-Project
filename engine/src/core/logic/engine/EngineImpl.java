@@ -16,7 +16,6 @@ public class EngineImpl implements Engine {
     private static final Engine instance = new EngineImpl();
 
     private SProgram program = null;
-    private final StatisticManager statisticManager = new StatisticManagerImpl();
 
     private EngineImpl() { }
 
