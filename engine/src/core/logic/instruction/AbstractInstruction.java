@@ -94,4 +94,15 @@ public abstract class AbstractInstruction implements SInstruction {
 
         return labels;
     }
+
+    @Override
+    public final String getRepresentation() {
+        return "(" + instructionData.getInstructionType() + ") "
+                + "[ " + label.getRepresentation() + " ] "
+                + getCommandRepresentation()
+                + " (" + instructionData.getCycles() + ")";
+    }
+
+
+    protected abstract String getCommandRepresentation();
 }

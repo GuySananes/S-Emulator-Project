@@ -16,9 +16,7 @@ public class LabelImpl implements Label {
     }
 
     @Override
-    public String getRepresentation() {
-        return label;
-    }
+    public String getRepresentation() {return label;}
 
     @Override
     public boolean equals(Object o) {

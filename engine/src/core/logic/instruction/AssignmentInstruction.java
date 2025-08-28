@@ -25,7 +25,7 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables {
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- " + getSecondaryVariable().getRepresentation();
     }
 

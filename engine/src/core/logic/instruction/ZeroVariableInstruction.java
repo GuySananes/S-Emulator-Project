@@ -22,7 +22,7 @@ public class ZeroVariableInstruction extends AbstractInstruction{
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- 0";
     }
 

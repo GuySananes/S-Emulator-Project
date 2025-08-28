@@ -21,7 +21,7 @@ public class PresentProgramDTOCreator {
                 program.getName(),
                 program.getOrderedVariablesCopy(),
                 program.getOrderedLabels(),
-                presentInstructionDTOList);
+                presentInstructionDTOList, program.getRepresentation());
 
     }
 }

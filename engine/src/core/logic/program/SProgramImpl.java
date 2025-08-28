@@ -66,7 +66,18 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public String getRepresentation() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < instructionList.size(); i++) {
+            SInstruction instruction = instructionList.get(i);
+            sb.append("#")
+                    .append(i + 1)
+                    .append(" ")
+                    .append(instruction.getRepresentation())
+                    .append(System.lineSeparator());
+        }
+
+        return sb.toString();
     }
 
     @Override

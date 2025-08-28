@@ -27,7 +27,7 @@ public class ConstantAssignmentInstruction extends AbstractInstruction {
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- " + constantValue;
     }
 }

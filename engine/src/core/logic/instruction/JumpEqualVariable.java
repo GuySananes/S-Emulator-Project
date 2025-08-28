@@ -32,7 +32,7 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables {
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = "
                 + getSecondaryVariable().getRepresentation() +
                 " GOTO " + targetLabel.getRepresentation();

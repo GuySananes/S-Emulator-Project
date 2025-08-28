@@ -26,7 +26,7 @@ public class JumpZero extends AbstractInstructionTwoLabels {
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = 0 GOTO " + getTargetLabel().getRepresentation();
     }
 

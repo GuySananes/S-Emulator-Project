@@ -11,8 +11,11 @@ public class PresentProgramDTO {
     private final Set<Variable> Xs;
     private final Set<Label> labels;
     private final List<PresentInstructionDTO> instructionList;
+    private final String representation;
 
-    public PresentProgramDTO(String programName, Set<Variable> Xs, Set<Label> labels, List<PresentInstructionDTO> instructionList) {
+    public PresentProgramDTO(String programName, Set<Variable> Xs, Set<Label> labels,
+                             List<PresentInstructionDTO> instructionList, String representation) {
+        this.representation = representation;
         this.programName = programName;
         this.Xs = Xs;
         this.labels = labels;

@@ -24,7 +24,7 @@ public class GotoLabel extends AbstractInstructionTwoLabels{
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return "GOTO" + getTargetLabel().getRepresentation();
     }
 }

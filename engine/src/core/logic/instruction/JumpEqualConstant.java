@@ -29,7 +29,7 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels{
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = " + constantValue + " GOTO " + getTargetLabel().getRepresentation();
     }
 }
