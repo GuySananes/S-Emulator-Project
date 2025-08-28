@@ -9,6 +9,7 @@ import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
+import exception.ProgramNotExecutedYetException;
 import statistic.SingleRunStatistic;
 import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManagerImpl;
@@ -18,6 +19,8 @@ public class RunProgramDTO {
     private final SProgram program;
     private int degree;
     private final List<Long> input;
+    private ProgramExecutor programExecutor;
+
 
     public RunProgramDTO(SProgram program) {
         if(program == null){
@@ -50,7 +53,6 @@ public class RunProgramDTO {
 
     public long runProgram(){
         SProgram program;
-        ProgramExecutor programExecutor;
         if(degree > getMaxDegree()){
             throw new IllegalStateException("Degree is out of range, cannot run program");
         }
@@ -71,6 +73,13 @@ public class RunProgramDTO {
 
     public Set<Variable> getOrderedVariablesCopy(){
         return program.getOrderedVariablesCopy();
+    }
+
+    public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
+        if(programExecutor == null){
+            throw new ProgramNotExecutedYetException();
+        }
+        return programExecutor.getOrderedValuesCopy();
     }
 
     public int getCycles() {

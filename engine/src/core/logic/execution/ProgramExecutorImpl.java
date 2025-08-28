@@ -7,14 +7,17 @@ import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.NoProgramException;
+import exception.ProgramNotExecutedYetException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ProgramExecutorImpl implements ProgramExecutor {
 
     private final SProgram program;
     private int currentInstructionIndex;
+    private ExecutionContext context;
 
     public ProgramExecutorImpl(SProgram program) {
         if(program == null){
@@ -27,8 +30,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
 
     @Override
     public long run(Long... input)  {
-
-        ExecutionContext context = new ExecutionContextImpl(program);
+        context = new ExecutionContextImpl(program);
         context.updateInputVariables(input);
         currentInstructionIndex = 0;
         SInstruction currentInstruction = program.getInstructionList()
@@ -51,5 +53,13 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
         return context.getVariableValue(Variable.RESULT);
+    }
+
+    @Override
+    public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
+        if(context == null){
+            throw new ProgramNotExecutedYetException();
+        }
+        return context.getOrderedValuesCopy(program.getOrderedVariables());
     }
 }

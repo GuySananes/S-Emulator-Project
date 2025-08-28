@@ -5,23 +5,26 @@ import core.logic.variable.Variable;
 import core.logic.variable.VariableImpl;
 import core.logic.variable.VariableType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class ExecutionContextImpl implements ExecutionContext {
 
-    private final Map<Variable, Long> variableValues;
+    private final Map<Variable, Long> variablesToValues;
 
     public ExecutionContextImpl(SProgram program){
         if(program == null){
             throw new IllegalArgumentException("Program cannot be null when creating ExecutionContext");
         }
 
-        variableValues = new TreeMap<>();
+        variablesToValues = new TreeMap<>();
         Set<Variable> variables = program.getOrderedVariables();
         for(Variable variable : variables){
-            variableValues.put(variable, 0L);
+            variablesToValues.put(variable, 0L);
         }
     }
 
@@ -37,32 +40,47 @@ public class ExecutionContextImpl implements ExecutionContext {
 
             Variable variable = new VariableImpl(VariableType.INPUT, i + 1);
 
-            if (variableValues.containsKey(variable)) {
-                variableValues.put(variable, value);
+            if (variablesToValues.containsKey(variable)) {
+                variablesToValues.put(variable, value);
             }
         }
     }
 
     @Override
     public long getVariableValue(Variable variable) {
-        if(!variableValues.containsKey(variable)){
+        if(!variablesToValues.containsKey(variable)){
             throw new IllegalArgumentException("Variable "
                     + variable.getRepresentation() +
                     " not found in context when getting value");
         }
 
-        return variableValues.get(variable);
+        return variablesToValues.get(variable);
     }
 
     @Override
     public void updateVariable(Variable variable, long value) {
-        if(!variableValues.containsKey(variable)){
+        if(!variablesToValues.containsKey(variable)){
             throw new IllegalArgumentException("Variable "
                     + variable.getRepresentation() +
                     " not found in context when updating value");
         }
 
-        variableValues.put(variable, value);
+        variablesToValues.put(variable, value);
 
+    }
+
+    @Override
+    public List<Long> getOrderedValuesCopy(Set<Variable> orderedVariables) {
+        List<Long> result = new ArrayList<>(orderedVariables.size());
+        for (Variable var : orderedVariables) {
+            Long value = variablesToValues.get(var);
+            if (value == null) {
+                throw new IllegalArgumentException("Variable "
+                        + var.getRepresentation() + " not found in context");
+            }
+            result.add(value);
+        }
+
+        return Collections.unmodifiableList(result);
     }
 }
