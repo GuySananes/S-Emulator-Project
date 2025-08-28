@@ -19,6 +19,9 @@ public class EngineImpl implements Engine {
 
     private EngineImpl() { }
 
+
+
+
     public static Engine getInstance() {
         return instance;
     }
@@ -57,7 +60,7 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        return statisticManager.getStatisticsForProgramCopy(program);
+        return StatisticManagerImpl.getInstance().getStatisticsForProgramCopy(program);
 
 
     }

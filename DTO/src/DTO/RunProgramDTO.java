@@ -55,7 +55,7 @@ public class RunProgramDTO {
             throw new IllegalStateException("Degree is out of range, cannot run program");
         }
         if(degree > 0){
-            program = extendProgramToDegree(degree);
+            program = null; //program.expandProgram(degree); or a class dedicated to expansion
         } else {
             program = this.program;
         }

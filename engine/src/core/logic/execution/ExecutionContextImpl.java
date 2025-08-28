@@ -43,7 +43,6 @@ public class ExecutionContextImpl implements ExecutionContext {
         }
     }
 
-
     @Override
     public long getVariableValue(Variable variable) {
         if(!variableValues.containsKey(variable)){

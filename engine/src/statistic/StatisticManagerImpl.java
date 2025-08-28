@@ -16,6 +16,9 @@ public class StatisticManagerImpl implements StatisticManager{
         return instance;
     }
 
+
+
+
     private final Map<SProgram, List<SingleRunStatistic>> statisticsMap = new HashMap<>();
 
     @Override
