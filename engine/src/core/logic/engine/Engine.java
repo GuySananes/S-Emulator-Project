@@ -7,7 +7,7 @@ import exception.NoProgramException;
 
 public interface Engine {
 
-    void laodProgram(String fullPath);
+    void loadProgram(String fullPath);
     PresentProgramDTO presentProgram() throws NoProgramException;
     void expandProgram();
     RunProgramDTO runProgram() throws NoProgramException;

@@ -19,6 +19,16 @@ public class ConstantAssignmentInstruction extends AbstractInstruction {
         this.constantValue = constantValue;
     }
 
+    public ConstantAssignmentInstruction(Variable variable, Label label) {
+
+        super(InstructionData.CONSTANT_ASSIGNMENT, variable, label);
+        this.constantValue = 0;
+    }
+
+    public ConstantAssignmentInstruction(Variable variable) {
+        this(variable, FixedLabel.EMPTY);
+    }
+
 
     @Override
     public Label execute(ExecutionContext context) {

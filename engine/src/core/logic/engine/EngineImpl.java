@@ -12,7 +12,7 @@ public class EngineImpl implements Engine {
 
     @Override
     //implement a method that loads the program
-    public void laodProgram(String fullPath) {
+    public void loadProgram(String fullPath) {
 
     }
 

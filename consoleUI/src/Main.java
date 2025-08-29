@@ -19,7 +19,7 @@ public class Main {
                 println(e.getMessage());
             }
 
-            println("max program degree: " + runProgramDTO.getMaxDegree());
+//            println("max program degree: " + runProgramDTO.getMaxDegree());
             //get input from user
             int maxDegree = scanner.nextInt();
 
