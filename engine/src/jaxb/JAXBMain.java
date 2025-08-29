@@ -9,11 +9,13 @@ import java.io.File;
 public class JAXBMain {
 
     public static void main(String[] args) {
-        if (args.length > 0) {
+       /* if (args.length > 0) {
             unmarshalXMLFile(args[0]);
         } else {
             System.out.println("Usage: java JAXBMain <xml-file>");
-        }
+        }*/
+        unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\successor.xml");
+        unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\synthetic.xml");
     }
 
     private static void unmarshalXMLFile(String xmlFilePath) {
