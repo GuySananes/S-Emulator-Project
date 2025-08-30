@@ -8,8 +8,8 @@ public class LabelImpl implements Label {
 
     public LabelImpl(int number)
     {
-        if (number < 0) {
-            throw new IllegalArgumentException("Label number must be non-negative");
+        if (number <= 0) {
+            throw new IllegalArgumentException("Label number must be positive.");
         }
 
         label = "L" + number;

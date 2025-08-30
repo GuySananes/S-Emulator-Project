@@ -5,11 +5,13 @@ import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
+import display.IndexedInstruction;
 
 import java.util.*;
 
 public class SProgramImpl implements SProgram{
 
+    private int index = 1;
     private final String name;
     private final List<SInstruction> instructionList;
     private int runNumber = 0;
@@ -63,6 +65,7 @@ public class SProgramImpl implements SProgram{
         if(instruction == null){
             throw new IllegalArgumentException("Instruction cannot be null when adding to program");
         }
+
         instructionList.add(instruction);
     }
 
