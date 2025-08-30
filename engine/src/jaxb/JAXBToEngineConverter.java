@@ -108,13 +108,33 @@ public class JAXBToEngineConverter {
             return new VariableImpl(VariableType.RESULT, 0);
         }
 
-        // Try to parse as number, otherwise treat as named variable
-        try {
-            int varNumber = Integer.parseInt(variableName);
-            return new VariableImpl(VariableType.RESULT, varNumber);
-        } catch (NumberFormatException e) {
-            // For named variables, you might want to create a different type
+        // Parse variable name to determine type and number
+        if (variableName.equals("y")) {
+            // Result variable is always y with number 0
             return new VariableImpl(VariableType.RESULT, 0);
+        } else if (variableName.startsWith("x")) {
+            // Input variables: x1, x2, x3, etc.
+            try {
+                String numberStr = variableName.substring(1); // Remove 'x' prefix
+                int varNumber = Integer.parseInt(numberStr);
+                return new VariableImpl(VariableType.INPUT, varNumber);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid input variable format: " + variableName + 
+                                                 ". Expected format: x<number> (e.g., x1, x2)");
+            }
+        } else if (variableName.startsWith("z")) {
+            // Work variables: z1, z2, z3, etc.
+            try {
+                String numberStr = variableName.substring(1); // Remove 'z' prefix
+                int varNumber = Integer.parseInt(numberStr);
+                return new VariableImpl(VariableType.WORK, varNumber);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid work variable format: " + variableName + 
+                                                 ". Expected format: z<number> (e.g., z1, z2)");
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown variable format: " + variableName + 
+                                             ". Expected formats: y, x<number>, or z<number>");
         }
     }
 

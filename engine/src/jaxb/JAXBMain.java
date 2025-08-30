@@ -15,7 +15,7 @@ public class JAXBMain {
             unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\synthetic.xml");
         } catch (XMLUnmarshalException e) {
             System.err.println("Failed to process XML file: " + e.getMessage());
-            // In the future, you can ask the user to enter a new path here
+
         }
     }
 
