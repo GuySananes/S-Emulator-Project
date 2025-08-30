@@ -1,6 +1,7 @@
 package jaxb;
 
 import jaxb.engine.src.jaxb.schema.generated.*;
+import exception.XMLUnmarshalException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -9,21 +10,25 @@ import java.io.File;
 public class JAXBMain {
 
     public static void main(String[] args) {
-       /* if (args.length > 0) {
-            unmarshalXMLFile(args[0]);
-        } else {
-            System.out.println("Usage: java JAXBMain <xml-file>");
-        }*/
-        unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\successor.xml");
-        unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\synthetic.xml");
+        try {
+            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\successor.xml");
+            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\synthetic.xml");
+        } catch (XMLUnmarshalException e) {
+            System.err.println("Failed to process XML file: " + e.getMessage());
+            // In the future, you can ask the user to enter a new path here
+        }
     }
 
-    private static void unmarshalXMLFile(String xmlFilePath) {
+    private static void unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException {
+        // Check if the path ends with ".xml"
+        if (!xmlFilePath.endsWith(".xml")) {
+            throw new XMLUnmarshalException("File must have .xml extension: " + xmlFilePath);
+        }
+        
         try {
             File xmlFile = new File(xmlFilePath);
             if (!xmlFile.exists()) {
-                System.err.println("File not found: " + xmlFilePath);
-                return;
+                throw new XMLUnmarshalException("File not found: " + xmlFilePath);
             }
 
             System.out.println("Processing: " + xmlFilePath);
@@ -44,9 +49,9 @@ public class JAXBMain {
             System.out.println("Engine Instructions: " + engineProgram.getInstructionList().size());
 
         } catch (JAXBException e) {
-            System.err.println("JAXB Error: " + e.getMessage());
+            throw new XMLUnmarshalException("JAXB unmarshalling failed for file: " + xmlFilePath, e);
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            throw new XMLUnmarshalException("Unexpected error processing file: " + xmlFilePath, e);
         }
     }
 }
