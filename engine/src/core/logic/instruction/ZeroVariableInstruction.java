@@ -5,6 +5,7 @@ import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 import expansion.Expandable;
+import expansion.ExpansionContext;
 import expansion.RootedInstruction;
 
 import java.util.ArrayList;

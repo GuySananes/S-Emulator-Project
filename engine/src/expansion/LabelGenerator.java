@@ -3,44 +3,40 @@ package expansion;
 import core.logic.instruction.SInstruction;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
+import core.logic.label.LabelImpl;
+import core.logic.program.SProgram;
 
 import java.util.List;
 import java.util.Set;
 
 public class LabelGenerator {
-    private Integer maxLabel = null;
-    private List<SInstruction> instructions;
+    private int maxLabel = -1;
+    private SProgram program;
 
-    public LabelGenerator(List<SInstruction> instructions) {
-        this.instructions = instructions;
+    public LabelGenerator(SProgram program) {
+        this.program = program;
     }
 
     public Label generateLabel() {
-        if (maxLabel == null) {
-
+        if (maxLabel == -1) {
+            maxLabel = findMaxLabel();
         }
 
+        return new LabelImpl(++maxLabel);
     }
 
-    private Integer findMaxLabel() {
+    private int findMaxLabel() {
+        Set<Label> labels = program.getOrderedLabels();
         int max = 0;
-        int tmp = 0;
-        for (SInstruction instruction : instructions) {
-            Set<Label> labels = instruction.getLabels();
-            for(Label label : labels) {
-                if(label != FixedLabel.EMPTY) {
-                    tmp = label.getNumper();
-                    if (tmp > max) {
-                        max = tmp;
-                    }
+        for (Label label : labels) {
+            if (label instanceof LabelImpl) {
+                int value = ((LabelImpl) label).getNumber();
+                if (value > max) {
+                    max = value;
                 }
             }
-
         }
 
         return max;
-
-
-
     }
 }

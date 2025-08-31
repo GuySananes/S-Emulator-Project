@@ -9,7 +9,7 @@ import core.logic.variable.Variable;
 import java.util.Set;
 
 public class IndexedInstruction implements SInstruction{
-    private final int index;
+    private int index;
     private final SInstruction instruction;
 
     public IndexedInstruction(int index, SInstruction instruction) {
@@ -25,7 +25,14 @@ public class IndexedInstruction implements SInstruction{
         return instruction;
     }
 
-    // Implement all methods from SInstruction by delegating to the wrapped instruction
+    public void setIndex(int index){
+        if(index < 0){
+            throw new IllegalArgumentException("Index cannot be negative");
+        }
+
+        this.index = index;
+    }
+
     @Override
     public Label execute(ExecutionContext context) {
         return instruction.execute(context);

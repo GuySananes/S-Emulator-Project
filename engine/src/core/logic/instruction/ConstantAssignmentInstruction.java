@@ -4,8 +4,14 @@ import core.logic.execution.ExecutionContext;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
+import expansion.Expandable;
+import expansion.ExpansionContext;
+import expansion.RootedInstruction;
 
-public class ConstantAssignmentInstruction extends AbstractInstruction {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ConstantAssignmentInstruction extends AbstractInstruction implements Expandable {
 
     private final long constantValue;
 
@@ -29,5 +35,16 @@ public class ConstantAssignmentInstruction extends AbstractInstruction {
     @Override
     public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- " + constantValue;
+    }
+
+    @Override
+    public List<SInstruction> expand(ExpansionContext context) {
+        List<SInstruction> expansion = new ArrayList<>((int) constantValue + 1);
+        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), this));
+        for (int i = 0; i < constantValue; i++) {
+            expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), this));
+        }
+
+        return expansion;
     }
 }

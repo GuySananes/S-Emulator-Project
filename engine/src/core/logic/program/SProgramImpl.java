@@ -66,6 +66,14 @@ public class SProgramImpl implements SProgram{
             throw new IllegalArgumentException("Instruction cannot be null when adding to program");
         }
 
+        if(!(instruction instanceof IndexedInstruction)){
+            instruction = new IndexedInstruction(index++, instruction);
+        }
+
+        else {
+            ((IndexedInstruction)instruction).setIndex(index++);
+        }
+
         instructionList.add(instruction);
     }
 

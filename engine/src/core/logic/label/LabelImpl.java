@@ -5,6 +5,7 @@ import java.util.Objects;
 public class LabelImpl implements Label {
 
     private final String label;
+    private final int number;
 
     public LabelImpl(int number)
     {
@@ -12,7 +13,12 @@ public class LabelImpl implements Label {
             throw new IllegalArgumentException("Label number must be positive.");
         }
 
-        label = "L" + number;
+        this.number = number;
+        this.label = "L" + number;
+    }
+
+    public int getNumber() {
+        return number;
     }
 
     @Override
