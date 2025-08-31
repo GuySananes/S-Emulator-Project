@@ -48,7 +48,7 @@ public class RootedInstruction implements SInstruction {
 
     @Override
     public String getRepresentation() {
-        return instruction.getRepresentation() + ">>>" + rootInstructions.getRepresentation();
+        return instruction.getRepresentation() + " >>> " + rootInstructions.getRepresentation();
     }
 
     @Override

@@ -1,8 +1,6 @@
-package display;
+package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
-import core.logic.instruction.InstructionData;
-import core.logic.instruction.SInstruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
@@ -80,7 +78,6 @@ public class IndexedInstruction implements SInstruction{
 
     @Override
     public String getRepresentation() {
-        // You can customize the representation to include the index
         return String.format("%d: %s", index, instruction.getRepresentation());
     }
 

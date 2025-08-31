@@ -5,7 +5,7 @@ import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
-import display.IndexedInstruction;
+import core.logic.instruction.IndexedInstruction;
 
 import java.util.*;
 
