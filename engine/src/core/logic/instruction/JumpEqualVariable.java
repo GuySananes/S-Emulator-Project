@@ -21,8 +21,13 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
     }
 
     public JumpEqualVariable(Variable variable, Variable secondaryVariable, Label targetLabel, Label label) {
-        super(InstructionData.LUMP_EQUAL_VARIABLE, variable, secondaryVariable, label);
+        super(InstructionData.JUMP_EQUAL_VARIABLE, variable, secondaryVariable, label);
         this.targetLabel = targetLabel;
+    }
+
+    public JumpEqualVariable(Variable variable, Label label) {
+        super(InstructionData.JUMP_EQUAL_VARIABLE, variable, variable, label);
+        this.targetLabel = label;
     }
 
     @Override
