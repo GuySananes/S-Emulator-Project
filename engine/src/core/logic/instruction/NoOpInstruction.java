@@ -21,7 +21,7 @@ public class NoOpInstruction extends AbstractInstruction {
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- " + getVariable().getRepresentation();
     }
 }

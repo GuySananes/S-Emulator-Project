@@ -5,30 +5,38 @@ import DTO.RunProgramDTO;
 import DTOcreate.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
+import statistic.SingleRunStatistic;
+import statistic.StatisticManager;
+import statistic.StatisticManagerImpl;
+
+import java.util.List;
 
 public class EngineImpl implements Engine {
 
-    SProgram program;
+    private static final Engine instance = new EngineImpl();
 
-    @Override
-    //implement a method that loads the program
-    public void laodProgram(String fullPath) {
+    private SProgram program = null;
 
+    private EngineImpl() { }
+
+
+
+
+    public static Engine getInstance() {
+        return instance;
     }
 
+    @Override
+    public void loadProgram(String fullPath) {
+
+    }
 
     @Override
     public PresentProgramDTO presentProgram() throws NoProgramException {
         if (program == null) {
             throw new NoProgramException();
         }
-
         return PresentProgramDTOCreator.create(program);
-
-
-
-
-
     }
 
     @Override
@@ -42,12 +50,18 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        return new RunProgramDTO();
+        return new RunProgramDTO(program);
 
     }
 
     @Override
-    public void presentProgramStats() {
+    public List<SingleRunStatistic> presentProgramStats() throws NoProgramException {
+        if (program == null) {
+            throw new NoProgramException();
+        }
+
+        return StatisticManagerImpl.getInstance().getStatisticsForProgramCopy(program);
+
 
     }
 }

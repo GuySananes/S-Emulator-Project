@@ -2,18 +2,27 @@ package core.logic.label;
 
 import java.util.Objects;
 
-public class LabelImpl implements Label, Comparable<Label> {
+public class LabelImpl implements Label {
 
     private final String label;
+    private final int number;
 
-    public LabelImpl(int number) {
-        label = "L" + number;
+    public LabelImpl(int number)
+    {
+        if (number <= 0) {
+            throw new IllegalArgumentException("Label number must be positive.");
+        }
+
+        this.number = number;
+        this.label = "L" + number;
+    }
+
+    public int getNumber() {
+        return number;
     }
 
     @Override
-    public String getRepresentation() {
-        return label;
-    }
+    public String getRepresentation() {return label;}
 
     @Override
     public boolean equals(Object o) {
@@ -26,14 +35,5 @@ public class LabelImpl implements Label, Comparable<Label> {
     @Override
     public int hashCode() {
         return Objects.hashCode(label);
-    }
-
-    @Override
-    public int compareTo(Label other) {
-        if(other == FixedLabel.EXIT) {
-            return 1;
-        }
-
-        return this.label.compareTo(other.getRepresentation());
     }
 }

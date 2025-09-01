@@ -1,23 +1,15 @@
+
 package core.logic.execution;
 
 import core.logic.variable.Variable;
+import exception.ProgramNotExecutedYetException;
 
+import java.util.List;
 import java.util.Map;
 
 public interface ProgramExecutor {
 
-    /**
-     * Executes the program with the given input (x1, x2, x3...).
-     *
-     * @param input The input values for the program.
-     * @return The result of the program execution.
-     */
-    long run(Long... input);
+    long run(java.lang.Long... input);
 
-    /**
-     * Returns the current state of all variables in the program.
-     *
-     * @return A map where keys are variables and values are their current values.
-     */
-    Map<Variable, Long> variableState();
+    public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException;
 }

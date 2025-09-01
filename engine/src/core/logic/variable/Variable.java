@@ -7,7 +7,5 @@ public interface Variable extends Comparable<Variable> {
     Variable copy();
     Variable RESULT = new VariableImpl(VariableType.RESULT, 0);
 
-    long getValue();
-    void setValue(long value);
 
 }

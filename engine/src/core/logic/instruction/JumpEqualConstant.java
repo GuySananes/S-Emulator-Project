@@ -4,8 +4,13 @@ import core.logic.execution.ExecutionContext;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
+import expansion.Expandable;
+import expansion.ExpansionContext;
+import expansion.RootedInstruction;
 
-public class JumpEqualConstant extends AbstractInstructionTwoLabels{
+import java.util.List;
+
+public class JumpEqualConstant extends AbstractInstructionTwoLabels implements Expandable {
 
     private final long constantValue;
 
@@ -29,7 +34,25 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels{
     }
 
     @Override
-    public String getRepresentation() {
+    public String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = " + constantValue + " GOTO " + getTargetLabel().getRepresentation();
+    }
+
+    @Override
+    public List<SInstruction> expand(ExpansionContext context) {
+
+        List<SInstruction> expansion = new java.util.ArrayList<>(4 + (2 * (int) constantValue));
+        Variable z1 = context.generateZ();
+        Label L1 = context.generateLabel();
+        expansion.add(new RootedInstruction(new AssignmentInstruction(z1, getVariable(), getLabel()), this));
+        for (int i = 0; i < constantValue; i++) {
+            expansion.add(new RootedInstruction(new JumpZero(z1, L1), this));
+            expansion.add(new RootedInstruction(new DecreaseInstruction(z1), this));
+        }
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L1), this));
+        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), this));
+        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), this));
+
+        return expansion;
     }
 }

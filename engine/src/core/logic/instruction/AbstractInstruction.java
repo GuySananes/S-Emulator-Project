@@ -33,6 +33,8 @@ public abstract class AbstractInstruction implements SInstruction {
         this.variable = variable;
     }
 
+
+
     @Override
     public String getName() {
         return instructionData.getName();
@@ -64,6 +66,16 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = new HashSet<>();
+        if (variable != null) {
+            variables.add(variable);
+        }
+
+        return variables;
+    }
+
+    @Override
     public Set<Variable> getVariablesCopy() {
         Set<Variable> variables = new HashSet<>();
         if (variable != null) {
@@ -82,4 +94,15 @@ public abstract class AbstractInstruction implements SInstruction {
 
         return labels;
     }
+
+    @Override
+    public final String getRepresentation() {
+        return "(" + instructionData.getInstructionType() + ") "
+                + "[ " + label.getRepresentation() + " ] "
+                + getCommandRepresentation()
+                + " (" + instructionData.getCycles() + ")";
+    }
+
+
+    protected abstract String getCommandRepresentation();
 }

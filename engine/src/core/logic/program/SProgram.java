@@ -12,15 +12,21 @@ public interface SProgram {
     String getName();
     void addInstruction(SInstruction instruction);
     List<SInstruction> getInstructionList();
+    int getRunNumber();
+    void incrementRunNumber();
+    Set<Variable> getOrderedVariables();
     Set<Variable> getOrderedVariablesCopy();
     Set<Label> getOrderedLabels();
+    Set<Variable> getInputVariables();
+    Set<Variable> getInputVariablesCopy();
+
 
     boolean validate();
     int calculateMaxDegree();
     int calculateCycles();
     String getRepresentation();
+    SInstruction getInstructionByLabel(Label Label);
 
     SInstruction getInstructionAtIndex(int index);
-    SInstruction getInstructionByLabel(Label label);
 
 }
