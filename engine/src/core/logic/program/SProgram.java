@@ -27,6 +27,4 @@ public interface SProgram {
     String getRepresentation();
     SInstruction getInstructionByLabel(Label Label);
 
-    SInstruction getInstructionAtIndex(int index);
-
 }

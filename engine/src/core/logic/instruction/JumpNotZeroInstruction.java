@@ -5,12 +5,11 @@ import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
-import java.util.Set;
 
 public class JumpNotZeroInstruction extends AbstractInstructionTwoLabels{
 
     public JumpNotZeroInstruction(Variable variable, Label targetLabel) {
-        this(variable, targetLabel, FixedLabel.EMPTY);
+        this(variable, FixedLabel.EMPTY, targetLabel);
     }
 
     public JumpNotZeroInstruction(Variable variable, Label label, Label targetLabel) {

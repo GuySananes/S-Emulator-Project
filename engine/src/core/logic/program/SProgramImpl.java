@@ -126,9 +126,6 @@ public class SProgramImpl implements SProgram{
         return sb.toString();
     }
 
-
-
-
     @Override
     public Set<Variable> getOrderedVariables() {
         if(orderedVariables == null){
@@ -188,35 +185,5 @@ public class SProgramImpl implements SProgram{
 
         throw new NoSuchElementException("No instruction found with label: " +
                 label.getRepresentation());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public SInstruction getInstructionAtIndex(int index) {
-        if (index < 0 || index >= instructionList.size()) {
-            return null;
-        }
-        return instructionList.get(index);
-    }
-
-    @Override
-    public SInstruction getInstructionByLabel(Label label) {
-        // Find the first instruction with a matching label
-        for (SInstruction instruction : instructionList) {
-            if (instruction.getLabel().equals(label)) {
-                return instruction;
-            }
-        }
-        return null;
     }
 }

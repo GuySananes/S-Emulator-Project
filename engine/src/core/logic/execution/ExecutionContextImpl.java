@@ -17,16 +17,18 @@ public class ExecutionContextImpl implements ExecutionContext {
     private final Map<Variable, Long> variablesToValues;
 
     public ExecutionContextImpl(SProgram program){
-        if(program == null){
-            throw new IllegalArgumentException("Program cannot be null when creating ExecutionContext");
-        }
+            if(program == null){
+                throw new IllegalArgumentException("Program cannot be null when creating ExecutionContext");
+            }
 
-        variablesToValues = new TreeMap<>();
-        Set<Variable> variables = program.getOrderedVariables();
-        for(Variable variable : variables){
-            variablesToValues.put(variable, 0L);
+            variablesToValues = new TreeMap<>();
+            Set<Variable> variables = program.getOrderedVariables();
+            for(Variable variable : variables){
+                variablesToValues.put(variable, 0L);
+            }
+            Variable resultVariable = new VariableImpl(VariableType.RESULT, 0);
+            variablesToValues.put(resultVariable, 0L);
         }
-    }
 
     @Override
     public void updateInputVariables(Long... inputVariables) {
