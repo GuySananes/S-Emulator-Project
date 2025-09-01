@@ -28,6 +28,62 @@ public class ConverterTest {
             System.err.println("❌ Conversion failed: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Test 4: Test validation with invalid label reference
+        testInvalidLabelValidation();
+
+        // Test 5: Test validation with EXIT label (should pass)
+        testExitLabelValidation();
+    }
+
+    private static void testInvalidLabelValidation() {
+        System.out.println("\nTesting invalid label validation...");
+        
+        jaxb.engine.src.jaxb.schema.generated.SProgram program = new jaxb.engine.src.jaxb.schema.generated.SProgram();
+        program.setName("InvalidLabelTest");
+
+        jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
+
+        // Create GOTO instruction with undefined label
+        jaxb.engine.src.jaxb.schema.generated.SInstruction gotoInstruction = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        gotoInstruction.setType("basic");
+        gotoInstruction.setName("GOTO_LABEL");
+        gotoInstruction.setSLabel("UNDEFINED_LABEL");
+        instructions.getSInstruction().add(gotoInstruction);
+
+        program.setSInstructions(instructions);
+
+        try {
+            JAXBToEngineConverter.convertJAXBToEngine(program);
+            System.err.println("❌ Expected validation to fail for undefined label");
+        } catch (IllegalArgumentException e) {
+            System.out.println("✅ Validation correctly caught undefined label: " + e.getMessage());
+        }
+    }
+
+    private static void testExitLabelValidation() {
+        System.out.println("\nTesting EXIT label validation...");
+        
+        jaxb.engine.src.jaxb.schema.generated.SProgram program = new jaxb.engine.src.jaxb.schema.generated.SProgram();
+        program.setName("ExitLabelTest");
+
+        jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
+
+        // Create GOTO instruction with EXIT label (should be allowed)
+        jaxb.engine.src.jaxb.schema.generated.SInstruction gotoInstruction = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        gotoInstruction.setType("basic");
+        gotoInstruction.setName("GOTO_LABEL");
+        gotoInstruction.setSLabel("EXIT");
+        instructions.getSInstruction().add(gotoInstruction);
+
+        program.setSInstructions(instructions);
+
+        try {
+            SProgram engineProgram = JAXBToEngineConverter.convertJAXBToEngine(program);
+            System.out.println("✅ EXIT label validation passed successfully");
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ EXIT label should be allowed: " + e.getMessage());
+        }
     }
 
     private static jaxb.engine.src.jaxb.schema.generated.SProgram createTestJAXBProgram() {

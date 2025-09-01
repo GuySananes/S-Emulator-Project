@@ -11,8 +11,7 @@ public class JAXBMain {
 
     public static void main(String[] args) {
         try {
-            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\successor.xml");
-            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resourses\\synthetic.xml");
+            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resources\\error-1.xml");
         } catch (XMLUnmarshalException e) {
             System.err.println("Failed to process XML file: " + e.getMessage());
 
@@ -55,3 +54,4 @@ public class JAXBMain {
         }
     }
 }
+

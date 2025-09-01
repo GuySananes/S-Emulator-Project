@@ -24,7 +24,7 @@ public class Main {
             int maxDegree = scanner.nextInt();
 
             /*println("these are the inputs: " + runProgramDTO.getInputs());
-            //get inputs from user
+            //get inputs from the user
             //should now create a Long list with unknown size and fill it with user inputs
 
             runProgramDTO.execute(Long inputs);*/
@@ -32,6 +32,8 @@ public class Main {
 
 
         }
+
+
 
 
 }

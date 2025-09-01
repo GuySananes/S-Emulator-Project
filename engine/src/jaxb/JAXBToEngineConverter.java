@@ -15,6 +15,113 @@ import java.util.List;
 
 public class JAXBToEngineConverter {
 
+    /**
+     * Collects all defined labels from the list of JAXB instructions.
+     * Any instruction with an S-Label defines that label as a jump target.
+     * 
+     * @param jaxbInstructions List of JAXB instructions
+     * @return Set of defined label names
+     */
+    private static java.util.Set<String> collectDefinedLabels(List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions) {
+        java.util.Set<String> definedLabels = new java.util.HashSet<>();
+        for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction : jaxbInstructions) {
+            // Any instruction with S-Label defines that label
+            if (instruction.getSLabel() != null && !instruction.getSLabel().isEmpty()) {
+                definedLabels.add(instruction.getSLabel());
+            }
+        }
+        return definedLabels;
+    }
+
+    /**
+     * Validates that a single JAXB instruction's label references are valid.
+     * 
+     * @param jaxbInstruction The JAXB instruction to validate
+     * @param definedLabels Set of all defined labels in the program
+     * @throws IllegalArgumentException if a referenced label is not found
+     */
+    private static void validateInstructionLabelReferences(
+            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
+            java.util.Set<String> definedLabels) {
+
+        String instructionName = jaxbInstruction.getName();
+        String referencedLabel = getReferencedLabel(jaxbInstruction);
+
+        // Instructions that use labels as jump targets
+        if (isLabelReferencingInstruction(instructionName)) {
+            if (referencedLabel == null || referencedLabel.isEmpty()) {
+                throw new IllegalArgumentException(
+                    "Instruction " + instructionName + " requires a label but none was provided"
+                );
+            }
+
+            // Allow special system labels like "EXIT"
+            if (isSystemLabel(referencedLabel)) {
+                return; // System labels don't need to be defined in the program
+            }
+
+            if (!definedLabels.contains(referencedLabel)) {
+                throw new IllegalArgumentException(
+                    "Instruction " + instructionName + " references undefined label: " + referencedLabel + 
+                    ". Available labels: " + definedLabels
+                );
+            }
+        }
+    }
+
+    /**
+     * Extracts the referenced label from a JAXB instruction's arguments.
+     * This finds the label that the instruction wants to jump to, not the label that defines this instruction.
+     * 
+     * @param jaxbInstruction The JAXB instruction
+     * @return The referenced label name, or null if none found
+     */
+    private static String getReferencedLabel(jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction) {
+        // Check instruction arguments for label references (jump targets)
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            for (jaxb.engine.src.jaxb.schema.generated.SInstructionArgument arg : 
+                 jaxbInstruction.getSInstructionArguments().getSInstructionArgument()) {
+
+                if ("gotoLabel".equals(arg.getName()) || "JNZLabel".equals(arg.getName()) || 
+                    "JZLabel".equals(arg.getName()) || "jumpLabel".equals(arg.getName())) {
+                    return arg.getValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if the given instruction type requires a valid label reference.
+     * 
+     * @param instructionName The name of the instruction
+     * @return true if the instruction references a label that must exist
+     */
+    private static boolean isLabelReferencingInstruction(String instructionName) {
+        switch (instructionName) {
+            case "GOTO_LABEL":
+            case "JUMP_NOT_ZERO":
+            case "JUMP_ZERO":
+            case "JUMP_EQUAL_CONSTANT":
+            case "JUMP_EQUAL_VARIABLE":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Checks if the given label is a system-defined label that doesn't need
+     * to be defined in the program.
+     * 
+     * @param labelName The name of the label to check
+     * @return true if it's a system label
+     */
+    private static boolean isSystemLabel(String labelName) {
+        return labelName.equals("EXIT");
+    }
+
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) {
         if (jaxbProgram == null) {
             throw new IllegalArgumentException("JAXB program cannot be null");
@@ -28,14 +135,19 @@ public class JAXBToEngineConverter {
             List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbProgram.getSInstructions()
                     .getSInstruction();
 
+            // Collect all defined labels first for validation
+            java.util.Set<String> definedLabels = collectDefinedLabels(jaxbInstructions);
+
             for (jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction : jaxbInstructions) {
+                // Validate each instruction's label references
+                validateInstructionLabelReferences(jaxbInstruction, definedLabels);
+
                 SInstruction engineInstruction = convertInstruction(jaxbInstruction);
                 if (engineInstruction != null) {
                     engineProgram.addInstruction(engineInstruction);
                 }
             }
         }
-
         return engineProgram;
     }
 
@@ -110,7 +222,7 @@ public class JAXBToEngineConverter {
 
         // Parse variable name to determine type and number
         if (variableName.equals("y")) {
-            // Result variable is always y with number 0
+            // The result variable is always y with the number 0
             return new VariableImpl(VariableType.RESULT, 0);
         } else if (variableName.startsWith("x")) {
             // Input variables: x1, x2, x3, etc.
