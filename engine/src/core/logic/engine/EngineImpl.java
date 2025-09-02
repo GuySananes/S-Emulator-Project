@@ -2,11 +2,10 @@ package core.logic.engine;
 
 import DTO.PresentProgramDTO;
 import DTO.RunProgramDTO;
-import DTOcreate.PresentProgramDTOCreator;
+import DTOCreate.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
 import statistic.SingleRunStatistic;
-import statistic.StatisticManager;
 import statistic.StatisticManagerImpl;
 
 import java.util.List;

@@ -15,15 +15,17 @@ public class PresentProgramDTO {
 
     public PresentProgramDTO(String programName, Set<Variable> Xs, Set<Label> labels,
                              List<PresentInstructionDTO> instructionList, String representation) {
-        this.representation = representation;
         this.programName = programName;
         this.Xs = Xs;
         this.labels = labels;
         this.instructionList = instructionList;
+        this.representation = representation;
+
     }
 
     public String getProgramName() { return programName;}
     public Set<Variable> getXs() { return Xs; }
     public Set<Label> getLabels() { return labels; }
     public List<PresentInstructionDTO> getInstructionList() { return instructionList; }
+    public String getRepresentation() { return representation; }
 }

@@ -10,6 +10,7 @@ import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
 import exception.ProgramNotExecutedYetException;
+import expansion.Expansion;
 import statistic.SingleRunStatistic;
 import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManagerImpl;
@@ -18,8 +19,9 @@ public class RunProgramDTO {
 
     private final SProgram program;
     private int degree;
-    private final List<Long> input;
+    private List<Long> input = null;
     private ProgramExecutor programExecutor;
+
 
 
     public RunProgramDTO(SProgram program) {
@@ -27,7 +29,6 @@ public class RunProgramDTO {
             throw new IllegalArgumentException("Program cannot be null when creating RunProgramDTO");
         }
         this.program = program;
-        input = new ArrayList<>();
     }
 
     public int getMaxDegree(){
@@ -47,8 +48,11 @@ public class RunProgramDTO {
     }
 
     public void setInputs(List<Long> input){
-        this.input.clear();
-        this.input.addAll(input);
+        if(input == null){
+            throw new IllegalArgumentException("Input list cannot be null when setting inputs");
+        }
+
+        this.input = new ArrayList<>(input);
     }
 
     public long runProgram(){
@@ -57,7 +61,7 @@ public class RunProgramDTO {
             throw new IllegalStateException("Degree is out of range, cannot run program");
         }
         if(degree > 0){
-            program = null; //program.expandProgram(degree); or a class dedicated to expansion
+            program = Expansion.expand(this.program, degree);
         } else {
             program = this.program;
         }

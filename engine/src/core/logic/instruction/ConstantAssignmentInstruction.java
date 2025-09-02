@@ -35,6 +35,9 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
         this(variable, FixedLabel.EMPTY);
     }
 
+    public long getConstantValue() {
+        return constantValue;
+    }
 
     @Override
     public Label execute(ExecutionContext context) {

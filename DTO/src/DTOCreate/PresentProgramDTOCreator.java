@@ -1,8 +1,10 @@
-package DTOcreate;
+package DTOCreate;
 
 import DTO.PresentInstructionDTO;
 import DTO.PresentProgramDTO;
+import core.logic.instruction.IndexedInstruction;
 import core.logic.program.SProgram;
+import util.Util;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,10 +13,11 @@ import java.util.stream.Collectors;
 public class PresentProgramDTOCreator {
 
     public static PresentProgramDTO create(SProgram program){
+        List<IndexedInstruction> indexedInstructions = Util.makeIndexedInstructionList(program);
         List<PresentInstructionDTO> presentInstructionDTOList =
-                program.getInstructionList().stream()
-                        .map(PresentInstructionDTOCreator::create)
-                        .collect(Collectors.toList());
+                indexedInstructions.stream()
+                .map(PresentInstructionDTOCreator::create)
+                .collect(Collectors.toList());
 
 
         return new PresentProgramDTO(

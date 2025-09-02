@@ -3,17 +3,17 @@ package core.logic.instruction;
 
 public enum InstructionData {
 
-    INCREASE("INCREASE", 1, "B"),
-    DECREASE("DECREASE", 1, "B"),
-    NO_OP("NO_OP", 0, "B"),
-    JUMP_NOT_ZERO("JNZ", 3, "B"),
-    ZERO_VARIABLE("ZERO_VARIABLE", 1, "S"),
-    GOTO_LABEL("GOTO_LABEL", 1, "S"),
-    ASSIGNMENT("ASSIGNMENT", 4, "S"),
-    CONSTANT_ASSIGNMENT("CONSTANT_ASSIGNMENT", 2, "S"),
-    JUMP_ZERO("JUMP_ZERO", 2, "S"),
-    JUMP_EQUAL_CONSTANT("JUMP_EQUAL_CONSTANT", 2, "S"),
-    JUMP_EQUAL_VARIABLE("JUMP_EQUAL_VARIABLE", 2, "S");
+    INCREASE("INCREASE", 1, "B", 0),
+    DECREASE("DECREASE", 1, "B", 0),
+    NO_OP("NO_OP", 0, "B", 0),
+    JUMP_NOT_ZERO("JNZ", 3, "B", 0),
+    ZERO_VARIABLE("ZERO_VARIABLE", 1, "S", 1),
+    GOTO_LABEL("GOTO_LABEL", 1, "S", 1),
+    ASSIGNMENT("ASSIGNMENT", 4, "S", 2),
+    CONSTANT_ASSIGNMENT("CONSTANT_ASSIGNMENT", 2, "S", 2),
+    JUMP_ZERO("JUMP_ZERO", 2, "S", 2),
+    JUMP_EQUAL_CONSTANT("JUMP_EQUAL_CONSTANT", 2, "S", 3),
+    JUMP_EQUAL_VARIABLE("JUMP_EQUAL_VARIABLE", 2, "S", 3);
 
 
 
@@ -21,11 +21,13 @@ public enum InstructionData {
     private final String name;
     private final int cycles;
     private final String instructionType;
+    private final int degree;
 
-    InstructionData(String name, int cycles, String instructionType) {
+    InstructionData(String name, int cycles, String instructionType, int degree) {
         this.name = name;
         this.cycles = cycles;
         this.instructionType = instructionType;
+        this.degree = degree;
     }
 
     public String getName() {
@@ -39,4 +41,6 @@ public enum InstructionData {
     public String getInstructionType() {
         return instructionType;
     }
+
+    public int getDegree() { return degree; }
 }

@@ -11,6 +11,7 @@ public interface SProgram {
 
     String getName();
     void addInstruction(SInstruction instruction);
+    void addInstructions(List<SInstruction> instructions);
     List<SInstruction> getInstructionList();
     int getRunNumber();
     void incrementRunNumber();

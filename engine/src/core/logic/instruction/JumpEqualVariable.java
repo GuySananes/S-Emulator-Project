@@ -30,6 +30,10 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
         this.targetLabel = label;
     }
 
+    public Label getTargetLabel() {
+        return targetLabel;
+    }
+
     @Override
     public Label execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());

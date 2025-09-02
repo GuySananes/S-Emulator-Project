@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.*;
 public class SProgramImpl implements SProgram{
 
-    private int index = 1;
+    private int index = 0;
     private final String name;
     private final List<SInstruction> instructionList;
     private int runNumber = 0;
@@ -55,7 +55,6 @@ public class SProgramImpl implements SProgram{
         return labels;
     }
 
-
     @Override
     public String getName() {
         return name;
@@ -67,15 +66,26 @@ public class SProgramImpl implements SProgram{
             throw new IllegalArgumentException("Instruction cannot be null when adding to program");
         }
 
-        if(!(instruction instanceof IndexedInstruction)){
-            instruction = new IndexedInstruction(index++, instruction);
+        SInstruction toAdd;
+
+        if (instruction instanceof IndexedInstruction ii) {
+            toAdd = new IndexedInstruction(index++, ii.getInstruction());
+        } else {
+            toAdd = new IndexedInstruction(index++, instruction);
         }
 
-        else {
-            ((IndexedInstruction)instruction).setIndex(index++);
+        instructionList.add(toAdd);
+    }
+
+    @Override
+    public void addInstructions(List<SInstruction> instructions) {
+        if(instructions == null){
+            throw new IllegalArgumentException("Instructions List cannot be null when adding to program");
         }
 
-        instructionList.add(instruction);
+        for(SInstruction instruction : instructions){
+            addInstruction(instruction);
+        }
     }
 
     @Override
@@ -100,27 +110,33 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public int calculateMaxDegree() {
-        // traverse all commands and find the maximum degree
-        return 0;
+        //every instruction has a degree, return the max degree of all instructions
+        int maxDegree = 0;
+        for (SInstruction instruction : instructionList) {
+            int degree = instruction.getDegree();
+            if (degree > maxDegree) {
+                maxDegree = degree;
+            }
+        }
+
+        return maxDegree;
     }
 
     @Override
     public int calculateCycles() {
-        // traverse all commands and calculate cycles
-        return 0;
+        int totalCycles = 0;
+        for (SInstruction instruction : instructionList) {
+            totalCycles += instruction.getCycles();
+        }
+
+        return totalCycles;
     }
 
     @Override
     public String getRepresentation() {
         StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < instructionList.size(); i++) {
-            SInstruction instruction = instructionList.get(i);
-            sb.append("#")
-                    .append(i + 1)
-                    .append(" ")
-                    .append(instruction.getRepresentation())
-                    .append(System.lineSeparator());
+        for (SInstruction instruction : instructionList) {
+            sb.append(instruction.getRepresentation()).append(System.lineSeparator());
         }
 
         return sb.toString();

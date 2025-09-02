@@ -6,24 +6,23 @@ import core.logic.instruction.SInstruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
-import java.util.List;
 import java.util.Set;
 
 public class RootedInstruction implements SInstruction {
     private final SInstruction instruction;
-    private final SInstruction rootInstructions;
+    private final SInstruction rootInstruction;
 
-    public RootedInstruction(SInstruction instruction, SInstruction rootInstructions) {
+    public RootedInstruction(SInstruction instruction, SInstruction rootInstruction) {
         this.instruction = instruction;
-        this.rootInstructions = rootInstructions;
+        this.rootInstruction = rootInstruction;
     }
 
     public SInstruction getInstruction() {
         return instruction;
     }
 
-    public SInstruction getRootInstructions() {
-        return rootInstructions;
+    public SInstruction getRootInstruction() {
+        return rootInstruction;
     }
 
     @Override
@@ -48,7 +47,7 @@ public class RootedInstruction implements SInstruction {
 
     @Override
     public String getRepresentation() {
-        return instruction.getRepresentation() + " >>> " + rootInstructions.getRepresentation();
+        return instruction.getRepresentation() + " >>> " + rootInstruction.getRepresentation();
     }
 
     @Override
@@ -79,6 +78,11 @@ public class RootedInstruction implements SInstruction {
     @Override
     public Set<Label> getLabels() {
         return instruction.getLabels();
+    }
+
+    @Override
+    public int getDegree() {
+        return instruction.getDegree();
     }
 
 

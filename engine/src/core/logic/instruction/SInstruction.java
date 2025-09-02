@@ -24,5 +24,5 @@ public interface SInstruction {
     Set<Label> getLabels();
     String getRepresentation();
     InstructionData getInstructionData();
-
+    int getDegree();
 }

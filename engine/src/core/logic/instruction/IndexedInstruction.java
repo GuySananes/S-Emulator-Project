@@ -7,7 +7,7 @@ import core.logic.variable.Variable;
 import java.util.Set;
 
 public class IndexedInstruction implements SInstruction{
-    private int index;
+    private final int index;
     private final SInstruction instruction;
 
     public IndexedInstruction(int index, SInstruction instruction) {
@@ -15,20 +15,17 @@ public class IndexedInstruction implements SInstruction{
         this.instruction = instruction;
     }
 
-    public int getIndex() {
-        return index;
-    }
-
     public SInstruction getInstruction() {
         return instruction;
     }
 
-    public void setIndex(int index){
-        if(index < 0){
-            throw new IllegalArgumentException("Index cannot be negative");
-        }
+    public int getIndex() {
+        return index;
+    }
 
-        this.index = index;
+    @Override
+    public int getDegree() {
+        return instruction.getDegree();
     }
 
     @Override
@@ -77,15 +74,13 @@ public class IndexedInstruction implements SInstruction{
     }
 
     @Override
-    public String getRepresentation() {
-        return String.format("%d: %s", index, instruction.getRepresentation());
-    }
-
-    @Override
     public InstructionData getInstructionData() {
         return instruction.getInstructionData();
     }
 
-
+    @Override
+    public String getRepresentation() {
+        return String.format("%d: %s", index, instruction.getRepresentation());
+    }
 }
 

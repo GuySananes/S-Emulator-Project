@@ -46,6 +46,11 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
+    public int getDegree() {
+        return instructionData.getDegree();
+    }
+
+    @Override
     public InstructionData getInstructionData() {
         return instructionData;
     }

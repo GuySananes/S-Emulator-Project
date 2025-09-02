@@ -3,27 +3,37 @@ package util;
 import core.logic.instruction.IndexedInstruction;
 import core.logic.instruction.SInstruction;
 import core.logic.program.SProgram;
+import core.logic.program.SProgramImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
 
-    public static List<IndexedInstruction> makeIndexedInstructionList(SProgram program){
-        List<SInstruction> instructions = program.getInstructionList();
+    public static List<IndexedInstruction> makeIndexedInstructionList(List<SInstruction> instructions) {
         List<IndexedInstruction> indexedInstructions = new ArrayList<>(instructions.size());
 
         for(int i = 0; i < instructions.size(); i++) {
-            if(instructions.get(i) instanceof IndexedInstruction) {
-                indexedInstructions.add(new IndexedInstruction
-                        (i + 1, ((IndexedInstruction)instructions.get(i)).getInstruction()));
-            }
+            SInstruction current = instructions.get(i);
 
-            else {
-                indexedInstructions.add(new IndexedInstruction(i + 1, instructions.get(i)));
+            if(current instanceof IndexedInstruction ii) {
+                indexedInstructions.add(new IndexedInstruction(i, ii.getInstruction()));
+            } else {
+                indexedInstructions.add(new IndexedInstruction(i, instructions.get(i)));
             }
         }
 
         return indexedInstructions;
+    }
+
+    public static List<IndexedInstruction> makeIndexedInstructionList(SProgram program) {
+        return makeIndexedInstructionList(program.getInstructionList());
+    }
+
+    public static SProgram makeIndexedProgram(SProgram program) {
+        List<IndexedInstruction> indexedInstructions = makeIndexedInstructionList(program);
+        SProgram indexedProgram = new SProgramImpl(program.getName() + "_indexed");
+        indexedProgram.addInstructions(new ArrayList<>(indexedInstructions));
+        return indexedProgram;
     }
 }

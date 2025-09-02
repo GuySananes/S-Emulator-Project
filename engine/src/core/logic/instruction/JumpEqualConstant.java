@@ -27,6 +27,10 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
         this(variable, 0, label);
     }
 
+    public long getConstantValue() {
+        return constantValue;
+    }
+
     @Override
     public Label execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
