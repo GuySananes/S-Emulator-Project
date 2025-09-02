@@ -1,3 +1,4 @@
+
 package jaxb;
 
 import jaxb.engine.src.jaxb.schema.generated.*;
@@ -54,4 +55,3 @@ public class JAXBMain {
         }
     }
 }
-
