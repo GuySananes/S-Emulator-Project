@@ -1,7 +1,5 @@
 package statistic;
 
-import core.logic.engine.Engine;
-import core.logic.engine.EngineImpl;
 import core.logic.program.SProgram;
 
 import java.util.*;

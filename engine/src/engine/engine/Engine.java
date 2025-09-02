@@ -1,8 +1,8 @@
-package core.logic.engine;
+package engine.engine;
 
 
 import DTO.PresentProgramDTO;
-import DTO.RunProgramDTO;
+import runProgram.RunProgramDTO;
 import exception.NoProgramException;
 import statistic.SingleRunStatistic;
 

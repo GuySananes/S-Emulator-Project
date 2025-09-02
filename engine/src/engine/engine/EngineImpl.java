@@ -1,7 +1,7 @@
-package core.logic.engine;
+package engine.engine;
 
 import DTO.PresentProgramDTO;
-import DTO.RunProgramDTO;
+import runProgram.RunProgramDTO;
 import DTOCreate.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;

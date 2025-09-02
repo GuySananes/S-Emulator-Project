@@ -10,7 +10,7 @@ public class PresentInstructionDTO {
     private final Variable variable;
     private final Label label;
     private final int index;
-    private final String representation
+    private final String representation;
 
     public PresentInstructionDTO(InstructionData instructionData, Variable variable, Label label, String representation, int index) {
         this.instructionData = instructionData;

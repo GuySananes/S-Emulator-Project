@@ -1,4 +1,4 @@
-package DTO;
+package runProgram;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,6 @@ import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
 import exception.ProgramNotExecutedYetException;
 import expansion.Expansion;
-import statistic.SingleRunStatistic;
 import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManagerImpl;
 
