@@ -14,5 +14,7 @@ public interface SingleRunStatistic {
 
     long getCycles();
 
+    String getRepresentation();
+
 
 }

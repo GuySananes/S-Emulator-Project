@@ -1,14 +1,14 @@
-package engine.engine;
+package engine;
 
-import DTO.PresentProgramDTO;
-import runProgram.RunProgramDTO;
-import DTOCreate.PresentProgramDTOCreator;
+import core.logic.program.SProgramImpl;
+import expand.ExpandDTO;
+import present.PresentProgramDTO;
+import run.RunProgramDTO;
+import present.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
-import statistic.SingleRunStatistic;
+import statistic.ProgramStatisticDTO;
 import statistic.StatisticManagerImpl;
-
-import java.util.List;
 
 public class EngineImpl implements Engine {
 
@@ -28,6 +28,9 @@ public class EngineImpl implements Engine {
     @Override
     public void loadProgram(String fullPath) {
 
+
+        program = new SProgramImpl("name from path");
+
     }
 
 
@@ -36,12 +39,17 @@ public class EngineImpl implements Engine {
         if (program == null) {
             throw new NoProgramException();
         }
+
         return PresentProgramDTOCreator.create(program);
     }
 
     @Override
-    public void expandProgram() {
+    public ExpandDTO expandProgram() throws NoProgramException {
+        if (program == null) {
+            throw new NoProgramException();
+        }
 
+        return new ExpandDTO(program);
     }
 
     @Override
@@ -51,16 +59,15 @@ public class EngineImpl implements Engine {
         }
 
         return new RunProgramDTO(program);
-
     }
 
     @Override
-    public List<SingleRunStatistic> presentProgramStats() throws NoProgramException {
+    public ProgramStatisticDTO presentProgramStats() throws NoProgramException {
         if (program == null) {
             throw new NoProgramException();
         }
 
-        return StatisticManagerImpl.getInstance().getStatisticsForProgramCopy(program);
+        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getStatisticMap(), program);
 
 
     }

@@ -46,6 +46,16 @@ public class SingleRunStatisticImpl implements SingleRunStatistic {
         return cycles;
     }
 
+    @Override
+    public String getRepresentation() {
+        return "Run number: " + runNumber + "\n" +
+                "Run degree: " + runDegree + "\n" +
+                "Input: " + input + "\n" +
+                "Result: " + result + "\n" +
+                "Cycles: " + cycles + "\n";
+    }
+
+
 
 
 

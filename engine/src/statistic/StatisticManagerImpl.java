@@ -15,20 +15,17 @@ public class StatisticManagerImpl implements StatisticManager{
     }
 
 
+    private final Map<SProgram, List<SingleRunStatistic>> statisticMap = new HashMap<>();
 
-
-    private final Map<SProgram, List<SingleRunStatistic>> statisticsMap = new HashMap<>();
+    @Override
+    public Map<SProgram, List<SingleRunStatistic>> getStatisticMap() {
+        return statisticMap;
+    }
 
     @Override
     public void addRunStatistic(SProgram program, SingleRunStatistic statistic) {
-        statisticsMap
+        statisticMap
                 .computeIfAbsent(program, p -> new ArrayList<>())
                 .add(statistic);
     }
-
-    @Override
-    public List<SingleRunStatistic> getStatisticsForProgramCopy(SProgram program) {
-        return new ArrayList<>(statisticsMap.getOrDefault(program, Collections.emptyList()));
-    }
-
 }

@@ -1,6 +1,5 @@
-package DTOCreate;
+package present;
 
-import DTO.*;
 import core.logic.instruction.*;
 
 public class PresentInstructionDTOCreator {

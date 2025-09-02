@@ -19,7 +19,7 @@ public class Util {
             if(current instanceof IndexedInstruction ii) {
                 indexedInstructions.add(new IndexedInstruction(i, ii.getInstruction()));
             } else {
-                indexedInstructions.add(new IndexedInstruction(i, instructions.get(i)));
+                indexedInstructions.add(new IndexedInstruction(i, current));
             }
         }
 

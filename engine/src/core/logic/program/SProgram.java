@@ -20,12 +20,10 @@ public interface SProgram {
     Set<Label> getOrderedLabels();
     Set<Variable> getInputVariables();
     Set<Variable> getInputVariablesCopy();
-
-
-    boolean validate();
     int calculateMaxDegree();
     int calculateCycles();
     String getRepresentation();
     SInstruction getInstructionByLabel(Label Label);
+    int getMinDegree();
 
 }

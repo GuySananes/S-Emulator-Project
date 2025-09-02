@@ -9,9 +9,7 @@ import core.logic.variable.Variable;
 import exception.NoProgramException;
 import exception.ProgramNotExecutedYetException;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ProgramExecutorImpl implements ProgramExecutor {
 

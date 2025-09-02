@@ -35,7 +35,8 @@ public class Expansion {
         return result;
     }
 
-    public static List<IndexedInstruction> expand(List<IndexedInstruction> indexedInstructions, ExpansionContext context) {
+    public static List<IndexedInstruction> expand
+            (List<IndexedInstruction> indexedInstructions, ExpansionContext context) {
         List<IndexedInstruction> expandedInstructions = new ArrayList<>(indexedInstructions.size());
 
         int index = 0;

@@ -1,7 +1,8 @@
-package runProgram;
+package run;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import core.logic.execution.ProgramExecutor;
@@ -11,15 +12,18 @@ import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
 import exception.ProgramNotExecutedYetException;
 import expansion.Expansion;
+import present.PresentProgramDTO;
+import present.PresentProgramDTOCreator;
 import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManagerImpl;
 
 public class RunProgramDTO {
 
     private final SProgram program;
+    private SProgram expandedProgram = null;
     private int degree;
     private List<Long> input = null;
-    private ProgramExecutor programExecutor;
+    private ProgramExecutor programExecutor = null;
 
 
 
@@ -34,9 +38,13 @@ public class RunProgramDTO {
         return program.calculateMaxDegree();
     }
 
+    public int getMinDegree(){
+        return program.getMinDegree();
+    }
+
     public void setDegree(int degree) throws DegreeOutOfRangeException {
         if(degree < 0 || degree > getMaxDegree()){
-            throw new DegreeOutOfRangeException(0, getMaxDegree());
+            throw new DegreeOutOfRangeException(getMinDegree() , getMaxDegree());
         }
         this.degree = degree;
 
@@ -55,18 +63,15 @@ public class RunProgramDTO {
     }
 
     public long runProgram(){
-        SProgram program;
-        if(degree > getMaxDegree()){
-            throw new IllegalStateException("Degree is out of range, cannot run program");
-        }
+        SProgram program = this.program;
         if(degree > 0){
-            program = Expansion.expand(this.program, degree);
-        } else {
-            program = this.program;
+            expandedProgram = Expansion.expand(this.program, degree);
+            program = expandedProgram;
         }
+
         programExecutor = new ProgramExecutorImpl(program);
         long result = programExecutor.run(input.toArray(new Long[0]));
-        program.incrementRunNumber();
+        this.program.incrementRunNumber();
         StatisticManagerImpl.getInstance().addRunStatistic(this.program,
                 new SingleRunStatisticImpl(this.program.getRunNumber(),
                 degree, input, result, program.calculateCycles()));
@@ -74,8 +79,11 @@ public class RunProgramDTO {
         return result;
     }
 
-    public Set<Variable> getOrderedVariablesCopy(){
-        return program.getOrderedVariablesCopy();
+    public Set<Variable> getOrderedVariablesCopy() throws ProgramNotExecutedYetException{
+        if(programExecutor == null){
+            throw new ProgramNotExecutedYetException();
+        }
+        return Objects.requireNonNullElse(expandedProgram, program).getOrderedVariablesCopy();
     }
 
     public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
@@ -85,8 +93,18 @@ public class RunProgramDTO {
         return programExecutor.getOrderedValuesCopy();
     }
 
-    public int getCycles() {
-        return program.calculateCycles();
+    public int getCycles() throws ProgramNotExecutedYetException {
+        if(programExecutor == null){
+            throw new ProgramNotExecutedYetException();
+        }
+        return Objects.requireNonNullElse(expandedProgram, program).calculateCycles();
+    }
+
+    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
+        if(programExecutor == null){
+            throw new ProgramNotExecutedYetException();
+        }
+        return PresentProgramDTOCreator.create(Objects.requireNonNullElse(expandedProgram, program));
     }
 
 

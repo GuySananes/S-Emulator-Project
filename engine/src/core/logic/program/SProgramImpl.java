@@ -19,6 +19,7 @@ public class SProgramImpl implements SProgram{
     private Set<Variable> orderedVariables = null;
     private Set<Variable> inputVariables = null;
     private Set<Label> orderedLabels = null;
+    private static final int MIN_DEGREE = 0;
 
     public SProgramImpl(String name) {
         this.name = name;
@@ -101,11 +102,6 @@ public class SProgramImpl implements SProgram{
     @Override
     public void incrementRunNumber() {
         runNumber++;
-    }
-
-    @Override
-    public boolean validate() {
-        return false;
     }
 
     @Override
@@ -201,5 +197,10 @@ public class SProgramImpl implements SProgram{
 
         throw new NoSuchElementException("No instruction found with label: " +
                 label.getRepresentation());
+    }
+
+    @Override
+    public int getMinDegree() {
+        return MIN_DEGREE;
     }
 }
