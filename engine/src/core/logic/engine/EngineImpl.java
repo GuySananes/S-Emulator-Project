@@ -1,7 +1,7 @@
-package engine;
+package core.logic.engine;
 
-import core.logic.program.SProgramImpl;
 import expand.ExpandDTO;
+import jaxb.JAXBLoader;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
 import present.PresentProgramDTOCreator;
@@ -28,8 +28,8 @@ public class EngineImpl implements Engine {
     @Override
     public void loadProgram(String fullPath) {
 
-
-        program = new SProgramImpl("name from path");
+        JAXBLoader loader = new JAXBLoader();
+        program = loader.load(fullPath);
 
     }
 

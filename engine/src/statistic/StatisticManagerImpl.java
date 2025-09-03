@@ -31,6 +31,10 @@ public class StatisticManagerImpl implements StatisticManager{
     }
 
     @Override
+    public Map<SProgram, List<SingleRunStatistic>> getStatisticMap() {
+        return Map.of();
+    }
+
     public List<SingleRunStatistic> getStatisticsForProgramCopy(SProgram program) {
         if (program == null) {
             return new ArrayList<>();

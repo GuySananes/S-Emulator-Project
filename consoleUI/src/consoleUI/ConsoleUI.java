@@ -1,10 +1,9 @@
 package consoleUI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import core.logic.variable.Variable;
-import engine.Engine;
-import engine.EngineImpl;
+import core.logic.engine.Engine;
+import core.logic.engine.EngineImpl;
 import expand.ExpandDTO;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;

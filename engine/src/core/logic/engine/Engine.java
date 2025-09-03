@@ -1,18 +1,17 @@
 package core.logic.engine;
 
 
-import DTO.PresentProgramDTO;
-import DTO.RunProgramDTO;
+import expand.ExpandDTO;
+import present.PresentProgramDTO;
+import run.RunProgramDTO;
 import exception.NoProgramException;
-import statistic.SingleRunStatistic;
-
-import java.util.List;
+import statistic.ProgramStatisticDTO;
 
 public interface Engine {
 
     void loadProgram(String fullPath);
     PresentProgramDTO presentProgram() throws NoProgramException;
-    void expandProgram();
+    ExpandDTO expandProgram() throws NoProgramException;
     RunProgramDTO runProgram() throws NoProgramException;
-    List<SingleRunStatistic> presentProgramStats() throws NoProgramException;
+    ProgramStatisticDTO presentProgramStats() throws NoProgramException;
 }
