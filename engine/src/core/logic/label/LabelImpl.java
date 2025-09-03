@@ -25,6 +25,13 @@ public class LabelImpl implements Label {
         // Normalize the label string to uppercase
         labelString = labelString.trim().toUpperCase();
 
+        // Special case for EXIT label
+        if ("EXIT".equals(labelString)) {
+            this.label = "EXIT";
+            this.number = -1; // Special number for EXIT label
+            return;
+        }
+
         // Check if the label starts with 'L'
         if (!labelString.startsWith("L")) {
             throw new IllegalArgumentException("Label must start with 'L' or 'l', got: " + labelString);

@@ -83,7 +83,8 @@ public class JAXBToEngineConverter {
                  jaxbInstruction.getSInstructionArguments().getSInstructionArgument()) {
 
                 if ("gotoLabel".equals(arg.getName()) || "JNZLabel".equals(arg.getName()) || 
-                    "JZLabel".equals(arg.getName()) || "jumpLabel".equals(arg.getName())) {
+                    "JZLabel".equals(arg.getName()) || "jumpLabel".equals(arg.getName()) ||
+                    "JEConstantLabel".equals(arg.getName()) || "JEVariableLabel".equals(arg.getName())) {
                     return arg.getValue();
                 }
             }
@@ -165,14 +166,8 @@ public class JAXBToEngineConverter {
         // Create a label if present
         Label label = null;
         if (jaxbInstruction.getSLabel() != null && !jaxbInstruction.getSLabel().isEmpty()) {
-            // Try to parse as a number, otherwise use a default
-            try {
-                int labelNumber = Integer.parseInt(jaxbInstruction.getSLabel());
-                label = new LabelImpl(labelNumber);
-            } catch (NumberFormatException e) {
-                // For named labels, create a default numbered label
-                label = new LabelImpl(0);
-            }
+            // Use the string constructor that handles 'L' prefix and special cases like "EXIT"
+            label = new LabelImpl(jaxbInstruction.getSLabel());
         }
 
         // Create instruction based on name
@@ -188,14 +183,13 @@ public class JAXBToEngineConverter {
                         : new ZeroVariableInstruction(variable);
 
             case "GOTO_LABEL":
-                return label != null ? new GotoLabel(label) : new GotoLabel(new LabelImpl(0));
+                return createGotoLabel(jaxbInstruction, label);
 
             case "JUMP_NOT_ZERO":
-                return label != null ? new JumpNotZeroInstruction(variable, label)
-                        : new JumpNotZeroInstruction(variable, new LabelImpl(0));
+                return createJumpNotZero(variable, jaxbInstruction, label);
 
             case "JUMP_ZERO":
-                return label != null ? new JumpZero(variable, label) : new JumpZero(variable, new LabelImpl(0));
+                return createJumpZero(variable, jaxbInstruction, label);
 
             case "ASSIGNMENT":
                 return createAssignmentInstruction(variable, jaxbInstruction, label);
@@ -275,10 +269,12 @@ public class JAXBToEngineConverter {
     private static SInstruction createJumpEqualConstant(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
-            String targetLabel = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEConstantLabel");
+            String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEConstantLabel");
             String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
-            if (targetLabel != null && constantValue != null) {
-                return new JumpEqualConstant(variable, Long.parseLong(constantValue), new LabelImpl(targetLabel));
+            if (targetLabelName != null && constantValue != null) {
+                Label targetLabel = new LabelImpl(targetLabelName);
+                return label != null ? new JumpEqualConstant(variable, Long.parseLong(constantValue), label, targetLabel)
+                                     : new JumpEqualConstant(variable, Long.parseLong(constantValue), targetLabel);
             }
         }
         throw new IllegalArgumentException("JumpEqualConstant instruction requires both JEConstantLabel and constantValue arguments");
@@ -287,12 +283,54 @@ public class JAXBToEngineConverter {
     private static SInstruction createJumpEqualVariable(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
-            String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "secondaryVariable");
-            if (secondaryVarName != null && label != null) {
-                return new JumpEqualVariable(variable, createVariable(secondaryVarName), label);
+            String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "variableName");
+            String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEVariableLabel");
+            if (secondaryVarName != null && targetLabelName != null) {
+                Variable secondaryVariable = createVariable(secondaryVarName);
+                Label targetLabel = new LabelImpl(targetLabelName);
+                return label != null ? new JumpEqualVariable(variable, secondaryVariable, targetLabel, label)
+                                     : new JumpEqualVariable(variable, secondaryVariable, targetLabel);
             }
         }
-        throw new IllegalArgumentException("JumpEqualVariable instruction requires both a label and a secondaryVariable argument");
+        throw new IllegalArgumentException("JumpEqualVariable instruction requires both variableName and JEVariableLabel arguments");
+    }
+
+    private static SInstruction createGotoLabel(
+            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "gotoLabel");
+            if (targetLabelName != null) {
+                Label targetLabel = new LabelImpl(targetLabelName);
+                return label != null ? new GotoLabel(label, targetLabel) : new GotoLabel(targetLabel);
+            }
+        }
+        throw new IllegalArgumentException("GOTO_LABEL instruction requires a gotoLabel argument");
+    }
+
+    private static SInstruction createJumpNotZero(Variable variable,
+            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JNZLabel");
+            if (targetLabelName != null) {
+                Label targetLabel = new LabelImpl(targetLabelName);
+                return label != null ? new JumpNotZeroInstruction(variable, label, targetLabel)
+                                     : new JumpNotZeroInstruction(variable, targetLabel);
+            }
+        }
+        throw new IllegalArgumentException("JUMP_NOT_ZERO instruction requires a JNZLabel argument");
+    }
+
+    private static SInstruction createJumpZero(Variable variable,
+            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JZLabel");
+            if (targetLabelName != null) {
+                Label targetLabel = new LabelImpl(targetLabelName);
+                return label != null ? new JumpZero(variable, label, targetLabel)
+                                     : new JumpZero(variable, targetLabel);
+            }
+        }
+        throw new IllegalArgumentException("JUMP_ZERO instruction requires a JZLabel argument");
     }
 
     private static String getArgumentValue(jaxb.engine.src.jaxb.schema.generated.SInstructionArguments arguments, String argumentName) {

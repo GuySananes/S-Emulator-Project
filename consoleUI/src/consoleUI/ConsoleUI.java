@@ -28,6 +28,7 @@ public class ConsoleUI {
             System.out.println("4. Run Program");
             System.out.println("5. Show Statistics");
             System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
             String choice = scanner.nextLine();
             switch (choice) {
                 case "1":

@@ -54,7 +54,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                 currentInstruction = currentInstructionIndex < instructions.size()
                         ? instructions.get(currentInstructionIndex)
                         : null;
-            } else if (nextLabel != FixedLabel.EXIT) {
+            } else if (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation())) {
                 currentInstruction = program.getInstructionByLabel(nextLabel);
                 if (currentInstruction == null) {
                     throw new RuntimeException("Invalid label reference: " + nextLabel);
@@ -63,8 +63,11 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                 if (currentInstructionIndex == -1) {
                     throw new RuntimeException("Instruction not found in program: " + currentInstruction);
                 }
+            } else {
+                // Either FixedLabel.EXIT or "EXIT" label - terminate the program
+                currentInstruction = null;
             }
-        } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
+        } while (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation()) && currentInstruction != null);
 
         // Ensure we have a result variable
         if (Variable.RESULT == null) {
