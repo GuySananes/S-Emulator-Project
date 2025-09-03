@@ -34,7 +34,6 @@ public class JAXBLoader {
                 throw new XMLUnmarshalException("File not found: " + xmlFilePath);
             }
 
-            System.out.println("Processing: " + xmlFilePath);
 
             // JAXB will automatically create the objects when unmarshalling
             JAXBContext context = JAXBContext.newInstance(SProgram.class);
@@ -47,9 +46,6 @@ public class JAXBLoader {
 
             // Convert JAXB objects to real engine objects
             engineProgram = JAXBToEngineConverter.convertJAXBToEngine(jaxbProgram);
-
-            System.out.println("Engine Program: " + engineProgram.getName());
-            System.out.println("Engine Instructions: " + engineProgram.getInstructionList().size());
 
         } catch (JAXBException e) {
             throw new XMLUnmarshalException("JAXB unmarshalling failed for file: " + xmlFilePath, e);

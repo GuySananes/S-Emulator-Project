@@ -33,10 +33,24 @@ public class ConsoleUI {
             String choice = scanner.nextLine();
             switch (choice) {
                 case "1":
-                    System.out.print("Enter the full path of the program to load: ");
-                    String path = scanner.nextLine();
-                    engine.loadProgram(path);
-                    System.out.println("Program loaded successfully.");
+                    boolean programLoaded = false;
+                    while (!programLoaded) {
+                        try {
+                            System.out.print("Enter the full path of the program to load: ");
+                            String path = scanner.nextLine();
+                            engine.loadProgram(path);
+                            System.out.println("Program loaded successfully.");
+                            programLoaded = true;
+
+                        } catch (Exception e) {
+                            System.out.println("Error loading program: " + e.getMessage());
+                            System.out.print("Would you like to try another path? (y/n): ");
+                            String retry = scanner.nextLine();
+                            if (!retry.toLowerCase().startsWith("y")) {
+                                break;
+                            }
+                        }
+                    }
                     break;
                 case "2":
                     try {
