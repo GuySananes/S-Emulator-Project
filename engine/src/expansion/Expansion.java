@@ -7,7 +7,6 @@ import core.logic.program.SProgramImpl;
 import util.Util;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Expansion {

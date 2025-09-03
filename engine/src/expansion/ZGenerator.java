@@ -1,7 +1,6 @@
 package expansion;
 
 
-import core.logic.label.LabelImpl;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableImpl;
@@ -11,7 +10,7 @@ import java.util.Set;
 
 public class ZGenerator {
     private int maxZ = -1;
-    private SProgram program;
+    private final SProgram program;
 
     public ZGenerator(SProgram program) {
         this.program = program;

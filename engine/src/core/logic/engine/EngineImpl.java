@@ -1,5 +1,6 @@
 package core.logic.engine;
 
+import core.logic.program.SProgramImpl;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
 import present.PresentProgramDTO;
@@ -17,9 +18,6 @@ public class EngineImpl implements Engine {
     private SProgram program = null;
 
     private EngineImpl() { }
-
-
-
 
     public static Engine getInstance() {
         return instance;

@@ -30,7 +30,7 @@ public class ExpandDTO {
         return program.calculateMaxDegree();
     }
 
-    public PresentProgramDTO expand(int degree) throws NoProgramException, DegreeOutOfRangeException {
+    public SProgram expand(int degree) throws NoProgramException, DegreeOutOfRangeException {
         if (program == null) {
             throw new NoProgramException();
         }
@@ -39,6 +39,6 @@ public class ExpandDTO {
             throw new DegreeOutOfRangeException(getMinDegree(), getMaxDegree());
         }
 
-        return PresentProgramDTOCreator.create(Expansion.expand(program, degree));
+        return Expansion.expand(program, degree);
     }
 }

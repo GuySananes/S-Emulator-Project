@@ -7,8 +7,6 @@ import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
 import core.logic.instruction.IndexedInstruction;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.*;
 
 public class SProgramImpl implements SProgram{

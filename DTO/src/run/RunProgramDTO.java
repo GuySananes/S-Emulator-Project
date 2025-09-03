@@ -100,11 +100,11 @@ public class RunProgramDTO {
         return Objects.requireNonNullElse(expandedProgram, program).calculateCycles();
     }
 
-    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
+    public SProgram getPresentProgramDTO()throws ProgramNotExecutedYetException {
         if(programExecutor == null){
             throw new ProgramNotExecutedYetException();
         }
-        return PresentProgramDTOCreator.create(Objects.requireNonNullElse(expandedProgram, program));
+        return Objects.requireNonNullElse(expandedProgram, program);
     }
 
 

@@ -9,5 +9,5 @@ public interface ProgramExecutor {
 
     long run(java.lang.Long... input);
 
-    public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException;
+    List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException;
 }

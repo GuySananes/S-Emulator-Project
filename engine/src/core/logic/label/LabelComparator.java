@@ -10,10 +10,10 @@ public class LabelComparator implements Comparator<Label> {
             return 0;
         }
 
-        if (l1 == FixedLabel.EXIT && l2 != FixedLabel.EXIT) {
+        if (l1 == FixedLabel.EXIT) {
             return 1;
         }
-        if (l2 == FixedLabel.EXIT && l1 != FixedLabel.EXIT) {
+        if (l2 == FixedLabel.EXIT) {
             return -1;
         }
 

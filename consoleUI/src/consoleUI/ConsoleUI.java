@@ -1,6 +1,7 @@
 package consoleUI;
 import java.util.*;
 
+import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
@@ -54,11 +55,14 @@ public class ConsoleUI {
                         System.out.print("Enter the degree of expansion ("
                                 + expandDTO.getMinDegree() + " - " + expandDTO.getMaxDegree() + "): ");
                         int degree = Integer.parseInt(scanner.nextLine());
-                        PresentProgramDTO expandedProgram = expandDTO.expand(degree);
+                        //changed here and in ExpandDTO, in expand method. it used to return PresentProgramDTO
+                        //now it returns SProgram
+                        SProgram expandedProgram = expandDTO.expand(degree);
                         System.out.println("Expanded Program Representation: \n" +
                                 expandedProgram.getRepresentation());
                     } catch (Exception e) {
                         System.out.println("Error: " + e.getMessage());
+                        e.printStackTrace();
                     }
                     break;
                 case "4":
@@ -78,7 +82,9 @@ public class ConsoleUI {
                                 .toList();
                         runDTO.setInputs(inputValues);
                         long result = runDTO.runProgram();
-                        PresentProgramDTO programPresent = runDTO.getPresentProgramDTO();
+                        //changed here and in runDTO, in getPresentProgramDTO method. it used to return PresentProgramDTO
+                        //now it returns SProgram
+                        SProgram programPresent = runDTO.getPresentProgramDTO();
                         System.out.println("Program Representation: \n" + programPresent.getRepresentation());
                         System.out.println("Result: " + result);
                         Set<Variable> programVariables = runDTO.getOrderedVariablesCopy();
