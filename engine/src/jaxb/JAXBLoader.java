@@ -9,23 +9,25 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import java.io.File;
 
-public class JAXBMain {
+public class JAXBLoader {
 
-    public static void main(String[] args) {
+    public core.logic.program.SProgram load(String path) {
         try {
-            unmarshalXMLFile("C:\\Users\\guysa\\Java course 25\\S-Emulator-Project\\engine\\src\\resources\\error-1.xml");
+            return unmarshalXMLFile(path);
         } catch (XMLUnmarshalException e) {
             System.err.println("Failed to process XML file: " + e.getMessage());
 
         }
+        return null;
     }
 
-    private static void unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException {
+    private core.logic.program.SProgram unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException {
         // Check if the path ends with ".xml"
         if (!xmlFilePath.endsWith(".xml")) {
             throw new XMLUnmarshalException("File must have .xml extension: " + xmlFilePath);
         }
-        
+
+        core.logic.program.SProgram engineProgram;
         try {
             File xmlFile = new File(xmlFilePath);
             if (!xmlFile.exists()) {
@@ -44,7 +46,7 @@ public class JAXBMain {
             System.out.println("JAXB Instructions: " + jaxbProgram.getSInstructions().getSInstruction().size());
 
             // Convert JAXB objects to real engine objects
-            core.logic.program.SProgram engineProgram = JAXBToEngineConverter.convertJAXBToEngine(jaxbProgram);
+            engineProgram = JAXBToEngineConverter.convertJAXBToEngine(jaxbProgram);
 
             System.out.println("Engine Program: " + engineProgram.getName());
             System.out.println("Engine Instructions: " + engineProgram.getInstructionList().size());
@@ -54,5 +56,7 @@ public class JAXBMain {
         } catch (Exception e) {
             throw new XMLUnmarshalException("Unexpected error processing file: " + xmlFilePath, e);
         }
+
+        return engineProgram;
     }
 }

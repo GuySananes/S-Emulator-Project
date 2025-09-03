@@ -10,6 +10,7 @@ import core.logic.instruction.IndexedInstruction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
+
 public class SProgramImpl implements SProgram{
 
     private int index = 0;

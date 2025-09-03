@@ -252,34 +252,54 @@ public class JAXBToEngineConverter {
 
     private static SInstruction createAssignmentInstruction(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
-        // Assignment instruction needs a secondary variable
-        // For now, create a default secondary variable
-        Variable secondaryVariable = new VariableImpl(VariableType.RESULT, 0);
-        return label != null ? new AssignmentInstruction(variable, secondaryVariable, label)
-                : new AssignmentInstruction(variable, secondaryVariable);
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "assignedVariable");
+            if (secondaryVarName != null) {
+                return new AssignmentInstruction(variable, createVariable(secondaryVarName), label);
+            }
+        }
+        throw new IllegalArgumentException("Assignment instruction requires an assignedVariable argument");
     }
 
     private static SInstruction createConstantAssignmentInstruction(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
-        return label != null ? new ConstantAssignmentInstruction(variable, label)
-                : new ConstantAssignmentInstruction(variable);
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
+            if (constantValue != null) {
+                return new ConstantAssignmentInstruction(Long.parseLong(constantValue), variable, label);
+            }
+        }
+        throw new IllegalArgumentException("Constant Assignment instruction requires a constantValue argument");
     }
 
     private static SInstruction createJumpEqualConstant(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
-        // Jump if equal constant needs a label
-        if (label != null) {
-            return new JumpEqualConstant(variable, label);
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String targetLabel = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEConstantLabel");
+            String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
+            if (targetLabel != null && constantValue != null) {
+                return new JumpEqualConstant(variable, Long.parseLong(constantValue), new LabelImpl(targetLabel));
+            }
         }
-        return new NoOpInstruction(variable); // Fallback
+        throw new IllegalArgumentException("JumpEqualConstant instruction requires both JEConstantLabel and constantValue arguments");
     }
 
     private static SInstruction createJumpEqualVariable(Variable variable,
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
-        // Jump if equal variable needs a label
-        if (label != null) {
-            return new JumpEqualVariable(variable, label);
+        if (jaxbInstruction.getSInstructionArguments() != null) {
+            String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "secondaryVariable");
+            if (secondaryVarName != null && label != null) {
+                return new JumpEqualVariable(variable, createVariable(secondaryVarName), label);
+            }
         }
-        return new NoOpInstruction(variable); // Fallback
+        throw new IllegalArgumentException("JumpEqualVariable instruction requires both a label and a secondaryVariable argument");
+    }
+
+    private static String getArgumentValue(jaxb.engine.src.jaxb.schema.generated.SInstructionArguments arguments, String argumentName) {
+        return arguments.getSInstructionArgument().stream()
+                .filter(arg -> argumentName.equals(arg.getName()))
+                .map(jaxb.engine.src.jaxb.schema.generated.SInstructionArgument::getValue)
+                .findFirst()
+                .orElse(null);
     }
 }
