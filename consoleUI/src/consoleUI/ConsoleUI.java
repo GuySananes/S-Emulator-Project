@@ -1,17 +1,17 @@
 package consoleUI;
-import java.util.*;
 
-import core.logic.program.SProgram;
-import core.logic.variable.Variable;
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
+import core.logic.program.SProgram;
+import core.logic.variable.Variable;
 import exception.ProgramValidationException;
 import exception.XMLUnmarshalException;
-import exception.NoProgramException;
 import expand.ExpandDTO;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
+
+import java.util.*;
 
 public class ConsoleUI {
     private final Engine engine;

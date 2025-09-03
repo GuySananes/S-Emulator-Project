@@ -96,7 +96,7 @@ public class JAXBToEngineConverter {
 
     /**
      * Checks if the given instruction type requires a valid label reference.
-     * 
+     *
      * @param instructionName The name of the instruction
      * @return true if the instruction references a label that must exist
      */
@@ -116,7 +116,7 @@ public class JAXBToEngineConverter {
     /**
      * Checks if the given label is a system-defined label that doesn't need
      * to be defined in the program.
-     * 
+     *
      * @param labelName The name of the label to check
      * @return true if it's a system label
      */
@@ -204,6 +204,9 @@ public class JAXBToEngineConverter {
             case "JUMP_EQUAL_VARIABLE":
                 return createJumpEqualVariable(variable, jaxbInstruction, label);
 
+            case "NEUTRAL":
+                return label != null ? new NoOpInstruction(variable, label) : new NoOpInstruction(variable);
+
             default:
                 System.err.println("Unknown instruction: " + instructionName);
                 return new NoOpInstruction(variable);
@@ -226,7 +229,7 @@ public class JAXBToEngineConverter {
                 int varNumber = Integer.parseInt(numberStr);
                 return new VariableImpl(VariableType.INPUT, varNumber);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid input variable format: " + variableName + 
+                throw new IllegalArgumentException("Invalid input variable format: " + variableName +
                                                  ". Expected format: x<number> (e.g., x1, x2)");
             }
         } else if (variableName.startsWith("z")) {
@@ -236,11 +239,11 @@ public class JAXBToEngineConverter {
                 int varNumber = Integer.parseInt(numberStr);
                 return new VariableImpl(VariableType.WORK, varNumber);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid work variable format: " + variableName + 
+                throw new IllegalArgumentException("Invalid work variable format: " + variableName +
                                                  ". Expected format: z<number> (e.g., z1, z2)");
             }
         } else {
-            throw new IllegalArgumentException("Unknown variable format: " + variableName + 
+            throw new IllegalArgumentException("Unknown variable format: " + variableName +
                                              ". Expected formats: y, x<number>, or z<number>");
         }
     }

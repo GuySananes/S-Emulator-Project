@@ -1,12 +1,13 @@
 package jaxb;
 
 
-import jaxb.engine.src.jaxb.schema.generated.*;
-import exception.XMLUnmarshalException;
 import exception.ProgramValidationException;
+import exception.XMLUnmarshalException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
+import jaxb.engine.src.jaxb.schema.generated.SProgram;
+
 import java.io.File;
 
 public class JAXBLoader {
