@@ -1,14 +1,21 @@
 package core.logic.engine;
 
+
 import DTO.PresentProgramDTO;
 import DTO.RunProgramDTO;
 import DTOcreate.PresentProgramDTOCreator;
+import core.logic.execution.ProgramExecutor;
+import core.logic.execution.ProgramExecutorImpl;
+import core.logic.instruction.SInstruction;
 import core.logic.program.SProgram;
 import core.logic.program.SProgramImpl;
 import exception.NoProgramException;
 import exception.XMLUnmarshalException;
+import expansion.Expandable;
+import expansion.ExpansionContext;
 import jaxb.JAXBLoader;
 import statistic.SingleRunStatistic;
+import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManagerImpl;
 
 import java.nio.file.Files;
@@ -49,16 +56,9 @@ public class EngineImpl implements Engine {
             throw new XMLUnmarshalException("File not found: " + s);
         }
 
-        // Minimal stub: create an SProgramImpl with the filename as a program name.
-        // Replace this with proper JAXB unmarshalling and conversion later.
-        String name = xmlPath.getFileName() == null ? "unnamed" : xmlPath.getFileName().toString();
-
         JAXBLoader jaxbLoader = new JAXBLoader();
         this.program = jaxbLoader.load(s);
-        // strip extension
-
     }
-
 
     @Override
     public PresentProgramDTO presentProgram() throws NoProgramException {
@@ -70,13 +70,52 @@ public class EngineImpl implements Engine {
 
     @Override
     public void expandProgram() {
-
+        try {
+            expandProgram(1); // Default expansion degree of 1
+        } catch (NoProgramException e) {
+            // This should not happen if program is null, but handle gracefully
+            throw new RuntimeException("No program loaded for expansion", e);
+        }
     }
 
     @Override
     public void expandProgram(int degree) throws NoProgramException {
         if (program == null) throw new NoProgramException();
-        // Minimal stub: no-op. Proper expansion logic should alter program or return a view.
+
+        if (degree < 0) {
+            throw new IllegalArgumentException("Expansion degree must be non-negative");
+        }
+
+        if (degree == 0) {
+            return; // No expansion needed
+        }
+
+        // Create expansion context
+        ExpansionContext expansionContext = new ExpansionContext(program);
+
+        // Create a new program to hold expanded instructions
+        SProgramImpl expandedProgram = new SProgramImpl(program.getName() + "_expanded_" + degree);
+
+        // Expand each instruction that implements Expandable
+        for (SInstruction instruction : program.getInstructionList()) {
+            if (instruction instanceof Expandable) {
+                List<SInstruction> expandedInstructions = ((Expandable) instruction).expand(expansionContext);
+                for (SInstruction expandedInstruction : expandedInstructions) {
+                    expandedProgram.addInstruction(expandedInstruction);
+                }
+            } else {
+                // Add non-expandable instructions as-is
+                expandedProgram.addInstruction(instruction);
+            }
+        }
+
+        // If degree > 1, recursively expand
+        if (degree > 1) {
+            this.program = expandedProgram;
+            expandProgram(degree - 1);
+        } else {
+            this.program = expandedProgram;
+        }
     }
 
     @Override
@@ -91,8 +130,29 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        return new RunProgramDTO(program);
+        // Create a program executor and run the program
+        ProgramExecutor executor = new ProgramExecutorImpl(program);
 
+        // Execute the program with empty input for now (this could be parameterized later)
+        long result = executor.run();
+
+        // Increment the run number for the program
+        program.incrementRunNumber();
+
+        // Create a statistic for this run with proper parameters
+        SingleRunStatistic runStatistic = new SingleRunStatisticImpl(
+            program.getRunNumber(),        // run number
+            program.calculateMaxDegree(),  // run degree
+            new java.util.ArrayList<>(),   // input (empty for now)
+            result,                        // result from execution
+            program.calculateCycles()      // cycles
+        );
+
+        // Record the statistic
+        StatisticManagerImpl.getInstance().addRunStatistic(program, runStatistic);
+
+        // Create run DTO with the executed program
+        return new RunProgramDTO(program);
     }
 
     @Override
@@ -102,7 +162,5 @@ public class EngineImpl implements Engine {
         }
 
         return StatisticManagerImpl.getInstance().getStatisticsForProgramCopy(program);
-
-
     }
 }

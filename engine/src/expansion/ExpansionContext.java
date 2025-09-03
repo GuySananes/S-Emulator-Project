@@ -7,7 +7,7 @@ import core.logic.variable.Variable;
 public class ExpansionContext {
     private ZGenerator zGenerator = null;
     private LabelGenerator labelGenerator = null;
-    private SProgram program;
+    private final SProgram program; // Made final as suggested
 
     public ExpansionContext(SProgram program) {
         this.program = program;
@@ -24,8 +24,6 @@ public class ExpansionContext {
         if (zGenerator == null) {
             zGenerator = new ZGenerator(program);
         }
-        return zGenerator.generateLabel();
+        return zGenerator.generateLabel(); // ZGenerator's method is actually named generateLabel()
     }
-
-
 }

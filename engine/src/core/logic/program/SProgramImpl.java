@@ -10,6 +10,7 @@ import core.logic.instruction.IndexedInstruction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
+
 public class SProgramImpl implements SProgram{
 
     private int index = 1;
@@ -30,7 +31,6 @@ public class SProgramImpl implements SProgram{
         for (SInstruction instruction : instructionList) {
             variables.addAll(instruction.getVariables());
         }
-
         return variables;
     }
 
@@ -42,7 +42,6 @@ public class SProgramImpl implements SProgram{
                 inputVariables.add(variable);
             }
         }
-
         return inputVariables;
     }
 
@@ -51,10 +50,8 @@ public class SProgramImpl implements SProgram{
         for (SInstruction instruction : instructionList) {
             labels.addAll(instruction.getLabels());
         }
-
         return labels;
     }
-
 
     @Override
     public String getName() {
@@ -69,18 +66,21 @@ public class SProgramImpl implements SProgram{
 
         if(!(instruction instanceof IndexedInstruction)){
             instruction = new IndexedInstruction(index++, instruction);
-        }
-
-        else {
+        } else {
             ((IndexedInstruction)instruction).setIndex(index++);
         }
 
         instructionList.add(instruction);
+        // Invalidate cached collections when instructions change
+        orderedVariables = null;
+        inputVariables = null;
+        orderedLabels = null;
     }
 
     @Override
     public List<SInstruction> getInstructionList() {
-        return instructionList;
+        // Return defensive copy to prevent external modification
+        return new ArrayList<>(instructionList);
     }
 
     @Override
@@ -95,25 +95,54 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public boolean validate() {
-        return false;
+        // Check if program has at least one instruction
+        if (instructionList.isEmpty()) {
+            return false;
+        }
+
+        // Check if all instructions are valid
+        for (SInstruction instruction : instructionList) {
+            if (instruction == null) {
+                return false;
+            }
+        }
+
+        // Check if all referenced labels exist
+        Set<Label> availableLabels = getOrderedLabels();
+        for (SInstruction instruction : instructionList) {
+            for (Label label : instruction.getLabels()) {
+                if (!availableLabels.contains(label)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override
     public int calculateMaxDegree() {
-        // traverse all commands and find the maximum degree
-        return 0;
+        int maxDegree = 0;
+        for (SInstruction instruction : instructionList) {
+            // Calculate degree based on instruction complexity
+            int instructionDegree = instruction.getVariables().size() + instruction.getLabels().size();
+            maxDegree = Math.max(maxDegree, instructionDegree);
+        }
+        return maxDegree;
     }
 
     @Override
     public int calculateCycles() {
-        // traverse all commands and calculate cycles
-        return 0;
+        int totalCycles = 0;
+        for (SInstruction instruction : instructionList) {
+            totalCycles += instruction.getCycles();
+        }
+        return totalCycles;
     }
 
     @Override
     public String getRepresentation() {
         StringBuilder sb = new StringBuilder();
-
         for (int i = 0; i < instructionList.size(); i++) {
             SInstruction instruction = instructionList.get(i);
             sb.append("#")
@@ -122,7 +151,6 @@ public class SProgramImpl implements SProgram{
                     .append(instruction.getRepresentation())
                     .append(System.lineSeparator());
         }
-
         return sb.toString();
     }
 
@@ -131,7 +159,6 @@ public class SProgramImpl implements SProgram{
         if(orderedVariables == null){
             orderedVariables = calculateOrderedVariables();
         }
-
         return orderedVariables;
     }
 
@@ -142,7 +169,6 @@ public class SProgramImpl implements SProgram{
         for (Variable variable : orderedVariables) {
             copy.add(variable.copy());
         }
-
         return copy;
     }
 
@@ -151,18 +177,16 @@ public class SProgramImpl implements SProgram{
         if(inputVariables == null){
             inputVariables = calculateOrderedInputVariables();
         }
-
         return inputVariables;
     }
 
     @Override
-    public Set<Variable> getInputVariablesCopy(){
+    public Set<Variable> getInputVariablesCopy() {
         Set<Variable> inputVariables = getInputVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : inputVariables) {
             copy.add(variable.copy());
         }
-
         return copy;
     }
 
@@ -171,19 +195,21 @@ public class SProgramImpl implements SProgram{
         if(orderedLabels == null){
             orderedLabels = calculateOrderedLabels();
         }
-
         return orderedLabels;
     }
 
     @Override
     public SInstruction getInstructionByLabel(Label label) {
+        if (label == null) {
+            return null;
+        }
+
         for (SInstruction instruction : instructionList) {
-            if (instruction.getLabel().equals(label)) {
+            if (instruction.getLabels().contains(label)) {
                 return instruction;
             }
         }
 
-        throw new NoSuchElementException("No instruction found with label: " +
-                label.getRepresentation());
+        return null;
     }
 }
