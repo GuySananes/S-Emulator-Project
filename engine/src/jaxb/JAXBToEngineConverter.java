@@ -10,6 +10,7 @@ import core.logic.variable.VariableImpl;
 import core.logic.variable.VariableType;
 import core.logic.label.Label;
 import core.logic.label.LabelImpl;
+import exception.ProgramValidationException;
 
 import java.util.List;
 
@@ -38,11 +39,11 @@ public class JAXBToEngineConverter {
      * 
      * @param jaxbInstruction The JAXB instruction to validate
      * @param definedLabels Set of all defined labels in the program
-     * @throws IllegalArgumentException if a referenced label is not found
+     * @throws ProgramValidationException if a referenced label is not found or missing
      */
     private static void validateInstructionLabelReferences(
             jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
-            java.util.Set<String> definedLabels) {
+            java.util.Set<String> definedLabels) throws ProgramValidationException {
 
         String instructionName = jaxbInstruction.getName();
         String referencedLabel = getReferencedLabel(jaxbInstruction);
@@ -50,7 +51,7 @@ public class JAXBToEngineConverter {
         // Instructions that use labels as jump targets
         if (isLabelReferencingInstruction(instructionName)) {
             if (referencedLabel == null || referencedLabel.isEmpty()) {
-                throw new IllegalArgumentException(
+                throw new ProgramValidationException(
                     "Instruction " + instructionName + " requires a label but none was provided"
                 );
             }
@@ -61,8 +62,8 @@ public class JAXBToEngineConverter {
             }
 
             if (!definedLabels.contains(referencedLabel)) {
-                throw new IllegalArgumentException(
-                    "Instruction " + instructionName + " references undefined label: " + referencedLabel + 
+                throw new ProgramValidationException(
+                    "Instruction " + instructionName + " references undefined label: " + referencedLabel +
                     ". Available labels: " + definedLabels
                 );
             }
@@ -123,9 +124,9 @@ public class JAXBToEngineConverter {
         return labelName.equals("EXIT");
     }
 
-    public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) {
+    public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
-            throw new IllegalArgumentException("JAXB program cannot be null");
+            throw new ProgramValidationException("JAXB program cannot be null");
         }
 
         // Create the real engine program
@@ -301,7 +302,7 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "gotoLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new GotoLabel(label, targetLabel) : new GotoLabel(targetLabel);
+                return label != null ? new GotoLabel(targetLabel, label) : new GotoLabel(targetLabel);
             }
         }
         throw new IllegalArgumentException("GOTO_LABEL instruction requires a gotoLabel argument");
@@ -313,7 +314,7 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JNZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new JumpNotZeroInstruction(variable, label, targetLabel)
+                return label != null ? new JumpNotZeroInstruction(variable, targetLabel, label)
                                      : new JumpNotZeroInstruction(variable, targetLabel);
             }
         }
@@ -326,18 +327,19 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new JumpZero(variable, label, targetLabel)
+                return label != null ? new JumpZero(variable, targetLabel, label)
                                      : new JumpZero(variable, targetLabel);
             }
         }
         throw new IllegalArgumentException("JUMP_ZERO instruction requires a JZLabel argument");
     }
 
-    private static String getArgumentValue(jaxb.engine.src.jaxb.schema.generated.SInstructionArguments arguments, String argumentName) {
-        return arguments.getSInstructionArgument().stream()
-                .filter(arg -> argumentName.equals(arg.getName()))
-                .map(jaxb.engine.src.jaxb.schema.generated.SInstructionArgument::getValue)
-                .findFirst()
-                .orElse(null);
+    private static String getArgumentValue(SInstructionArguments args, String name) {
+        for (SInstructionArgument arg : args.getSInstructionArgument()) {
+            if (name.equals(arg.getName())) {
+                return arg.getValue();
+            }
+        }
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 package core.logic.engine;
 
-import core.logic.program.SProgramImpl;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
 import present.PresentProgramDTO;
@@ -8,6 +7,8 @@ import run.RunProgramDTO;
 import present.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
+import exception.XMLUnmarshalException;
+import exception.ProgramValidationException;
 import statistic.ProgramStatisticDTO;
 import statistic.StatisticManagerImpl;
 
@@ -24,7 +25,7 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public void loadProgram(String fullPath) {
+    public void loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
 
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
