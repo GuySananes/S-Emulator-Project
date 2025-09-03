@@ -7,7 +7,7 @@ import core.logic.variable.Variable;
 public class ExpansionContext {
     private ZGenerator zGenerator = null;
     private LabelGenerator labelGenerator = null;
-    private SProgram program;
+    private final SProgram program;
 
     public ExpansionContext(SProgram program) {
         this.program = program;

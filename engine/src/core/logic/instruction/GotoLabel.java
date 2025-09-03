@@ -10,7 +10,6 @@ import expansion.RootedInstruction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class GotoLabel extends AbstractInstructionTwoLabels implements Expandable {
 

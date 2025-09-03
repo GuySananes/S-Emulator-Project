@@ -20,7 +20,7 @@ public class PresentProgramDTOCreator {
 
         return new PresentProgramDTO(
                 program.getName(),
-                program.getOrderedVariablesCopy(),
+                program.getInputVariablesCopy(),
                 program.getOrderedLabels(),
                 presentInstructionDTOList, program.getRepresentation());
 

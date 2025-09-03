@@ -3,10 +3,8 @@ package core.logic.instruction;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
-import core.logic.variable.VariableType;
 
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 public abstract class AbstractInstruction implements SInstruction {

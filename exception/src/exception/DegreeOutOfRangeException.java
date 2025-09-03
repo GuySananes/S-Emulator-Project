@@ -14,5 +14,9 @@ public class DegreeOutOfRangeException extends Exception {
     public int getMaxDegree() {
         return maxDegree;
     }
+
+    public int getMinDegree() {
+        return minDegree;
+    }
 }
 

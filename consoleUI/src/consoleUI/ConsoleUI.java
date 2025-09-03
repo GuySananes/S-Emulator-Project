@@ -1,6 +1,5 @@
 package consoleUI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import core.logic.variable.Variable;
 import engine.Engine;
@@ -59,6 +58,7 @@ public class ConsoleUI {
                                 expandedProgram.getRepresentation());
                     } catch (Exception e) {
                         System.out.println("Error: " + e.getMessage());
+                        e.printStackTrace();
                     }
                     break;
                 case "4":

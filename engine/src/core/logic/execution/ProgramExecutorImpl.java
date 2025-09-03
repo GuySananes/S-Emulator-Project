@@ -6,7 +6,6 @@ import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
-import exception.NoProgramException;
 import exception.ProgramNotExecutedYetException;
 
 import java.util.List;
