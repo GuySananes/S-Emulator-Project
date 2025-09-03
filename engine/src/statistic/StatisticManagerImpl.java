@@ -8,7 +8,7 @@ public class StatisticManagerImpl implements StatisticManager{
 
     private static final StatisticManager instance = new StatisticManagerImpl();
 
-    private StatisticManagerImpl() { }
+    private StatisticManagerImpl() {}
 
     public static StatisticManager getInstance() {
         return instance;
