@@ -70,4 +70,9 @@ public class LabelImpl implements Label {
     public int hashCode() {
         return Objects.hashCode(label);
     }
+
+    @Override
+    public String toString() {
+        return getRepresentation();
+    }
 }

@@ -52,10 +52,12 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
+
         List<SInstruction> expansion = new ArrayList<>((int) constantValue + 1);
-        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), this));
+        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), parentInstruction));
         for (int i = 0; i < constantValue; i++) {
-            expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), this));
+            expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), parentInstruction));
         }
 
         return expansion;

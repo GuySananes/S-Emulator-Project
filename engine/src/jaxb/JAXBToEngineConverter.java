@@ -305,7 +305,7 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "gotoLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new GotoLabel(targetLabel, label) : new GotoLabel(targetLabel);
+                return label != null ? new GotoLabel(label, targetLabel) : new GotoLabel(targetLabel);
             }
         }
         throw new IllegalArgumentException("GOTO_LABEL instruction requires a gotoLabel argument");
@@ -317,7 +317,7 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JNZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new JumpNotZeroInstruction(variable, targetLabel, label)
+                return label != null ? new JumpNotZeroInstruction(variable, label, targetLabel)
                                      : new JumpNotZeroInstruction(variable, targetLabel);
             }
         }
@@ -330,7 +330,7 @@ public class JAXBToEngineConverter {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
-                return label != null ? new JumpZero(variable, targetLabel, label)
+                return label != null ? new JumpZero(variable, label, targetLabel)
                                      : new JumpZero(variable, targetLabel);
             }
         }

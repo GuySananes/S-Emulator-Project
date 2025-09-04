@@ -27,10 +27,11 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     }
 
     @Override
-    public long run(Long... input) {
+    public ExecutionResult run(Long... input) {
         context = new ExecutionContextImpl(program);
         context.updateInputVariables(input);
         currentInstructionIndex = 0;
+        int cycles = -1;
 
         List<SInstruction> instructions = program.getInstructionList();
         if (instructions.isEmpty()) {
@@ -48,6 +49,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
             }
 
             nextLabel = currentInstruction.execute(context);
+            cycles += currentInstruction.getCycles();
 
             if (nextLabel == FixedLabel.EMPTY) {
                 currentInstructionIndex++;
@@ -74,7 +76,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
             throw new RuntimeException("Result variable not defined");
         }
 
-        return context.getVariableValue(Variable.RESULT);
+        return new ExecutionResult(context.getVariableValue(Variable.RESULT), cycles);
     }
 
     @Override

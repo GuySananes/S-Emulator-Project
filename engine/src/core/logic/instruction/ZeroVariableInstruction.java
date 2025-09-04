@@ -34,10 +34,11 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
         List<SInstruction> expansion = new ArrayList<>(2);
         Label label = (getLabel() == FixedLabel.EMPTY ? context.generateLabel() : getLabel());
-        expansion.add(new RootedInstruction(new DecreaseInstruction(getVariable(), label), this));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), label), this));
+        expansion.add(new RootedInstruction(new DecreaseInstruction(getVariable(), label), parentInstruction));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), label), parentInstruction));
 
         return expansion;
     }

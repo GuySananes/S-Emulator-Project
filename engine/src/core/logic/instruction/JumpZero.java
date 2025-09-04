@@ -38,14 +38,17 @@ public class JumpZero extends AbstractInstructionTwoLabels implements Expandable
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
         List<SInstruction> expansion = new ArrayList<>(3);
 
         Label L1 = context.generateLabel();
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), getLabel(), L1), this));
-        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), this));
-        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), this));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), getLabel(), L1), parentInstruction));
+        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), parentInstruction));
+        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), parentInstruction));
 
         return expansion;
 
     }
+
+
 }

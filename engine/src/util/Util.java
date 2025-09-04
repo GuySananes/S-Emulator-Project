@@ -17,9 +17,9 @@ public class Util {
             SInstruction current = instructions.get(i);
 
             if(current instanceof IndexedInstruction ii) {
-                indexedInstructions.add(new IndexedInstruction(i, ii.getInstruction()));
+                indexedInstructions.add(new IndexedInstruction(i + 1, ii.getInstruction()));
             } else {
-                indexedInstructions.add(new IndexedInstruction(i, current));
+                indexedInstructions.add(new IndexedInstruction(i + 1, current));
             }
         }
 

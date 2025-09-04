@@ -10,10 +10,13 @@ public class LabelComparator implements Comparator<Label> {
             return 0;
         }
 
-        if (l1 == FixedLabel.EXIT) {
+        boolean isL1Exit = "EXIT".equalsIgnoreCase(l1.getRepresentation());
+        boolean isL2Exit = "EXIT".equalsIgnoreCase(l2.getRepresentation());
+
+        if (isL1Exit && !isL2Exit) {
             return 1;
         }
-        if (l2 == FixedLabel.EXIT) {
+        if (!isL1Exit && isL2Exit) {
             return -1;
         }
 

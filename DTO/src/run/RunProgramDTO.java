@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import core.logic.execution.ExecutionResult;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SProgram;
@@ -21,7 +22,7 @@ public class RunProgramDTO {
 
     private final SProgram program;
     private SProgram expandedProgram = null;
-    private int degree;
+    private int degree = 0;
     private List<Long> input = null;
     private ProgramExecutor programExecutor = null;
 
@@ -62,7 +63,8 @@ public class RunProgramDTO {
         this.input = new ArrayList<>(input);
     }
 
-    public long runProgram(){
+    public ExecutionResult runProgram(){
+        ExecutionResult result;
         SProgram program = this.program;
         if(degree > 0){
             expandedProgram = Expansion.expand(this.program, degree);
@@ -70,11 +72,11 @@ public class RunProgramDTO {
         }
 
         programExecutor = new ProgramExecutorImpl(program);
-        long result = programExecutor.run(input.toArray(new Long[0]));
+        result = programExecutor.run(input.toArray(new Long[0]));
         this.program.incrementRunNumber();
         StatisticManagerImpl.getInstance().addRunStatistic(this.program,
                 new SingleRunStatisticImpl(this.program.getRunNumber(),
-                degree, input, result, program.calculateCycles()));
+                degree, input, result.getResult(), result.getCycles()));
 
         return result;
     }

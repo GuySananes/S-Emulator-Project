@@ -2,6 +2,7 @@ package consoleUI;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
+import core.logic.execution.ExecutionResult;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.ProgramValidationException;
@@ -25,6 +26,7 @@ public class ConsoleUI {
     public void start() {
         System.out.println("Welcome to the Program Engine Console UI!");
         while (true) {
+            System.out.println();
             System.out.println("Please choose an option:");
             System.out.println("1. Load Program");
             System.out.println("2. Present Program");
@@ -46,14 +48,20 @@ public class ConsoleUI {
                         System.out.println("Labels: " + programPresent.getLabels());
                         System.out.println("Representation: \n" + programPresent.getRepresentation());
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println(e.getMessage());
                     }
                     break;
                 case "3":
                     try {
                         ExpandDTO expandDTO = engine.expandProgram();
-                        System.out.print("Enter the degree of expansion ("
-                                + expandDTO.getMinDegree() + " - " + expandDTO.getMaxDegree() + "): ");
+                        if(expandDTO.getMaxDegree() == 0){
+                            System.out.println("The program cannot be expanded.");
+                            break;
+                        }
+                        else {
+                            System.out.print("Enter the degree of expansion ("
+                                    + expandDTO.getMinDegree() + " - " + expandDTO.getMaxDegree() + "): ");
+                        }
                         int degree = Integer.parseInt(scanner.nextLine());
                         //changed here and in ExpandDTO, in expand method. it used to return PresentProgramDTO
                         //now it returns SProgram
@@ -61,17 +69,22 @@ public class ConsoleUI {
                         System.out.println("Expanded Program Representation: \n" +
                                 expandedProgram.getRepresentation());
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
-                        e.printStackTrace();
+                        System.out.println(e.getMessage());
                     }
                     break;
                 case "4":
                     try {
                         RunProgramDTO runDTO = engine.runProgram();
-                        System.out.print("Enter the degree of program to run ("
-                                + runDTO.getMinDegree() + " - " + runDTO.getMaxDegree() + "): ");
-                        int degree = Integer.parseInt(scanner.nextLine());
-                        runDTO.setDegree(degree);
+                        if(runDTO.getMaxDegree() == 0){
+                            System.out.println("program cannot be expanded so will be executed as is.");
+                            runDTO.setDegree(0);
+                        }
+                        else {
+                            System.out.print("Enter the degree of program to run ("
+                                    + runDTO.getMinDegree() + " - " + runDTO.getMaxDegree() + "): ");
+                            int degree = Integer.parseInt(scanner.nextLine());
+                            runDTO.setDegree(degree);
+                        }
                         System.out.println("Input Variables: " + runDTO.getInputs());
                         System.out.print("Enter input values (comma or space separated): ");
                         String inputLine = scanner.nextLine();
@@ -81,12 +94,12 @@ public class ConsoleUI {
                                 .map(Long::parseLong)
                                 .toList();
                         runDTO.setInputs(inputValues);
-                        long result = runDTO.runProgram();
+                        ExecutionResult result = runDTO.runProgram();
                         //changed here and in runDTO, in getPresentProgramDTO method. it used to return PresentProgramDTO
                         //now it returns SProgram
                         SProgram programPresent = runDTO.getPresentProgramDTO();
                         System.out.println("Program Representation: \n" + programPresent.getRepresentation());
-                        System.out.println("Result: " + result);
+                        System.out.println("Result: " + result.getResult());
                         Set<Variable> programVariables = runDTO.getOrderedVariablesCopy();
                         List<Long> variableValues = runDTO.getOrderedValuesCopy();
                         Iterator<Variable> varIterator = programVariables.iterator();
@@ -95,9 +108,9 @@ public class ConsoleUI {
                             Long value = variableValues.get(i);
                             System.out.println(var + " = " + value);
                         }
-                        System.out.println("Execution Cycles: " + runDTO.getCycles());
+                        System.out.println("Execution Cycles: " + result.getCycles());
                     } catch (Exception e) {
-                        System.out.println("Error in UI in Run Program: " + e.getMessage());
+                        System.out.println(e.getMessage());
                     }
                     break;
                 case "5":
@@ -105,7 +118,7 @@ public class ConsoleUI {
                         ProgramStatisticDTO statsDTO = engine.presentProgramStats();
                         System.out.println(statsDTO.getRepresentation());
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println(e.getMessage());
                     }
                     break;
                 case "6":
@@ -130,12 +143,10 @@ public class ConsoleUI {
                 System.out.println("Program loaded successfully.");
                 programLoaded = true;
             } catch (XMLUnmarshalException e) {
-                System.err.println("XML Error: " + e.getMessage());
                 if (!askToRetry()) {
                     break;
                 }
             } catch (ProgramValidationException e) {
-                System.err.println("Program Validation Error: " + e.getMessage());
                 if (!askToRetry()) {
                     break;
                 }

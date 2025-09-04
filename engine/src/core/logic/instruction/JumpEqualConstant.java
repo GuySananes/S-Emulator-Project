@@ -48,18 +48,19 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
 
         List<SInstruction> expansion = new java.util.ArrayList<>(4 + (2 * (int) constantValue));
         Variable z1 = context.generateZ();
         Label L1 = context.generateLabel();
-        expansion.add(new RootedInstruction(new AssignmentInstruction(z1, getVariable(), getLabel()), this));
+        expansion.add(new RootedInstruction(new AssignmentInstruction(z1, getVariable(), getLabel()), parentInstruction));
         for (int i = 0; i < constantValue; i++) {
-            expansion.add(new RootedInstruction(new JumpZero(z1, L1), this));
-            expansion.add(new RootedInstruction(new DecreaseInstruction(z1), this));
+            expansion.add(new RootedInstruction(new JumpZero(z1, L1), parentInstruction));
+            expansion.add(new RootedInstruction(new DecreaseInstruction(z1), parentInstruction));
         }
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L1), this));
-        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), this));
-        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), this));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L1), parentInstruction));
+        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), parentInstruction));
+        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), parentInstruction));
 
         return expansion;
     }

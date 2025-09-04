@@ -18,6 +18,7 @@ public class JumpNotZeroInstruction extends AbstractInstructionTwoLabels{
 
     @Override
     public Label execute(ExecutionContext context) {
+
         long variableValue = context.getVariableValue(getVariable());
 
         if (variableValue != 0) {

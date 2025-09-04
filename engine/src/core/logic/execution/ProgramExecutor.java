@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ProgramExecutor {
 
-    long run(java.lang.Long... input);
+    ExecutionResult run(java.lang.Long... input);
 
     List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException;
 }

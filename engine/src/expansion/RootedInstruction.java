@@ -1,6 +1,7 @@
 package expansion;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.instruction.IndexedInstruction;
 import core.logic.instruction.InstructionData;
 import core.logic.instruction.SInstruction;
 import core.logic.label.Label;
@@ -10,9 +11,9 @@ import java.util.Set;
 
 public class RootedInstruction implements SInstruction {
     private final SInstruction instruction;
-    private final SInstruction rootInstruction;
+    private final IndexedInstruction rootInstruction;
 
-    public RootedInstruction(SInstruction instruction, SInstruction rootInstruction) {
+    public RootedInstruction(SInstruction instruction, IndexedInstruction rootInstruction) {
         this.instruction = instruction;
         this.rootInstruction = rootInstruction;
     }

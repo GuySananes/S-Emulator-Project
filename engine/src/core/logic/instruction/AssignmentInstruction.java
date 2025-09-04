@@ -40,21 +40,24 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
         Label L2 = context.generateLabel();
         Label L3 = context.generateLabel();
         Variable z1 = context.generateZ();
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
 
         List<SInstruction> expansion = new ArrayList<>(11);
 
-        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), this));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getSecondaryVariable(), L1), this));
-        expansion.add(new RootedInstruction(new GotoLabel(L3), this));
-        expansion.add(new RootedInstruction(new DecreaseInstruction(getSecondaryVariable(), L1), this));
-        expansion.add(new RootedInstruction(new IncreaseInstruction(z1), this));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getSecondaryVariable(), L1), this));
-        expansion.add(new RootedInstruction(new DecreaseInstruction(z1, L2), this));
-        expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), this));
-        expansion.add(new RootedInstruction(new IncreaseInstruction(getSecondaryVariable()), this));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L2), this));
-        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L3), this));
+        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), parentInstruction));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getSecondaryVariable(), L1), parentInstruction));
+        expansion.add(new RootedInstruction(new GotoLabel(L3), parentInstruction));
+        expansion.add(new RootedInstruction(new DecreaseInstruction(getSecondaryVariable(), L1), parentInstruction));
+        expansion.add(new RootedInstruction(new IncreaseInstruction(z1), parentInstruction));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getSecondaryVariable(), L1), parentInstruction));
+        expansion.add(new RootedInstruction(new DecreaseInstruction(z1, L2), parentInstruction));
+        expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), parentInstruction));
+        expansion.add(new RootedInstruction(new IncreaseInstruction(getSecondaryVariable()), parentInstruction));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L2), parentInstruction));
+        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L3), parentInstruction));
 
         return expansion;
     }
+
+
 }

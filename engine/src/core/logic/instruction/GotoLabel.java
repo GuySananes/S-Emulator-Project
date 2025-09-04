@@ -29,15 +29,17 @@ public class GotoLabel extends AbstractInstructionTwoLabels implements Expandabl
 
     @Override
     public String getCommandRepresentation() {
-        return "GOTO" + getTargetLabel().getRepresentation();
+        return "GOTO " + getTargetLabel().getRepresentation();
     }
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
+        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
+
         List<SInstruction> expansion = new ArrayList<>(2);
         Variable z = context.generateZ();
-        expansion.add(new RootedInstruction(new IncreaseInstruction(z, getLabel()), this));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z, getTargetLabel()), this));
+        expansion.add(new RootedInstruction(new IncreaseInstruction(z, getLabel()), parentInstruction));
+        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z, getTargetLabel()), parentInstruction));
 
         return expansion;
     }

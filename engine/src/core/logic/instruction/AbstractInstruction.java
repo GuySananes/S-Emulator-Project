@@ -5,6 +5,7 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class AbstractInstruction implements SInstruction {
@@ -27,8 +28,8 @@ public abstract class AbstractInstruction implements SInstruction {
 
     public AbstractInstruction(InstructionData instructionData, Variable variable, Label label) {
         this.instructionData = instructionData;
-        this.label = label != null ? label : FixedLabel.EMPTY;
         this.variable = variable;
+        this.label = label != null ? label : FixedLabel.EMPTY;
     }
 
 
@@ -108,4 +109,17 @@ public abstract class AbstractInstruction implements SInstruction {
 
 
     protected abstract String getCommandRepresentation();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractInstruction that = (AbstractInstruction) o;
+        return instructionData == that.instructionData && Objects.equals(label, that.label) && Objects.equals(variable, that.variable);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(instructionData, label, variable);
+    }
 }

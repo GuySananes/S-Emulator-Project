@@ -3,6 +3,7 @@ package core.logic.instruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
@@ -43,5 +44,19 @@ public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
         Set<Label> labels = super.getLabels();
         labels.add(targetLabel);
         return labels;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        AbstractInstructionTwoLabels that = (AbstractInstructionTwoLabels) o;
+        return Objects.equals(targetLabel, that.targetLabel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), targetLabel);
     }
 }

@@ -38,9 +38,13 @@ public class Expansion {
             (List<IndexedInstruction> indexedInstructions, ExpansionContext context) {
         List<IndexedInstruction> expandedInstructions = new ArrayList<>(indexedInstructions.size());
 
-        int index = 0;
+        int index = 1;
         for (IndexedInstruction indexedInstruction : indexedInstructions) {
+            context.setParentIndex(indexedInstruction.getIndex());
             SInstruction instruction = indexedInstruction.getInstruction();
+            if(instruction instanceof RootedInstruction ri) {
+                instruction = ri.getInstruction();
+            }
             if (instruction instanceof Expandable expandable) {
                 List<SInstruction> newInstructions = expandable.expand(context);
                 for (SInstruction newInstr : newInstructions) {
