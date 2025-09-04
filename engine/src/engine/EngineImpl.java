@@ -142,6 +142,6 @@ public class EngineImpl implements Engine {
 
         @Override
     public void loadProgram(String fullPath) {
-        program =
+
     }
 }
