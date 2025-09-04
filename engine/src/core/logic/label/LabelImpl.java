@@ -17,6 +17,40 @@ public class LabelImpl implements Label {
         this.label = "L" + number;
     }
 
+    public LabelImpl(String labelString) {
+        if (labelString == null || labelString.trim().isEmpty()) {
+            throw new IllegalArgumentException("Label string cannot be null or empty.");
+        }
+
+        // Normalize the label string to uppercase
+        labelString = labelString.trim().toUpperCase();
+
+        // Special case for EXIT label
+        if ("EXIT".equals(labelString)) {
+            this.label = "EXIT";
+            this.number = -1; // Special number for EXIT label
+            return;
+        }
+
+        // Check if the label starts with 'L'
+        if (!labelString.startsWith("L")) {
+            throw new IllegalArgumentException("Label must start with 'L' or 'l', got: " + labelString);
+        }
+
+        // Extract the number part
+        String numberStr = labelString.substring(1);
+        try {
+            this.number = Integer.parseInt(numberStr);
+            if (this.number <= 0) {
+                throw new IllegalArgumentException("Label number must be positive, got: " + this.number);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid label number format: " + numberStr);
+        }
+
+        this.label = "L" + this.number;
+    }
+
     public int getNumber() {
         return number;
     }

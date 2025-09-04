@@ -1,14 +1,17 @@
 package consoleUI;
-import java.util.*;
 
+import core.logic.engine.Engine;
+import core.logic.engine.EngineImpl;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
-import engine.Engine;
-import engine.EngineImpl;
+import exception.ProgramValidationException;
+import exception.XMLUnmarshalException;
 import expand.ExpandDTO;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
+
+import java.util.*;
 
 public class ConsoleUI {
     private final Engine engine;
@@ -29,13 +32,11 @@ public class ConsoleUI {
             System.out.println("4. Run Program");
             System.out.println("5. Show Statistics");
             System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
             String choice = scanner.nextLine();
             switch (choice) {
                 case "1":
-                    System.out.print("Enter the full path of the program to load: ");
-                    String path = scanner.nextLine();
-                    engine.loadProgram(path);
-                    System.out.println("Program loaded successfully.");
+                    loadProgramWithRetry();
                     break;
                 case "2":
                     try {
@@ -115,5 +116,36 @@ public class ConsoleUI {
                     System.out.println("Invalid choice. Please try again.");
             }
         }
+    }
+
+    private void loadProgramWithRetry() {
+        boolean programLoaded = false;
+
+        while (!programLoaded) {
+            System.out.print("Enter the full path of the program to load: ");
+            String path = scanner.nextLine();
+
+            try {
+                engine.loadProgram(path);
+                System.out.println("Program loaded successfully.");
+                programLoaded = true;
+            } catch (XMLUnmarshalException e) {
+                System.err.println("XML Error: " + e.getMessage());
+                if (!askToRetry()) {
+                    break;
+                }
+            } catch (ProgramValidationException e) {
+                System.err.println("Program Validation Error: " + e.getMessage());
+                if (!askToRetry()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private boolean askToRetry() {
+        System.out.print("The program was invalid. Would you like to try a different path? (y/n): ");
+        String retry = scanner.nextLine();
+        return retry.toLowerCase().startsWith("y");
     }
 }

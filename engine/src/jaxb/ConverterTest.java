@@ -1,6 +1,7 @@
 package jaxb;
 
 import core.logic.program.SProgram;
+import exception.ProgramValidationException;
 
 public class ConverterTest {
 
@@ -56,7 +57,7 @@ public class ConverterTest {
         try {
             JAXBToEngineConverter.convertJAXBToEngine(program);
             System.err.println("❌ Expected validation to fail for undefined label");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ProgramValidationException e) {
             System.out.println("✅ Validation correctly caught undefined label: " + e.getMessage());
         }
     }
@@ -81,7 +82,7 @@ public class ConverterTest {
         try {
             SProgram engineProgram = JAXBToEngineConverter.convertJAXBToEngine(program);
             System.out.println("✅ EXIT label validation passed successfully");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ProgramValidationException e) {
             System.err.println("❌ EXIT label should be allowed: " + e.getMessage());
         }
     }

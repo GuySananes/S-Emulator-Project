@@ -27,7 +27,7 @@ public abstract class AbstractInstruction implements SInstruction {
 
     public AbstractInstruction(InstructionData instructionData, Variable variable, Label label) {
         this.instructionData = instructionData;
-        this.label = label;
+        this.label = label != null ? label : FixedLabel.EMPTY;
         this.variable = variable;
     }
 

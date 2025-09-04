@@ -26,6 +26,4 @@ public class ExpansionContext {
         }
         return zGenerator.generateLabel();
     }
-
-
 }

@@ -8,6 +8,7 @@ import core.logic.variable.VariableType;
 import core.logic.instruction.IndexedInstruction;
 
 import java.util.*;
+
 public class SProgramImpl implements SProgram{
 
     private int index = 0;
@@ -187,6 +188,11 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SInstruction getInstructionByLabel(Label label) {
+        // Special case: if the label is EXIT, the program should end
+        if ("EXIT".equals(label.getRepresentation())) {
+            return null; // Returning null indicates program termination
+        }
+
         for (SInstruction instruction : instructionList) {
             if (instruction.getLabel().equals(label)) {
                 return instruction;
