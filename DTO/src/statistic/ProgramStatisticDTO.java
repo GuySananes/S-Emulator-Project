@@ -10,34 +10,29 @@ import java.util.Map;
 
 public class ProgramStatisticDTO {
 
-    private final SProgram program;
-    private final Map<SProgram, List<SingleRunStatistic>> statisticMap;
+    private final List<SingleRunStatistic> statisticList;
 
-    public ProgramStatisticDTO(Map<SProgram, List<SingleRunStatistic>> statisticMap, SProgram program) {
-        this.program = program;
-        this.statisticMap = statisticMap;
+    public ProgramStatisticDTO(List<SingleRunStatistic> statisticList) {
+        this.statisticList = statisticList;
     }
 
-    public List<SingleRunStatistic> getProgramStatisticCopy(SProgram program) throws ProgramNotExecutedYetException {
-        if (!statisticMap.containsKey(program)) {
+
+
+    public List<SingleRunStatistic> getProgramStatisticCopy() throws ProgramNotExecutedYetException {
+        if (statisticList == null || statisticList.isEmpty() ) {
             throw new ProgramNotExecutedYetException();
         }
 
-        return new ArrayList<>(statisticMap.getOrDefault(program, Collections.emptyList()));
+        return new ArrayList<>(statisticList);
     }
 
     public String getRepresentation() throws ProgramNotExecutedYetException {
-        if (!statisticMap.containsKey(program)) {
-            throw new ProgramNotExecutedYetException();
-        }
-
-        List<SingleRunStatistic> runs = statisticMap.getOrDefault(program, Collections.emptyList());
-        if (runs.isEmpty()) {
+        if (statisticList == null || statisticList.isEmpty() ) {
             throw new ProgramNotExecutedYetException();
         }
 
         StringBuilder sb = new StringBuilder();
-        for (SingleRunStatistic stat : runs) {
+        for (SingleRunStatistic stat : statisticList) {
             sb.append(stat.getRepresentation()).append("\n\n");
         }
 

@@ -6,8 +6,9 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 import expansion.Expandable;
 import expansion.ExpansionContext;
-import expansion.RootedInstruction;
+import expansion.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class JumpEqualConstant extends AbstractInstructionTwoLabels implements Expandable {
@@ -48,19 +49,27 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
-        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
-
-        List<SInstruction> expansion = new java.util.ArrayList<>(4 + (2 * (int) constantValue));
+        List<SInstruction> parentChain = createParentChain();
+        SInstruction toAdd;
+        List<SInstruction> expansion = new ArrayList<>(4 + (2 * (int) constantValue));
         Variable z1 = context.generateZ();
         Label L1 = context.generateLabel();
-        expansion.add(new RootedInstruction(new AssignmentInstruction(z1, getVariable(), getLabel()), parentInstruction));
+        toAdd = new AssignmentInstruction(z1, getVariable(), getLabel());
+        Utils.registerInstruction(toAdd, parentChain, expansion);
         for (int i = 0; i < constantValue; i++) {
-            expansion.add(new RootedInstruction(new JumpZero(z1, L1), parentInstruction));
-            expansion.add(new RootedInstruction(new DecreaseInstruction(z1), parentInstruction));
+            toAdd = new JumpZero(z1, L1);
+            Utils.registerInstruction(toAdd, parentChain, expansion);
+            toAdd = new DecreaseInstruction(z1);
+            Utils.registerInstruction(toAdd, parentChain, expansion);
+
         }
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(z1, L1), parentInstruction));
-        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), parentInstruction));
-        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), parentInstruction));
+
+        toAdd = new JumpNotZeroInstruction(z1, L1);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
+        toAdd = new GotoLabel(getTargetLabel());
+        Utils.registerInstruction(toAdd, parentChain, expansion);
+        toAdd = new NoOpInstruction(getVariable(), L1);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
     }

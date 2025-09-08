@@ -4,86 +4,81 @@ import core.logic.instruction.*;
 
 public class PresentInstructionDTOCreator {
 
-    public static PresentInstructionDTO create(IndexedInstruction indexedInstruction) {
-        InstructionData type = indexedInstruction.getInstructionData();
+    public static PresentInstructionDTO create(SInstruction instruction) {
+        InstructionData type = instruction.getInstructionData();
         switch (type) {
             case INCREASE, DECREASE, NO_OP, ZERO_VARIABLE -> {
                 return new PresentInstructionDTO(
-                        indexedInstruction.getInstructionData(),
-                        indexedInstruction.getVariableCopy(),
-                        indexedInstruction.getLabel(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex());
+                        instruction.getInstructionData(),
+                        instruction.getVariableCopy(),
+                        instruction.getLabel(),
+                        instruction.getIndex(),
+                        instruction.getRepresentation());
             }
 
             case JUMP_NOT_ZERO, GOTO_LABEL, JUMP_ZERO -> {
-                AbstractInstructionTwoLabels instructionTwoLabels = (AbstractInstructionTwoLabels)
-                        indexedInstruction.getInstruction();
+                AbstractInstructionTwoLabels instructionTwoLabels =
+                        (AbstractInstructionTwoLabels)instruction;
                 return new PresentInstructionTwoLabelsDTO(
                         instructionTwoLabels.getInstructionData(),
                         instructionTwoLabels.getVariableCopy(),
                         instructionTwoLabels.getLabel(),
                         instructionTwoLabels.getTargetLabel(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex()
-                );
+                        instructionTwoLabels.getIndex(),
+                        instructionTwoLabels.getRepresentation());
             }
 
             case ASSIGNMENT -> {
-                AbstractInstructionTwoVariables instructionTwoVariables = (AbstractInstructionTwoVariables)
-                        indexedInstruction.getInstruction();
+                AbstractInstructionTwoVariables instructionTwoVariables =
+                        (AbstractInstructionTwoVariables)instruction;
                 return new PresentInstructionTwoVariablesDTO(
                         instructionTwoVariables.getInstructionData(),
                         instructionTwoVariables.getVariableCopy(),
                         instructionTwoVariables.getSecondaryVariable(),
                         instructionTwoVariables.getLabel(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex()
-                );
+                        instructionTwoVariables.getIndex(),
+                        instructionTwoVariables.getRepresentation());
             }
 
             case CONSTANT_ASSIGNMENT -> {
-                ConstantAssignmentInstruction constantAssignmentInstruction = (ConstantAssignmentInstruction)
-                        indexedInstruction.getInstruction();
+                ConstantAssignmentInstruction constantAssignmentInstruction =
+                        (ConstantAssignmentInstruction)instruction;
                 return new PresentConstantAssignmentInstructionDTO(
                         constantAssignmentInstruction.getInstructionData(),
                         constantAssignmentInstruction.getVariableCopy(),
                         constantAssignmentInstruction.getLabel(),
                         constantAssignmentInstruction.getConstantValue(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex()
-                );
+                        constantAssignmentInstruction.getIndex(),
+                        constantAssignmentInstruction.getRepresentation());
             }
 
             case JUMP_EQUAL_CONSTANT -> {
-                JumpEqualConstant jumpEqualConstant = (JumpEqualConstant)
-                        indexedInstruction.getInstruction();
+                JumpEqualConstant jumpEqualConstant =
+                        (JumpEqualConstant)instruction;
                 return new PresentJumpEqualConstantInstructionDTO(
                         jumpEqualConstant.getInstructionData(),
                         jumpEqualConstant.getVariableCopy(),
                         jumpEqualConstant.getLabel(),
                         jumpEqualConstant.getTargetLabel(),
                         jumpEqualConstant.getConstantValue(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex()
-                );
+                        jumpEqualConstant.getIndex(),
+                        jumpEqualConstant.getRepresentation());
             }
 
             case JUMP_EQUAL_VARIABLE -> {
-                JumpEqualVariable jumpEqualVariable = (JumpEqualVariable)
-                        indexedInstruction.getInstruction();
+                JumpEqualVariable jumpEqualVariable =
+                        (JumpEqualVariable)instruction;
                 return new PresentJumpEqualVariableDTO(
                         jumpEqualVariable.getInstructionData(),
                         jumpEqualVariable.getVariableCopy(),
                         jumpEqualVariable.getSecondaryVariable(),
                         jumpEqualVariable.getLabel(),
                         jumpEqualVariable.getTargetLabel(),
-                        indexedInstruction.getRepresentation(),
-                        indexedInstruction.getIndex()
-                );
+                        jumpEqualVariable.getIndex(),
+                        jumpEqualVariable.getRepresentation());
             }
 
-            default -> throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected value: " + type);
+            default -> throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
         }
     }
 }

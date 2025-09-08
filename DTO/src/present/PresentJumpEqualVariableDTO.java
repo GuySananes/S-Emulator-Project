@@ -11,8 +11,8 @@ public class PresentJumpEqualVariableDTO extends PresentInstructionTwoVariablesD
     public PresentJumpEqualVariableDTO(
             InstructionData instructionData,
             Variable variable, Variable secondVariable,
-            Label label, Label secondLabel, String representation, int index) {
-        super(instructionData, variable, secondVariable, label, representation, index);
+            Label label, Label secondLabel, int index, String representation) {
+        super(instructionData, variable, secondVariable, label, index, representation);
         this.secondLabel = secondLabel;
     }
 

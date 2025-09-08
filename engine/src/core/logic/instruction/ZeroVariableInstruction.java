@@ -6,7 +6,7 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 import expansion.Expandable;
 import expansion.ExpansionContext;
-import expansion.RootedInstruction;
+import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,11 +34,14 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
-        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
+        List<SInstruction> parentChain = createParentChain();
+        SInstruction toAdd;
         List<SInstruction> expansion = new ArrayList<>(2);
         Label label = (getLabel() == FixedLabel.EMPTY ? context.generateLabel() : getLabel());
-        expansion.add(new RootedInstruction(new DecreaseInstruction(getVariable(), label), parentInstruction));
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), label), parentInstruction));
+        toAdd = new DecreaseInstruction(getVariable(), label);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
+        toAdd = new JumpNotZeroInstruction(getVariable(), label);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
     }

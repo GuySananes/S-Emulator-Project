@@ -6,7 +6,7 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 import expansion.Expandable;
 import expansion.ExpansionContext;
-import expansion.RootedInstruction;
+import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +52,16 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
-        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
+        List<SInstruction> parentChain = createParentChain();
+        SInstruction toAdd;
 
         List<SInstruction> expansion = new ArrayList<>((int) constantValue + 1);
-        expansion.add(new RootedInstruction(new ZeroVariableInstruction(getVariable(), getLabel()), parentInstruction));
+        toAdd = new ZeroVariableInstruction(getVariable(), getLabel());
+        Utils.registerInstruction(toAdd, parentChain, expansion);
         for (int i = 0; i < constantValue; i++) {
-            expansion.add(new RootedInstruction(new IncreaseInstruction(getVariable()), parentInstruction));
+            toAdd = new IncreaseInstruction(getVariable());
+            Utils.registerInstruction(toAdd, parentChain, expansion);
+
         }
 
         return expansion;

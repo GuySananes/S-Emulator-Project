@@ -6,7 +6,7 @@ public class DegreeOutOfRangeException extends Exception {
     private final int maxDegree;
 
     public DegreeOutOfRangeException(int minDegree, int maxDegree) {
-        super("Degree out of range. Valid range is from" + minDegree + "to " + maxDegree + ".");
+        super("Degree out of range. Valid range is from " + minDegree + " to " + maxDegree + ".");
         this.minDegree = minDegree;
         this.maxDegree = maxDegree;
     }

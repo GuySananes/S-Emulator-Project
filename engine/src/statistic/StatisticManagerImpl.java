@@ -14,12 +14,14 @@ public class StatisticManagerImpl implements StatisticManager{
         return instance;
     }
 
-
     private final Map<SProgram, List<SingleRunStatistic>> statisticMap = new HashMap<>();
 
+
+
     @Override
-    public Map<SProgram, List<SingleRunStatistic>> getStatisticMap() {
-        return statisticMap;
+    public List<SingleRunStatistic> getProgramStatistics(SProgram program) {
+        return Collections.unmodifiableList(
+                Objects.requireNonNullElse(statisticMap.get(program), List.of()));
     }
 
     @Override

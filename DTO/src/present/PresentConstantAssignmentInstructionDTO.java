@@ -9,8 +9,8 @@ public class PresentConstantAssignmentInstructionDTO extends PresentInstructionD
 
     public PresentConstantAssignmentInstructionDTO(
             InstructionData instructionData,
-            Variable variable, Label label, long constantValue, String representation, int index) {
-        super(instructionData, variable, label, representation, index);
+            Variable variable, Label label, long constantValue, int index, String representation) {
+        super(instructionData, variable, label, index, representation);
         this.constantValue = constantValue;
     }
 

@@ -6,7 +6,7 @@ import core.logic.label.Label;
 import core.logic.variable.Variable;
 import expansion.Expandable;
 import expansion.ExpansionContext;
-import expansion.RootedInstruction;
+import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,16 +38,18 @@ public class JumpZero extends AbstractInstructionTwoLabels implements Expandable
 
     @Override
     public List<SInstruction> expand(ExpansionContext context) {
-        IndexedInstruction parentInstruction = new IndexedInstruction(context.getParentIndex(), this);
+        List<SInstruction> parentChain = createParentChain();
+        SInstruction toAdd;
         List<SInstruction> expansion = new ArrayList<>(3);
-
         Label L1 = context.generateLabel();
-        expansion.add(new RootedInstruction(new JumpNotZeroInstruction(getVariable(), getLabel(), L1), parentInstruction));
-        expansion.add(new RootedInstruction(new GotoLabel(getTargetLabel()), parentInstruction));
-        expansion.add(new RootedInstruction(new NoOpInstruction(getVariable(), L1), parentInstruction));
+        toAdd = new JumpNotZeroInstruction(getVariable(), getLabel(), L1);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
+        toAdd = new GotoLabel(getTargetLabel());
+        Utils.registerInstruction(toAdd, parentChain, expansion);
+        toAdd = new NoOpInstruction(getVariable(), L1);
+        Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
-
     }
 
 

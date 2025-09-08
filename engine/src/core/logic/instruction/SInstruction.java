@@ -4,6 +4,7 @@ import core.logic.execution.ExecutionContext;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,6 +19,10 @@ public interface SInstruction {
     int getCycles();
     Label getLabel();
     Variable getVariable();
+    List<SInstruction> getParents();
+    int getIndex();
+    void setIndex(int index);
+    void setParents(List<SInstruction> parents);
     Variable getVariableCopy();
     Set<Variable> getVariables();
     Set<Variable> getVariablesCopy();

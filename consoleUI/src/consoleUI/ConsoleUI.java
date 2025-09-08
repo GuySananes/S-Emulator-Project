@@ -63,9 +63,7 @@ public class ConsoleUI {
                                     + expandDTO.getMinDegree() + " - " + expandDTO.getMaxDegree() + "): ");
                         }
                         int degree = Integer.parseInt(scanner.nextLine());
-                        //changed here and in ExpandDTO, in expand method. it used to return PresentProgramDTO
-                        //now it returns SProgram
-                        SProgram expandedProgram = expandDTO.expand(degree);
+                        PresentProgramDTO expandedProgram = expandDTO.expand(degree);
                         System.out.println("Expanded Program Representation: \n" +
                                 expandedProgram.getRepresentation());
                     } catch (Exception e) {
@@ -95,9 +93,7 @@ public class ConsoleUI {
                                 .toList();
                         runDTO.setInputs(inputValues);
                         ExecutionResult result = runDTO.runProgram();
-                        //changed here and in runDTO, in getPresentProgramDTO method. it used to return PresentProgramDTO
-                        //now it returns SProgram
-                        SProgram programPresent = runDTO.getPresentProgramDTO();
+                        PresentProgramDTO programPresent = runDTO.getPresentProgramDTO();
                         System.out.println("Program Representation: \n" + programPresent.getRepresentation());
                         System.out.println("Result: " + result.getResult());
                         Set<Variable> programVariables = runDTO.getOrderedVariablesCopy();

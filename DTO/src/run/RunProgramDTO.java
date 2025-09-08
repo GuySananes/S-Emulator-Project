@@ -95,18 +95,12 @@ public class RunProgramDTO {
         return programExecutor.getOrderedValuesCopy();
     }
 
-    public int getCycles() throws ProgramNotExecutedYetException {
+    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
         if(programExecutor == null){
             throw new ProgramNotExecutedYetException();
         }
-        return Objects.requireNonNullElse(expandedProgram, program).calculateCycles();
-    }
 
-    public SProgram getPresentProgramDTO()throws ProgramNotExecutedYetException {
-        if(programExecutor == null){
-            throw new ProgramNotExecutedYetException();
-        }
-        return Objects.requireNonNullElse(expandedProgram, program);
+        return PresentProgramDTOCreator.create(Objects.requireNonNullElse(expandedProgram, program));
     }
 
 

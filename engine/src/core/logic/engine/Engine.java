@@ -1,6 +1,7 @@
 package core.logic.engine;
 
 
+import exception.ProgramNotExecutedYetException;
 import expand.ExpandDTO;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
@@ -15,5 +16,5 @@ public interface Engine {
     PresentProgramDTO presentProgram() throws NoProgramException;
     ExpandDTO expandProgram() throws NoProgramException;
     RunProgramDTO runProgram() throws NoProgramException;
-    ProgramStatisticDTO presentProgramStats() throws NoProgramException;
+    ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException;
 }

@@ -10,8 +10,8 @@ public class PresentJumpEqualConstantInstructionDTO extends PresentInstructionTw
     public PresentJumpEqualConstantInstructionDTO(
             InstructionData instructionData,
             Variable variable, Label label,
-            Label secondLabel, long constantValue, String representation, int index) {
-        super(instructionData, variable, label, secondLabel, representation, index);
+            Label secondLabel, long constantValue, int index, String representation) {
+        super(instructionData, variable, label, secondLabel, index, representation);
         this.constantValue = constantValue;
     }
 

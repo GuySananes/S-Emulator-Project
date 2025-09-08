@@ -5,7 +5,6 @@ import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
-import core.logic.instruction.IndexedInstruction;
 
 import java.util.*;
 
@@ -66,21 +65,15 @@ public class SProgramImpl implements SProgram{
             throw new IllegalArgumentException("Instruction cannot be null when adding to program");
         }
 
-        SInstruction toAdd;
+        instruction.setIndex(index++);
 
-        if (instruction instanceof IndexedInstruction ii) {
-            toAdd = new IndexedInstruction(index++, ii.getInstruction());
-        } else {
-            toAdd = new IndexedInstruction(index++, instruction);
-        }
-
-        instructionList.add(toAdd);
+        instructionList.add(instruction);
     }
 
     @Override
     public void addInstructions(List<SInstruction> instructions) {
         if(instructions == null){
-            throw new IllegalArgumentException("Instructions List cannot be null when adding to program");
+            throw new IllegalArgumentException("Instructions List cannot be null when added to program");
         }
 
         for(SInstruction instruction : instructions){
@@ -105,7 +98,6 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public int calculateMaxDegree() {
-        //every instruction has a degree, return the max degree of all instructions
         int maxDegree = 0;
         for (SInstruction instruction : instructionList) {
             int degree = instruction.getDegree();

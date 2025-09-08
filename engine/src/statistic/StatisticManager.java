@@ -9,5 +9,5 @@ public interface StatisticManager {
 
     void addRunStatistic(SProgram program, SingleRunStatistic statistic);
 
-    Map<SProgram, List<SingleRunStatistic>> getStatisticMap();
+    List<SingleRunStatistic> getProgramStatistics(SProgram program);
 }

@@ -10,8 +10,8 @@ public class PresentInstructionTwoVariablesDTO extends PresentInstructionDTO {
     public PresentInstructionTwoVariablesDTO
             (InstructionData instructionData,
              Variable variable, Variable secondVariable,
-             Label label, String representation, int index) {
-        super(instructionData, variable, label, representation, index);
+             Label label, int index, String representation) {
+        super(instructionData, variable, label, index, representation);
         this.secondVariable = secondVariable;
     }
 

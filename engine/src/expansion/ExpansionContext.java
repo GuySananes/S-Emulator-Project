@@ -8,18 +8,9 @@ public class ExpansionContext {
     private ZGenerator zGenerator = null;
     private LabelGenerator labelGenerator = null;
     private final SProgram program;
-    private int parentIndex;
 
     public ExpansionContext(SProgram program) {
         this.program = program;
-    }
-
-    public int getParentIndex() {
-        return parentIndex;
-    }
-
-    public void setParentIndex(int parentIndex) {
-        this.parentIndex = parentIndex;
     }
 
     public Label generateLabel() {

@@ -12,12 +12,12 @@ public class PresentInstructionDTO {
     private final int index;
     private final String representation;
 
-    public PresentInstructionDTO(InstructionData instructionData, Variable variable, Label label, String representation, int index) {
+    public PresentInstructionDTO(InstructionData instructionData, Variable variable, Label label, int index, String representation) {
         this.instructionData = instructionData;
         this.variable = variable;
         this.label = label;
-        this.representation = representation;
         this.index = index;
+        this.representation = representation;
     }
 
     public InstructionData getInstructionData() {

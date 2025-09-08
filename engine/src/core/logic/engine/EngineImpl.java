@@ -1,5 +1,6 @@
 package core.logic.engine;
 
+import exception.ProgramNotExecutedYetException;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
 import present.PresentProgramDTO;
@@ -61,13 +62,16 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public ProgramStatisticDTO presentProgramStats() throws NoProgramException {
+    public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException {
         if (program == null) {
             throw new NoProgramException();
         }
 
-        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getStatisticMap(), program);
+        if(StatisticManagerImpl.getInstance().getProgramStatistics(program) == null ||
+                StatisticManagerImpl.getInstance().getProgramStatistics(program).isEmpty()) {
+            throw new ProgramNotExecutedYetException();
+        }
 
-
+        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
     }
 }

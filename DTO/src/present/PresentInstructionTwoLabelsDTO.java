@@ -9,8 +9,8 @@ public class PresentInstructionTwoLabelsDTO extends PresentInstructionDTO {
 
     public PresentInstructionTwoLabelsDTO(InstructionData instructionData,
                                           Variable variable, Label label,
-                                          Label secondLabel, String representation, int index) {
-        super(instructionData, variable, label, representation, index);
+                                          Label secondLabel, int index, String representation) {
+        super(instructionData, variable, label, index, representation);
         this.secondLabel = secondLabel;
     }
 
