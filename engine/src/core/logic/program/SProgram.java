@@ -13,8 +13,6 @@ public interface SProgram {
     void addInstruction(SInstruction instruction);
     void addInstructions(List<SInstruction> instructions);
     List<SInstruction> getInstructionList();
-    int getRunNumber();
-    void incrementRunNumber();
     Set<Variable> getOrderedVariables();
     Set<Variable> getOrderedVariablesCopy();
     Set<Label> getOrderedLabels();

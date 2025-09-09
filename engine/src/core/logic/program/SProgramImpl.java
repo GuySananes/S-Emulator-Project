@@ -13,7 +13,6 @@ public class SProgramImpl implements SProgram{
     private int index = 1;
     private final String name;
     private final List<SInstruction> instructionList;
-    private int runNumber = 0;
     private Set<Variable> orderedVariables = null;
     private Set<Variable> inputVariables = null;
     private Set<Label> orderedLabels = null;
@@ -84,16 +83,6 @@ public class SProgramImpl implements SProgram{
     @Override
     public List<SInstruction> getInstructionList() {
         return instructionList;
-    }
-
-    @Override
-    public int getRunNumber() {
-        return runNumber;
-    }
-
-    @Override
-    public void incrementRunNumber() {
-        runNumber++;
     }
 
     @Override
@@ -202,7 +191,6 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SProgramImpl sProgram = (SProgramImpl) o;
         return index == sProgram.index && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels);

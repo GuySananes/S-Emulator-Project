@@ -1,15 +1,13 @@
 package core.logic.engine;
 
-import exception.ProgramNotExecutedYetException;
+import core.logic.program.RunCount;
+import exception.*;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
 import present.PresentProgramDTOCreator;
 import core.logic.program.SProgram;
-import exception.NoProgramException;
-import exception.XMLUnmarshalException;
-import exception.ProgramValidationException;
 import statistic.ProgramStatisticDTO;
 import statistic.StatisticManagerImpl;
 
@@ -62,14 +60,18 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException {
+    public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException {
         if (program == null) {
             throw new NoProgramException();
         }
 
+        if(RunCount.getRunCount(program) == 0) {
+            throw new ProgramNotExecutedYetException();
+        }
+
         if(StatisticManagerImpl.getInstance().getProgramStatistics(program) == null ||
                 StatisticManagerImpl.getInstance().getProgramStatistics(program).isEmpty()) {
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramHasNoStatisticException();
         }
 
         return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));

@@ -8,6 +8,7 @@ import java.util.Set;
 import core.logic.execution.ExecutionResult;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
+import core.logic.program.RunCount;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
@@ -73,9 +74,9 @@ public class RunProgramDTO {
 
         programExecutor = new ProgramExecutorImpl(program);
         result = programExecutor.run(input.toArray(new Long[0]));
-        this.program.incrementRunNumber();
+        RunCount.incrementRunCount(this.program);
         StatisticManagerImpl.getInstance().addRunStatistic(this.program,
-                new SingleRunStatisticImpl(this.program.getRunNumber(),
+                new SingleRunStatisticImpl(RunCount.getRunCount(this.program),
                 degree, input, result.getResult(), result.getCycles()));
 
         return result;
