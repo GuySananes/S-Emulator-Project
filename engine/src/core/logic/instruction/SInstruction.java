@@ -27,6 +27,7 @@ public interface SInstruction {
     Set<Variable> getVariables();
     Set<Variable> getVariablesCopy();
     Set<Label> getLabels();
+    String thisRepresentation();
     String getRepresentation();
     InstructionData getInstructionData();
     int getDegree();

@@ -10,6 +10,7 @@ import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ConstantAssignmentInstruction extends AbstractInstruction implements Expandable {
 
@@ -65,5 +66,18 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
         }
 
         return expansion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ConstantAssignmentInstruction that = (ConstantAssignmentInstruction) o;
+        return constantValue == that.constantValue;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), constantValue);
     }
 }

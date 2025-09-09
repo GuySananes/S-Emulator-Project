@@ -124,18 +124,23 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
+    public String thisRepresentation() {
+        return "#" + index +
+                " (" + instructionData.getInstructionType() + ") " +
+                "[ " + label.getRepresentation() + " ] " +
+                getCommandRepresentation() +
+                " (" + instructionData.getCycles() + ")";
+    }
+
+    @Override
     public final String getRepresentation() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("#").append(index)
-                .append(" (").append(instructionData.getInstructionType()).append(") ")
-                .append("[ ").append(label.getRepresentation()).append(" ] ")
-                .append(getCommandRepresentation())
-                .append(" (").append(instructionData.getCycles()).append(")");
+        sb.append(thisRepresentation());
 
         if (parents != null && !parents.isEmpty()) {
             for (SInstruction parent : parents) {
-                sb.append(" >>> ").append(parent.getRepresentation());
+                sb.append(" >>> ").append(parent.thisRepresentation());
             }
         }
 

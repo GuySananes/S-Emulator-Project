@@ -10,6 +10,7 @@ import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class JumpEqualConstant extends AbstractInstructionTwoLabels implements Expandable {
 
@@ -72,5 +73,18 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
         Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        JumpEqualConstant that = (JumpEqualConstant) o;
+        return constantValue == that.constantValue;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), constantValue);
     }
 }

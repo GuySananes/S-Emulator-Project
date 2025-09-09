@@ -10,6 +10,7 @@ import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class JumpEqualVariable extends AbstractInstructionTwoVariables implements Expandable {
@@ -85,5 +86,18 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
         Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        JumpEqualVariable that = (JumpEqualVariable) o;
+        return Objects.equals(targetLabel, that.targetLabel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), targetLabel);
     }
 }

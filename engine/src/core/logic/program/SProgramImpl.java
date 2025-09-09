@@ -205,11 +205,11 @@ public class SProgramImpl implements SProgram{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SProgramImpl sProgram = (SProgramImpl) o;
-        return index == sProgram.index && runNumber == sProgram.runNumber && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels);
+        return index == sProgram.index && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, name, instructionList, runNumber, orderedVariables, inputVariables, orderedLabels);
+        return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels);
     }
 }

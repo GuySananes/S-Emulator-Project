@@ -12,9 +12,10 @@ import java.util.List;
 public class Expansion {
 
     public static SProgram expand(SProgram program, int degree) {
-        if (degree < 0 || degree > program.calculateMaxDegree())
-            throw new IllegalArgumentException("Degree must be between 0 and " +
-                    program.calculateMaxDegree() + " when expanding program");
+        if (degree < 0 || degree > program.calculateMaxDegree()) {
+            throw new IllegalArgumentException("Degree must be between 0 and "
+                    + program.calculateMaxDegree() + " when expanding program");
+        }
 
         List<SInstruction> instructions = program.getInstructionList();
         ExpansionContext expansionContext = new ExpansionContext(program);
