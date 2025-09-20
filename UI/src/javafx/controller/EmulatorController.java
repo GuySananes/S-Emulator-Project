@@ -7,45 +7,38 @@ import javafx.stage.Stage;
 import javafx.model.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-// Explicitly import JavaFX Label to avoid confusion with SLabel
 import javafx.scene.control.Label;
+import javafx.service.FileLoadingService;
+import javafx.service.ProgramExecutionService;
+import javafx.service.ModelConverter;
+import core.logic.program.SProgram;
+import javafx.concurrent.Task;
+import javafx.application.Platform;
+import java.io.File;
+import java.util.List;
 
 public class EmulatorController {
 
-    // File section
+    // FXML UI Components
     @FXML private Button loadFileButton;
     @FXML private TextField loadedFilePath;
-
-    // Program controls
     @FXML private ComboBox<String> programSelector;
     @FXML private Button collapseButton;
-    @FXML private Label currentDegreeLabel;  // This is JavaFX Label control
+    @FXML private Label currentDegreeLabel;
     @FXML private Button expandButton;
     @FXML private Button highlightButton;
-
-    // Instructions table
     @FXML private TableView<Instruction> instructionsTable;
-
-    // Summary
-    @FXML private Label summaryLine;  // This is JavaFX Label control
-
-    // History chain
+    @FXML private Label summaryLine;
     @FXML private TextArea historyChain;
-
-    // Debugger section
     @FXML private Button startRegularButton;
     @FXML private Button startDebugButton;
     @FXML private Button stopButton;
     @FXML private Button resumeButton;
     @FXML private Button stepOverButton;
     @FXML private Button stepBackButton;
-
-    // Variables and execution
     @FXML private TableView<Variable> variablesTable;
     @FXML private TextArea executionInputs;
-    @FXML private Label cyclesLabel;  // This is JavaFX Label control
-
-    // Statistics
+    @FXML private Label cyclesLabel;
     @FXML private TableView<Statistic> statisticsTable;
     @FXML private Button showStatsButton;
     @FXML private Button rerunButton;
@@ -56,7 +49,12 @@ public class EmulatorController {
     private final ObservableList<Instruction> instructions = FXCollections.observableArrayList();
     private final ObservableList<Variable> variables = FXCollections.observableArrayList();
     private final ObservableList<Statistic> statistics = FXCollections.observableArrayList();
-    private final ObservableList<SLabel> labels = FXCollections.observableArrayList();  // This is your SLabel model
+    private final ObservableList<SLabel> labels = FXCollections.observableArrayList();
+
+    // Service classes (separation of concerns)
+    private final FileLoadingService fileLoadingService = new FileLoadingService();
+    private final ProgramExecutionService executionService = new ProgramExecutionService();
+    private SProgram loadedEngineProgram;
 
     // This method is automatically called after the fxml file has been loaded
     @FXML
@@ -113,6 +111,10 @@ public class EmulatorController {
 
         instructionsTable.getColumns().setAll(numberCol, typeCol, cyclesCol, descCol);
         instructionsTable.setItems(instructions);
+
+        // Make instructions table 3 times taller
+        instructionsTable.setPrefHeight(450); // Increased from default ~150 to 450
+        instructionsTable.setMinHeight(450);
 
         // Setup Variables Table
         TableColumn<Variable, String> varNameCol = new TableColumn<>("Name");
@@ -220,6 +222,16 @@ public class EmulatorController {
 
     // Event handler methods
     private void handleLoadFile() {
+        File selectedFile = showFileChooser();
+        if (selectedFile != null) {
+            loadProgramFromFile(selectedFile);
+        }
+    }
+
+    /**
+     * Shows file chooser dialog (UI logic only)
+     */
+    private File showFileChooser() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open S-Program File");
         fileChooser.getExtensionFilters().add(
@@ -227,87 +239,193 @@ public class EmulatorController {
         );
 
         Stage stage = (Stage) loadFileButton.getScene().getWindow();
-        java.io.File file = fileChooser.showOpenDialog(stage);
+        return fileChooser.showOpenDialog(stage);
+    }
 
-        if (file != null) {
-            // Update program model
+    /**
+     * Loads program using service and updates UI (delegates to service)
+     */
+    private void loadProgramFromFile(File file) {
+        // Update UI state
+        setLoadingState(true);
+        updateSummary("Loading file...");
+
+        // Create loading task using service
+        Task<SProgram> loadingTask = fileLoadingService.createLoadingTask(file);
+
+        // Handle successful loading
+        loadingTask.setOnSucceeded(event -> {
+            loadedEngineProgram = loadingTask.getValue();
+            updateUIWithLoadedProgram(file, loadedEngineProgram);
+            setLoadingState(false);
+        });
+
+        // Handle loading errors
+        loadingTask.setOnFailed(event -> {
+            Throwable exception = loadingTask.getException();
+            showErrorDialog("Loading Error", "Failed to load file: " + exception.getMessage());
+            updateSummary("Failed to load file: " + exception.getMessage());
+            setLoadingState(false);
+        });
+
+        // Run loading task in background thread
+        Thread loadingThread = new Thread(loadingTask);
+        loadingThread.setDaemon(true);
+        loadingThread.start();
+    }
+
+    /**
+     * Updates UI with loaded program data (UI logic only)
+     */
+    private void updateUIWithLoadedProgram(File file, SProgram engineProgram) {
+        try {
+            // Convert engine program to UI model using service
+            Program uiProgram = ModelConverter.convertProgram(engineProgram);
+
+            // Update current program model
             currentProgram.setFilePath(file.getAbsolutePath());
-            currentProgram.setName(file.getName().replace(".xml", ""));
+            currentProgram.setName(uiProgram.getName());
             currentProgram.setLoaded(true);
+            currentProgram.setMaxDegree(uiProgram.getMaxDegree());
+            currentProgram.setMinDegree(uiProgram.getMinDegree());
+            currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-            // TODO: Connect to your engine's file loading logic
-            // Engine engine = new EngineImpl();
-            // SProgram loadedProgram = engine.loadProgram(file);
-            // convertEngineToUIModel(loadedProgram);
+            // Update UI collections
+            updateUICollections(engineProgram);
 
-            updateSummary("File loaded: " + file.getName());
+            updateSummary("File loaded successfully: " + file.getName());
+
+        } catch (Exception e) {
+            showErrorDialog("Processing Error", "Error processing loaded program: " + e.getMessage());
+            updateSummary("Error processing file: " + e.getMessage());
         }
     }
 
-    private void handleCollapse() {
-        // TODO: Implement program collapse logic
-        updateSummary("Program collapsed");
-    }
+    /**
+     * Updates UI collections with converted data
+     */
+    private void updateUICollections(SProgram engineProgram) {
+        // Clear existing data
+        instructions.clear();
+        variables.clear();
+        labels.clear();
+        currentProgram.clearInstructions();
+        currentProgram.clearVariables();
 
-    private void handleExpand() {
-        // TODO: Implement program expansion logic
-        updateSummary("Program expanded");
-    }
+        // Convert and add instructions
+        List<Instruction> convertedInstructions = ModelConverter.convertInstructions(engineProgram.getInstructionList());
+        instructions.addAll(convertedInstructions);
+        for (Instruction instruction : convertedInstructions) {
+            currentProgram.addInstruction(instruction);
+        }
 
-    private void handleHighlight() {
-        // TODO: Implement instruction highlighting
-        updateSummary("Instructions highlighted");
+        // Convert and add variables
+        List<Variable> convertedVariables = ModelConverter.convertVariables(engineProgram.getOrderedVariables());
+        variables.addAll(convertedVariables);
+        for (Variable variable : convertedVariables) {
+            currentProgram.addVariable(variable);
+        }
+
+        // Convert and add labels
+        List<SLabel> convertedLabels = ModelConverter.convertLabels(engineProgram.getOrderedLabels());
+        labels.addAll(convertedLabels);
+
+        // Update execution state
+        executionResult.reset();
+        executionResult.setTotalSteps(instructions.size());
     }
 
     private void handleStartRegular() {
-        // Reset execution state
+        if (loadedEngineProgram == null) {
+            showErrorDialog("No Program", "Please load a program first.");
+            return;
+        }
+
+        // Update UI state
         executionResult.reset();
         executionResult.setRunning(true);
         executionResult.setStatus("Running");
-        executionResult.addToHistory("Execution started");
+        executionResult.addToHistory("Regular execution started");
+        updateSummary("Starting regular execution...");
 
-        // TODO: Connect to your engine's execution logic
-        // ProgramExecutor executor = new ProgramExecutorImpl();
-        // ExecutionResult result = executor.executeProgram(currentProgram);
+        // Get input values from execution inputs text area
+        Long[] inputs = parseInputValues();
 
-        updateSummary("Regular execution started");
+        // Create execution task using service with inputs
+        Task<core.logic.execution.ExecutionResult> executionTask =
+            executionService.createExecutionTask(loadedEngineProgram, inputs);
+
+        // Handle execution completion
+        executionTask.setOnSucceeded(event -> {
+            core.logic.execution.ExecutionResult result = executionTask.getValue();
+            updateUIWithExecutionResult(result);
+            updateSummary("Regular execution completed");
+        });
+
+        // Handle execution errors
+        executionTask.setOnFailed(event -> {
+            Throwable exception = executionTask.getException();
+            showErrorDialog("Execution Error", "Execution failed: " + exception.getMessage());
+            updateSummary("Execution failed: " + exception.getMessage());
+            executionResult.setRunning(false);
+        });
+
+        // Run execution in background
+        Thread executionThread = new Thread(executionTask);
+        executionThread.setDaemon(true);
+        executionThread.start();
+    }
+
+    /**
+     * Parses input values from the execution inputs text area
+     */
+    private Long[] parseInputValues() {
+        String inputText = executionInputs.getText().trim();
+        if (inputText.isEmpty()) {
+            return new Long[0]; // No inputs
+        }
+
+        try {
+            String[] inputStrings = inputText.split("[,\\s]+");
+            Long[] inputs = new Long[inputStrings.length];
+            for (int i = 0; i < inputStrings.length; i++) {
+                inputs[i] = Long.parseLong(inputStrings[i].trim());
+            }
+            return inputs;
+        } catch (NumberFormatException e) {
+            showErrorDialog("Invalid Input", "Please enter valid numbers separated by commas or spaces.");
+            return new Long[0];
+        }
     }
 
     private void handleStartDebug() {
+        if (loadedEngineProgram == null) {
+            showErrorDialog("No Program", "Please load a program first.");
+            return;
+        }
+
+        // Start debug execution using service
+        executionService.startDebugExecution(loadedEngineProgram);
+
+        // Update UI state
         executionResult.reset();
         executionResult.setRunning(true);
         executionResult.setPaused(true);
         executionResult.setStatus("Debug Mode - Paused");
         executionResult.addToHistory("Debug execution started");
-
-        // TODO: Connect to your engine's debug execution logic
-
-        updateSummary("Debug execution started");
-    }
-
-    private void handleStop() {
-        // TODO: Stop execution
-        updateSummary("Execution stopped");
-        cyclesLabel.setText("Stopped");
-    }
-
-    private void handleResume() {
-        // TODO: Resume execution
-        updateSummary("Execution resumed");
+        updateSummary("Debug execution started - use step controls");
     }
 
     private void handleStepOver() {
-        if (executionResult.isRunning() && executionResult.isPaused()) {
+        if (executionService.stepNext()) {
             int currentStep = executionResult.getCurrentStep();
             executionResult.setCurrentStep(currentStep + 1);
 
-            // Simulate stepping through instruction
             if (currentStep < instructions.size()) {
                 Instruction currentInstr = instructions.get(currentStep);
                 executionResult.setCurrentInstruction(currentInstr.getDescription());
                 executionResult.addToHistory("Step " + (currentStep + 1) + ": " + currentInstr.getDescription());
 
-                // Check if execution is complete
                 if (currentStep + 1 >= instructions.size()) {
                     executionResult.setCompleted(true);
                     executionResult.setRunning(false);
@@ -320,20 +438,99 @@ public class EmulatorController {
     }
 
     private void handleStepBack() {
-        // TODO: Step back instruction
-        updateSummary("Stepped back instruction");
+        if (executionService.stepBack()) {
+            int currentStep = executionResult.getCurrentStep();
+            if (currentStep > 0) {
+                executionResult.setCurrentStep(currentStep - 1);
+                executionResult.addToHistory("Stepped back to instruction " + currentStep);
+                updateSummary("Stepped back instruction");
+            }
+        }
+    }
+
+    private void handleStop() {
+        executionService.stopExecution();
+        executionResult.setRunning(false);
+        executionResult.setPaused(false);
+        executionResult.setStatus("Stopped");
+        updateSummary("Execution stopped");
+    }
+
+    private void handleResume() {
+        executionService.resumeExecution();
+        executionResult.setPaused(false);
+        executionResult.setStatus("Running");
+        updateSummary("Execution resumed");
+    }
+
+    private void handleCollapse() {
+        // TODO: Implement program collapse logic using expansion service
+        updateSummary("Program collapsed");
+    }
+
+    private void handleExpand() {
+        // TODO: Implement program expansion logic using expansion service
+        updateSummary("Program expanded");
+    }
+
+    private void handleHighlight() {
+        // TODO: Implement instruction highlighting
+        updateSummary("Instructions highlighted");
     }
 
     private void handleShowStats() {
-        // TODO: Show detailed statistics
+        // TODO: Show detailed statistics using statistics service
         updateSummary("Statistics displayed");
     }
 
     private void handleRerun() {
-        // TODO: Rerun last execution
-        updateSummary("Rerunning last execution");
+        if (loadedEngineProgram != null) {
+            handleStartRegular(); // Rerun the last loaded program
+            updateSummary("Rerunning last execution");
+        } else {
+            showErrorDialog("No Program", "Please load a program first.");
+        }
     }
 
+    // **UI UTILITY METHODS**
+
+    /**
+     * Sets loading state for UI components
+     */
+    private void setLoadingState(boolean loading) {
+        loadFileButton.setDisable(loading);
+        // Could disable other buttons during loading if needed
+    }
+
+    /**
+     * Updates UI with execution results using actual ExecutionResult data
+     */
+    private void updateUIWithExecutionResult(core.logic.execution.ExecutionResult result) {
+        // Update UI execution result with actual data from engine
+        executionResult.setCompleted(true);
+        executionResult.setRunning(false);
+        executionResult.setStatus("Completed");
+        executionResult.setCycles(result.getCycles());
+        executionResult.addToHistory("Execution completed with result: " + result.getResult());
+
+        // Update the summary with actual result
+        updateSummary("Execution completed - Result: " + result.getResult() + ", Cycles: " + result.getCycles());
+    }
+
+    /**
+     * Shows error dialog (UI logic only)
+     */
+    private void showErrorDialog(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Updates summary line (UI logic only)
+     */
     private void updateSummary(String message) {
         summaryLine.setText(message);
     }
