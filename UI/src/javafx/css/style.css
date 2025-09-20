@@ -1,0 +1,8 @@
+.green-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+}
+.top-bar {
+    -fx-padding: 5;
+    -fx-background-color: #f0f0f0;
+}
