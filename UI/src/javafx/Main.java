@@ -23,22 +23,12 @@ public class Main extends Application {
 
         // Scene setup
         Scene scene = new Scene(root, 1200, 800);
+
+        // Load CSS stylesheet
+        scene.getStylesheets().add(getClass().getResource("/javafx/css/style.css").toExternalForm());
+
         primaryStage.setTitle("S-Emulator");
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    // The inner classes (Instruction, Variable, Statistic) should be moved to their own files,
-    // possibly in a new 'model' package.
-    public static class Instruction {
-        // Add properties for your instruction model
-    }
-
-    public static class Variable {
-        // Add properties for variables
-    }
-
-    public static class Statistic {
-        // Add properties for statistics
     }
 }

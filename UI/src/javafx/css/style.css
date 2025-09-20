@@ -1,8 +1,121 @@
+/* Green buttons styling */
 .green-btn {
-    -fx-background-color: #4CAF50;
+    -fx-background-color: #8BC34A;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
+}
+
+.green-btn:hover {
+    -fx-background-color: #7CB342;
+}
+
+/* Top bar styling */
+.top-bar {
+    -fx-padding: 10;
+    -fx-background-color: #f0f0f0;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* File path field styling */
+.file-path-field {
+    -fx-background-color: #FFE0C4;
+    -fx-border-color: #E0B084;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+/* Program selector styling */
+.program-selector {
+    -fx-background-color: #8BC34A;
     -fx-text-fill: white;
 }
-.top-bar {
+
+/* Instructions table styling */
+.instructions-table {
+    -fx-background-color: #FFF8DC;
+    -fx-border-color: #8B4513;
+    -fx-border-width: 2;
+}
+
+.instructions-table .column-header {
+    -fx-background-color: #DEB887;
+    -fx-text-fill: #8B4513;
+    -fx-font-weight: bold;
+}
+
+/* Summary line styling */
+.summary-line {
+    -fx-background-color: #E0E0E0;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+}
+
+/* History area styling */
+.history-area {
+    -fx-background-color: #FFF8DC;
+    -fx-border-color: #8B4513;
+    -fx-border-width: 2;
+}
+
+/* Debugger panel styling */
+.debugger-panel {
+    -fx-background-color: #FFFF99;
+    -fx-border-color: #FFD700;
+    -fx-border-width: 2;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+/* Variables panel styling */
+.variables-panel {
+    -fx-background-color: #FF69B4;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+/* Execution inputs panel styling */
+.execution-panel {
+    -fx-background-color: #4682B4;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+/* Cycles panel styling */
+.cycles-panel {
+    -fx-background-color: #FF69B4;
+    -fx-text-fill: white;
     -fx-padding: 5;
-    -fx-background-color: #f0f0f0;
+    -fx-background-radius: 5;
+}
+
+/* Statistics table styling */
+.statistics-table {
+    -fx-background-color: white;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1;
+}
+
+/* Button styling */
+.control-button {
+    -fx-padding: 5 10 5 10;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+}
+
+.control-button:hover {
+    -fx-opacity: 0.8;
+}
+
+/* Section headers */
+.section-header {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
 }
