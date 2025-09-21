@@ -1,39 +1,31 @@
-package core.logic.instruction;
+package core.logic.instruction.quoteInstruction;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.ExecutionResult;
-import core.logic.execution.ProgramExecutorImpl;
+import core.logic.instruction.AbstractInstruction;
+import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
-import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import expansion.Expandable;
 
-import java.util.List;
+public class QuoteProgramInstruction extends AbstractInstruction implements Expandable {
 
-public class QuoteProgram extends AbstractInstruction implements Expandable {
+    FunctionArgument functionArgument;
 
-    SProgram program;
-    List<Argument> arguments;
-
-    public QuoteProgram(Variable variable, SProgram program, List<Variable> input) {
-        this(variable, FixedLabel.EMPTY, program, input);
+    public QuoteProgramInstruction(Variable variable, FunctionArgument functionArgument) {
+        this(variable, FixedLabel.EMPTY, functionArgument);
     }
 
-    public QuoteProgram(Variable variable, Label label, SProgram program, List<Variable> input) {
+    public QuoteProgramInstruction(Variable variable, Label label, FunctionArgument functionArgument) {
         super(InstructionData.QUOTE_PROGRAM, variable, label);
-        this.program = program;
-        this.input = input;
+        this.functionArgument = functionArgument;
     }
 
     @Override
     public Label execute(ExecutionContext context) {
-        Long[] inputValues = new Long[arguments.size()];
-        // Prepare input values for the program. arguments list can have
-        ProgramExecutorImpl executor = new ProgramExecutorImpl(program);
-        ExecutionResult result = executor.run(inputValues);
+        ExecutionResult result = functionArgument.evaluate(context);
         context.updateVariable(getVariable(), result.getResult());
-
         return FixedLabel.EMPTY;
     }
 

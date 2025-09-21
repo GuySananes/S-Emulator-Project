@@ -10,22 +10,22 @@ import java.util.*;
 
 public class SProgramImpl implements SProgram{
 
-    private int index = 1;
-    private final String name;
-    private final List<SInstruction> instructionList;
-    private Set<Variable> orderedVariables = null;
-    private Set<Variable> inputVariables = null;
-    private Set<Label> orderedLabels = null;
-    private int cycles = -1;
-    private int degree = -1;
-    private static final int MIN_DEGREE = 0;
+    protected int index = 1;
+    protected final String name;
+    protected final List<SInstruction> instructionList;
+    protected Set<Variable> orderedVariables = null;
+    protected Set<Variable> inputVariables = null;
+    protected Set<Label> orderedLabels = null;
+    protected int cycles = -1;
+    protected int degree = -1;
+    protected static final int MIN_DEGREE = 0;
 
     public SProgramImpl(String name) {
         this.name = name;
         instructionList = new ArrayList<>();
     }
 
-    private Set<Variable> calculateOrderedVariables() {
+    protected Set<Variable> calculateOrderedVariables() {
         Set<Variable> variables = new TreeSet<>();
         for (SInstruction instruction : instructionList) {
             variables.addAll(instruction.getVariables());
@@ -34,7 +34,7 @@ public class SProgramImpl implements SProgram{
         return variables;
     }
 
-    private Set<Variable> calculateOrderedInputVariables() {
+    protected Set<Variable> calculateOrderedInputVariables() {
         Set<Variable> orderedVariables = getOrderedVariables();
         Set<Variable> inputVariables = new TreeSet<>();
         for(Variable variable : orderedVariables) {
@@ -46,7 +46,7 @@ public class SProgramImpl implements SProgram{
         return inputVariables;
     }
 
-    private Set<Label> calculateOrderedLabels() {
+    protected Set<Label> calculateOrderedLabels() {
         Set<Label> labels = new TreeSet<>(new LabelComparator());
         for (SInstruction instruction : instructionList) {
             labels.addAll(instruction.getLabels());
@@ -55,7 +55,7 @@ public class SProgramImpl implements SProgram{
         return labels;
     }
 
-    private int calculateDegree() {
+    protected int calculateDegree() {
         int maxDegree = 0;
         for (SInstruction instruction : instructionList) {
             int degree = instruction.getDegree();
@@ -67,7 +67,7 @@ public class SProgramImpl implements SProgram{
         return maxDegree;
     }
 
-    private int calculateCycles() {
+    protected int calculateCycles() {
         int totalCycles = 0;
         for (SInstruction instruction : instructionList) {
             totalCycles += instruction.getCycles();

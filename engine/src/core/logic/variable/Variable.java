@@ -1,6 +1,6 @@
 package core.logic.variable;
 
-import core.logic.instruction.Argument;
+import core.logic.instruction.quoteInstruction.Argument;
 
 public interface Variable extends Comparable<Variable>, Argument {
     int getNumber();
