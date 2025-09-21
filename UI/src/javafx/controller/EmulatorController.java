@@ -1,19 +1,22 @@
 package javafx.controller;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.model.*;
+import core.logic.engine.Engine;
+import core.logic.engine.EngineImpl;
+import core.logic.program.SProgram;
+import exception.NoProgramException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
-import javafx.service.FileLoadingService;
-import javafx.service.ProgramExecutionService;
-import javafx.service.ModelConverter;
-import core.logic.program.SProgram;
 import javafx.concurrent.Task;
-import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.model.*;
+import javafx.scene.control.*;
+import javafx.service.FileLoadingService;
+import javafx.service.ModelConverter;
+import javafx.service.ProgramExecutionService;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import present.PresentProgramDTO;
+
 import java.io.File;
 import java.util.List;
 
@@ -62,9 +65,6 @@ public class EmulatorController {
         setupTables();
         setupEventHandlers();
         setupDataBinding();
-
-        // Add some sample data for testing
-        addSampleData();
     }
 
     private void setupDataBinding() {
@@ -171,55 +171,6 @@ public class EmulatorController {
         }
     }
 
-    private void addSampleData() {
-        // Sample program setup
-        currentProgram.setName("Sample Program");
-        currentProgram.setMinDegree(1);
-        currentProgram.setMaxDegree(3);
-
-        // Sample instructions
-        instructions.addAll(
-            new Instruction(1, "S", 1, "inc(x)"),
-            new Instruction(2, "B", 2, "dec(y)"),
-            new Instruction(3, "S", 1, "zero(z)")
-        );
-
-        // Add instructions to program
-        for (Instruction instruction : instructions) {
-            currentProgram.addInstruction(instruction);
-        }
-
-        // Sample variables
-        variables.addAll(
-            new Variable("x", 5, "input"),
-            new Variable("y", 3, "temp"),
-            new Variable("z", 0, "output")
-        );
-
-        // Add variables to program
-        for (Variable variable : variables) {
-            currentProgram.addVariable(variable);
-        }
-
-        // Sample statistics
-        statistics.add(new Statistic("Regular", 15, 10, "00:00:05"));
-
-        // Sample labels - now using SLabel instead of Label
-        labels.addAll(
-            new SLabel("START", 1, "entry"),
-            new SLabel("LOOP", 5, "jump"),
-            new SLabel("END", 10, "exit")
-        );
-
-        // Populate program selector
-        programSelector.getItems().addAll("Main Program", "Function A", "Function B");
-        programSelector.setValue("Main Program");
-
-        // Set initial execution state
-        executionResult.setStatus("Ready");
-        executionResult.setTotalSteps(instructions.size());
-    }
-
     // Event handler methods
     private void handleLoadFile() {
         File selectedFile = showFileChooser();
@@ -250,13 +201,23 @@ public class EmulatorController {
         setLoadingState(true);
         updateSummary("Loading file...");
 
-        // Create loading task using service
-        Task<SProgram> loadingTask = fileLoadingService.createLoadingTask(file);
+        // Create loading task using service (now returns PresentProgramDTO)
+        Task<PresentProgramDTO> loadingTask = fileLoadingService.createLoadingTask(file);
 
         // Handle successful loading
         loadingTask.setOnSucceeded(event -> {
-            loadedEngineProgram = loadingTask.getValue();
-            updateUIWithLoadedProgram(file, loadedEngineProgram);
+            PresentProgramDTO dto = loadingTask.getValue();
+            // Retrieve underlying SProgram from engine (if needed for execution service)
+            try {
+                Engine engine = EngineImpl.getInstance();
+                loadedEngineProgram = engine.getLoadedProgram();
+            } catch (NoProgramException e) {
+                showErrorDialog("Engine Error", "Program not available after load: " + e.getMessage());
+                updateSummary("Program not available after load");
+                setLoadingState(false);
+                return;
+            }
+            updateUIWithLoadedProgram(file, loadedEngineProgram); // existing method using SProgram
             setLoadingState(false);
         });
 

@@ -76,4 +76,12 @@ public class EngineImpl implements Engine {
 
         return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
     }
+
+    @Override // newly added implementation
+    public SProgram getLoadedProgram() throws NoProgramException {
+        if (program == null) {
+            throw new NoProgramException();
+        }
+        return program;
+    }
 }
