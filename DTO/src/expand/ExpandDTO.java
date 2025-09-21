@@ -27,7 +27,7 @@ public class ExpandDTO {
             throw new NoProgramException();
         }
 
-        return program.calculateMaxDegree();
+        return program.getDegree();
     }
 
     public PresentProgramDTO expand(int degree) throws NoProgramException, DegreeOutOfRangeException {

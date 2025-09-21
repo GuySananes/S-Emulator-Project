@@ -16,6 +16,8 @@ public class SProgramImpl implements SProgram{
     private Set<Variable> orderedVariables = null;
     private Set<Variable> inputVariables = null;
     private Set<Label> orderedLabels = null;
+    private int cycles = -1;
+    private int degree = -1;
     private static final int MIN_DEGREE = 0;
 
     public SProgramImpl(String name) {
@@ -53,9 +55,48 @@ public class SProgramImpl implements SProgram{
         return labels;
     }
 
+    private int calculateDegree() {
+        int maxDegree = 0;
+        for (SInstruction instruction : instructionList) {
+            int degree = instruction.getDegree();
+            if (degree > maxDegree) {
+                maxDegree = degree;
+            }
+        }
+
+        return maxDegree;
+    }
+
+    private int calculateCycles() {
+        int totalCycles = 0;
+        for (SInstruction instruction : instructionList) {
+            totalCycles += instruction.getCycles();
+        }
+
+        return totalCycles;
+    }
+
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int getCycles() {
+        if(cycles == -1){
+            cycles = calculateCycles();
+        }
+
+        return cycles;
+    }
+
+    @Override
+    public int getDegree() {
+        if(degree == -1){
+            degree = calculateDegree();
+        }
+
+        return degree;
     }
 
     @Override
@@ -83,29 +124,6 @@ public class SProgramImpl implements SProgram{
     @Override
     public List<SInstruction> getInstructionList() {
         return instructionList;
-    }
-
-    @Override
-    public int calculateMaxDegree() {
-        int maxDegree = 0;
-        for (SInstruction instruction : instructionList) {
-            int degree = instruction.getDegree();
-            if (degree > maxDegree) {
-                maxDegree = degree;
-            }
-        }
-
-        return maxDegree;
-    }
-
-    @Override
-    public int calculateCycles() {
-        int totalCycles = 0;
-        for (SInstruction instruction : instructionList) {
-            totalCycles += instruction.getCycles();
-        }
-
-        return totalCycles;
     }
 
     @Override

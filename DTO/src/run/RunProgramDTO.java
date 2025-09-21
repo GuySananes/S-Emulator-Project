@@ -37,7 +37,7 @@ public class RunProgramDTO {
     }
 
     public int getMaxDegree(){
-        return program.calculateMaxDegree();
+        return program.getDegree();
     }
 
     public int getMinDegree(){

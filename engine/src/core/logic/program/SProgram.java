@@ -18,8 +18,8 @@ public interface SProgram {
     Set<Label> getOrderedLabels();
     Set<Variable> getInputVariables();
     Set<Variable> getInputVariablesCopy();
-    int calculateMaxDegree();
-    int calculateCycles();
+    int getDegree();
+    int getCycles();
     String getRepresentation();
     SInstruction getInstructionByLabel(Label Label);
     int getMinDegree();

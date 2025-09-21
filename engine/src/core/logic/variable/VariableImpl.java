@@ -1,5 +1,8 @@
 package core.logic.variable;
 
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.ExecutionResult;
+
 import java.util.Objects;
 
 public class VariableImpl implements Variable {
@@ -57,5 +60,11 @@ public class VariableImpl implements Variable {
         }
 
         return Integer.compare(this.number, other.getNumber());
+    }
+
+    @Override
+    public ExecutionResult evaluate(ExecutionContext context) {
+        long value = context.getVariableValue(this);
+        return new ExecutionResult(value, 0);
     }
 }

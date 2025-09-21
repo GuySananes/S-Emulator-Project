@@ -129,7 +129,7 @@ public abstract class AbstractInstruction implements SInstruction {
                 " (" + instructionData.getInstructionType() + ") " +
                 "[ " + label.getRepresentation() + " ] " +
                 getCommandRepresentation() +
-                " (" + instructionData.getCycles() + ")";
+                " (" + getCycles() + ")";
     }
 
     @Override
