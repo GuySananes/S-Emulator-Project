@@ -180,8 +180,19 @@ public class ModelConverter {
     /* ===================== Private helpers (DTO) ===================== */
     private static String formatDTOInstruction(PresentInstructionDTO pi) {
         String label = pi.getLabel() == null ? "" : pi.getLabel().getRepresentation();
-        String repr = pi.getRepresentation() == null ? "" : pi.getRepresentation();
-        return "[" + (label.isBlank() ? "  " : label) + "] " + repr;
+        String rep = pi.getRepresentation() == null ? "" : pi.getRepresentation();
+
+        // Strip leading line number + type pattern e.g. "#1 (B) "
+        rep = rep.replaceFirst("^#\\d+\\s*\\([A-Za-z]\\)\\s*", "");
+        // Strip a leading label in brackets inside the representation (e.g. "[ L1 ] ") to avoid duplication
+        rep = rep.replaceFirst("^\\[\\s*[^]]*\\]\\s*", "");
+        // Strip trailing cycles count e.g. "(3)" at end
+        rep = rep.replaceFirst("\\(\\d+\\)\\s*$", "");
+
+        // Final trimmed core textual instruction
+        String core = rep.trim();
+        // Compose with external label (only once) — keep blank placeholder to preserve alignment if needed
+        return "[" + (label.isBlank() ? "  " : label) + "] " + core;
     }
 
     private static String deriveTypeFromRepresentation(String repr) {

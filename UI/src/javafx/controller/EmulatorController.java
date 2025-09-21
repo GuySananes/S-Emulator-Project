@@ -45,6 +45,8 @@ public class EmulatorController {
     @FXML private TableView<Statistic> statisticsTable;
     @FXML private Button showStatsButton;
     @FXML private Button rerunButton;
+    @FXML private ProgressIndicator loadProgress; // added
+    @FXML private Label loadStatusLabel; // added
 
     // Model objects
     private final Program currentProgram = new Program();
@@ -200,48 +202,64 @@ public class EmulatorController {
         // Update UI state
         setLoadingState(true);
         updateSummary("Loading file...");
+        if (loadStatusLabel != null) loadStatusLabel.setText("Starting...");
+        if (loadProgress != null) loadProgress.setProgress(-1); // indeterminate
 
-        // Create loading task using service (now returns PresentProgramDTO)
         Task<PresentProgramDTO> loadingTask = fileLoadingService.createLoadingTask(file);
 
-        // Handle successful loading
+        // Bind progress + message
+        if (loadProgress != null) loadProgress.progressProperty().bind(loadingTask.progressProperty());
+        if (loadStatusLabel != null) loadStatusLabel.textProperty().bind(loadingTask.messageProperty());
+
         loadingTask.setOnSucceeded(event -> {
+            // Unbind first
+            if (loadProgress != null) loadProgress.progressProperty().unbind();
+            if (loadStatusLabel != null) loadStatusLabel.textProperty().unbind();
+
             PresentProgramDTO dto = loadingTask.getValue();
-            // Retrieve underlying SProgram from engine (if needed for execution service)
             try {
-                Engine engine = EngineImpl.getInstance();
-                loadedEngineProgram = engine.getLoadedProgram();
-            } catch (NoProgramException e) {
-                showErrorDialog("Engine Error", "Program not available after load: " + e.getMessage());
-                updateSummary("Program not available after load");
+                updateUIWithLoadedDto(file, dto);
+                try {
+                    Engine engine = EngineImpl.getInstance();
+                    loadedEngineProgram = engine.getLoadedProgram();
+                } catch (NoProgramException e) {
+                    showErrorDialog("Engine Warning", "Program loaded but engine did not expose SProgram: " + e.getMessage());
+                }
+                if (loadProgress != null) loadProgress.setProgress(1);
+                if (loadStatusLabel != null) loadStatusLabel.setText("Loaded");
+            } catch (Exception e) {
+                showErrorDialog("Processing Error", "Error processing loaded program: " + e.getMessage());
+                updateSummary("Error processing file: " + e.getMessage());
+                if (loadProgress != null) loadProgress.setProgress(0);
+                if (loadStatusLabel != null) loadStatusLabel.setText("Process error");
+            } finally {
                 setLoadingState(false);
-                return;
             }
-            updateUIWithLoadedProgram(file, loadedEngineProgram); // existing method using SProgram
-            setLoadingState(false);
         });
 
-        // Handle loading errors
         loadingTask.setOnFailed(event -> {
+            if (loadProgress != null) loadProgress.progressProperty().unbind();
+            if (loadStatusLabel != null) loadStatusLabel.textProperty().unbind();
             Throwable exception = loadingTask.getException();
             showErrorDialog("Loading Error", "Failed to load file: " + exception.getMessage());
             updateSummary("Failed to load file: " + exception.getMessage());
+            if (loadProgress != null) loadProgress.setProgress(0);
+            if (loadStatusLabel != null) loadStatusLabel.setText("Failed");
             setLoadingState(false);
         });
 
-        // Run loading task in background thread
         Thread loadingThread = new Thread(loadingTask);
         loadingThread.setDaemon(true);
         loadingThread.start();
     }
 
     /**
-     * Updates UI with loaded program data (UI logic only)
+     * Updates UI with loaded program data from a PresentProgramDTO
      */
-    private void updateUIWithLoadedProgram(File file, SProgram engineProgram) {
+    private void updateUIWithLoadedDto(File file, PresentProgramDTO dto) {
         try {
-            // Convert engine program to UI model using service
-            Program uiProgram = ModelConverter.convertProgram(engineProgram);
+            // Convert DTO to UI Program model
+            Program uiProgram = ModelConverter.convertProgram(dto);
 
             // Update current program model
             currentProgram.setFilePath(file.getAbsolutePath());
@@ -251,21 +269,20 @@ public class EmulatorController {
             currentProgram.setMinDegree(uiProgram.getMinDegree());
             currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-            // Update UI collections
-            updateUICollections(engineProgram);
+            // Update UI collections using DTO-aware converters
+            updateUICollections(dto);
 
             updateSummary("File loaded successfully: " + file.getName());
 
         } catch (Exception e) {
-            showErrorDialog("Processing Error", "Error processing loaded program: " + e.getMessage());
-            updateSummary("Error processing file: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     /**
-     * Updates UI collections with converted data
+     * Updates UI collections with converted data (DTO path)
      */
-    private void updateUICollections(SProgram engineProgram) {
+    private void updateUICollections(PresentProgramDTO dto) {
         // Clear existing data
         instructions.clear();
         variables.clear();
@@ -273,22 +290,22 @@ public class EmulatorController {
         currentProgram.clearInstructions();
         currentProgram.clearVariables();
 
-        // Convert and add instructions
-        List<Instruction> convertedInstructions = ModelConverter.convertInstructions(engineProgram.getInstructionList());
+        // Convert and add instructions (DTO-based)
+        List<Instruction> convertedInstructions = ModelConverter.convertInstructions(dto);
         instructions.addAll(convertedInstructions);
         for (Instruction instruction : convertedInstructions) {
             currentProgram.addInstruction(instruction);
         }
 
-        // Convert and add variables
-        List<Variable> convertedVariables = ModelConverter.convertVariables(engineProgram.getOrderedVariables());
+        // Convert and add variables (DTO-based)
+        List<Variable> convertedVariables = ModelConverter.convertVariables(dto);
         variables.addAll(convertedVariables);
         for (Variable variable : convertedVariables) {
             currentProgram.addVariable(variable);
         }
 
-        // Convert and add labels
-        List<SLabel> convertedLabels = ModelConverter.convertLabels(engineProgram.getOrderedLabels());
+        // Convert and add labels (DTO-based)
+        List<SLabel> convertedLabels = ModelConverter.convertLabels(dto);
         labels.addAll(convertedLabels);
 
         // Update execution state

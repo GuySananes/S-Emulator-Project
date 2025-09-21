@@ -15,6 +15,9 @@
                     <children>
                         <Button fx:id="loadFileButton" prefWidth="150" style="-fx-background-color: #8BC34A; -fx-text-fill: white;" text="Load File" />
                         <TextField fx:id="loadedFilePath" editable="false" promptText="Currently Loaded File path" style="-fx-background-color: #FFE0C4;" HBox.hgrow="ALWAYS" />
+                        <!-- Added progress indicator + status label -->
+                        <ProgressIndicator fx:id="loadProgress" prefWidth="30" prefHeight="30" progress="0.0" />
+                        <Label fx:id="loadStatusLabel" text="Idle" />
                     </children>
                 </HBox>
                 <HBox spacing="10">
