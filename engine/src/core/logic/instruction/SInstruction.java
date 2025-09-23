@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
@@ -15,14 +16,16 @@ import java.util.Set;
 public interface SInstruction {
 
     String getName();
-    Label execute(ExecutionContext context);
-    int getCycles();
+    LabelCycle execute(ExecutionContext context);
+    String getCycleRepresentation();
     Label getLabel();
     Variable getVariable();
     List<SInstruction> getParents();
     int getIndex();
     void setIndex(int index);
     void setParents(List<SInstruction> parents);
+    void setVariable(Variable variable);
+    void setLabel(Label label);
     Variable getVariableCopy();
     Set<Variable> getVariables();
     Set<Variable> getVariablesCopy();
@@ -31,4 +34,5 @@ public interface SInstruction {
     String getRepresentation();
     InstructionData getInstructionData();
     int getDegree();
+    SInstruction clone();//currently without parents and index
 }

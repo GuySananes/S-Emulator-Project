@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -16,18 +17,23 @@ public class IncreaseInstruction extends AbstractInstruction {
     }
 
     @Override
-    public Label execute(ExecutionContext context) {
+    public LabelCycle execute(ExecutionContext context) {
 
         long variableValue = context.getVariableValue(getVariable());
         variableValue++;
         context.updateVariable(getVariable(), variableValue);
 
-        return FixedLabel.EMPTY;
+        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
     }
 
     @Override
     public String getCommandRepresentation() {
         return getVariable().getRepresentation() + " <- " +
                 getVariable().getRepresentation() + " + 1";
+    }
+
+    @Override
+    public SInstruction clone() {
+        return new IncreaseInstruction(getVariable(), getLabel());
     }
 }

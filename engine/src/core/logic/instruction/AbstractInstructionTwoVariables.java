@@ -8,7 +8,7 @@ import java.util.Set;
 
 public abstract class AbstractInstructionTwoVariables extends AbstractInstruction {
 
-    private final Variable secondaryVariable;
+    private Variable secondaryVariable;
 
     public AbstractInstructionTwoVariables(InstructionData instructionData,
                                            Variable variable, Variable secondaryVariable) {
@@ -22,6 +22,11 @@ public abstract class AbstractInstructionTwoVariables extends AbstractInstructio
         super(instructionData, variable, label);
         this.secondaryVariable = secondaryVariable;
     }
+
+    public void setSecondaryVariable(Variable secondaryVariable) {
+        this.secondaryVariable = secondaryVariable;
+    }
+
 
     public Variable getSecondaryVariable() {
         return secondaryVariable;

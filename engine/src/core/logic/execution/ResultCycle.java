@@ -1,10 +1,10 @@
 package core.logic.execution;
 
-public class ExecutionResult {
+public class ResultCycle {
     private final long result;
     private final int cycles;
 
-    public ExecutionResult(long result, int cycles){
+    public ResultCycle(long result, int cycles){
         this.result = result;
         this.cycles = cycles;
     }

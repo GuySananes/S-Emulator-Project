@@ -27,7 +27,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     }
 
     @Override
-    public ExecutionResult run(Long... input) {
+    public ResultCycle run(Long... input) {
         context = new ExecutionContextImpl(program);
         context.updateInputVariables(input);
         currentInstructionIndex = 0;
@@ -39,6 +39,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         }
 
         SInstruction currentInstruction = instructions.get(currentInstructionIndex);
+        LabelCycle labelCycle;
         Label nextLabel;
         int maxIterations = 10000; // Prevent infinite loops
         int iterationCount = 0;
@@ -48,8 +49,9 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                 throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
             }
 
-            nextLabel = currentInstruction.execute(context);
-            cycles += currentInstruction.getCycles();
+            labelCycle = currentInstruction.execute(context);
+            nextLabel = labelCycle.getLabel();
+            cycles += labelCycle.getCycles();
 
             if (nextLabel == FixedLabel.EMPTY) {
                 currentInstructionIndex++;
@@ -76,7 +78,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
             throw new RuntimeException("Result variable not defined");
         }
 
-        return new ExecutionResult(context.getVariableValue(Variable.RESULT), cycles);
+        return new ResultCycle(context.getVariableValue(Variable.RESULT), cycles);
     }
 
     @Override

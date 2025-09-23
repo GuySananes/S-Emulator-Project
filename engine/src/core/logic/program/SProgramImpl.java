@@ -67,27 +67,9 @@ public class SProgramImpl implements SProgram{
         return maxDegree;
     }
 
-    protected int calculateCycles() {
-        int totalCycles = 0;
-        for (SInstruction instruction : instructionList) {
-            totalCycles += instruction.getCycles();
-        }
-
-        return totalCycles;
-    }
-
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public int getCycles() {
-        if(cycles == -1){
-            cycles = calculateCycles();
-        }
-
-        return cycles;
     }
 
     @Override
@@ -123,7 +105,7 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public List<SInstruction> getInstructionList() {
-        return instructionList;
+        return Collections.unmodifiableList(instructionList);
     }
 
     @Override
@@ -218,4 +200,16 @@ public class SProgramImpl implements SProgram{
     public int hashCode() {
         return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels);
     }
+
+    @Override
+    public SProgram clone() {
+        SProgram clone = new SProgramImpl(this.name);
+        for (SInstruction instruction : this.instructionList) {
+            clone.addInstruction(instruction.clone());
+        }
+
+        return clone;
+    }
+
+
 }

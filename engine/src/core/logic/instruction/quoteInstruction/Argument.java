@@ -1,9 +1,10 @@
 package core.logic.instruction.quoteInstruction;
 
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.ExecutionResult;
+import core.logic.execution.ResultCycle;
 
 public interface Argument {
-    ExecutionResult evaluate(ExecutionContext context);
+    ResultCycle evaluate(ExecutionContext context);
     String getRepresentation();
+    Argument clone();
 }

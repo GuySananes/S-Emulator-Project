@@ -1,7 +1,7 @@
 package core.logic.variable;
 
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.ExecutionResult;
+import core.logic.execution.ResultCycle;
 
 import java.util.Objects;
 
@@ -63,8 +63,14 @@ public class VariableImpl implements Variable {
     }
 
     @Override
-    public ExecutionResult evaluate(ExecutionContext context) {
+    public ResultCycle evaluate(ExecutionContext context) {
         long value = context.getVariableValue(this);
-        return new ExecutionResult(value, 0);
+        return new ResultCycle(value, 0);
     }
+
+    @Override
+    public Variable clone() {
+        return this;
+    }
+
 }

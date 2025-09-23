@@ -9,8 +9,8 @@ import java.util.*;
 public abstract class AbstractInstruction implements SInstruction {
 
     private final InstructionData instructionData;
-    private final Label label;
-    private final Variable variable;
+    private Label label;
+    private Variable variable;
     private int index = -1;
     private List<SInstruction> parents = new ArrayList<>();
 
@@ -33,6 +33,15 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
 
+    @Override
+    public void setVariable(Variable variable) {
+        this.variable = variable;
+    }
+
+    @Override
+    public void setLabel(Label label) {
+        this.label = label;
+    }
 
     @Override
     public String getName() {
@@ -40,8 +49,8 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public int getCycles() {
-        return instructionData.getCycles();
+    public String getCycleRepresentation() {
+        return instructionData.getCycleRepresentation();
     }
 
     @Override
@@ -129,7 +138,7 @@ public abstract class AbstractInstruction implements SInstruction {
                 " (" + instructionData.getInstructionType() + ") " +
                 "[ " + label.getRepresentation() + " ] " +
                 getCommandRepresentation() +
-                " (" + getCycles() + ")";
+                " (" + getCycleRepresentation() + ")";
     }
 
     @Override

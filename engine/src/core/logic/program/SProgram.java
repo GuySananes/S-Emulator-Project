@@ -19,7 +19,7 @@ public interface SProgram {
     Set<Variable> getInputVariables();
     Set<Variable> getInputVariablesCopy();
     int getDegree();
-    int getCycles();
+    SProgram clone();
     String getRepresentation();
     SInstruction getInstructionByLabel(Label Label);
     int getMinDegree();

@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -41,9 +42,10 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
     }
 
     @Override
-    public Label execute(ExecutionContext context) {
+    public LabelCycle execute(ExecutionContext context) {
         context.updateVariable(getVariable(), constantValue);
-        return FixedLabel.EMPTY;
+        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+
     }
 
     @Override
@@ -79,5 +81,10 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), constantValue);
+    }
+
+    @Override
+    public SInstruction clone() {
+        return new ConstantAssignmentInstruction(constantValue, getVariable(), getLabel());
     }
 }

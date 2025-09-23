@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import core.logic.execution.ExecutionResult;
+import core.logic.execution.ResultCycle;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.RunCount;
@@ -64,8 +64,8 @@ public class RunProgramDTO {
         this.input = new ArrayList<>(input);
     }
 
-    public ExecutionResult runProgram(){
-        ExecutionResult result;
+    public ResultCycle runProgram(){
+        ResultCycle result;
         SProgram program = this.program;
         if(degree > 0){
             expandedProgram = Expansion.expand(this.program, degree);

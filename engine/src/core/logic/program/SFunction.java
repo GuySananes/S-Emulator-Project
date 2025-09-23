@@ -1,5 +1,7 @@
 package core.logic.program;
 
+import core.logic.instruction.SInstruction;
+
 public class SFunction extends SProgramImpl{
     private final String userName;
 
@@ -10,6 +12,16 @@ public class SFunction extends SProgramImpl{
 
     public String getUserName() {
         return userName;
+    }
+
+    @Override
+    public SProgram clone() {
+        SProgram clone = new SFunction(this.name, this.userName);
+        for (SInstruction instruction : this.instructionList) {
+            clone.addInstruction(instruction.clone());
+        }
+
+        return clone;
     }
 
 }

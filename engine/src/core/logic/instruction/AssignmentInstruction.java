@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -11,7 +12,7 @@ import expansion.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AssignmentInstruction extends AbstractInstructionTwoVariables implements Expandable {
+public class AssignmentInstruction extends AbstractInstructionTwoVariables implements Expandable{
 
     public AssignmentInstruction(Variable variable, Variable secondaryVariable) {
         this(variable, secondaryVariable, FixedLabel.EMPTY);
@@ -22,10 +23,10 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
     }
 
     @Override
-    public Label execute(ExecutionContext context) {
+    public LabelCycle execute(ExecutionContext context) {
         long secondaryValue = context.getVariableValue(getSecondaryVariable());
         context.updateVariable(getVariable(), secondaryValue);
-        return FixedLabel.EMPTY;
+        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
     }
 
     @Override
@@ -68,6 +69,11 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
         Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
+    }
+
+    @Override
+    public SInstruction clone(){
+        return new AssignmentInstruction(getVariable(), getSecondaryVariable(), getLabel());
     }
 
 

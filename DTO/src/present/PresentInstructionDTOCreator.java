@@ -9,7 +9,7 @@ public class PresentInstructionDTOCreator {
         switch (type) {
             case INCREASE, DECREASE, NO_OP, ZERO_VARIABLE -> {
                 return new PresentInstructionDTO(
-                        instruction.getInstructionData(),
+                        type,
                         instruction.getVariableCopy(),
                         instruction.getLabel(),
                         instruction.getIndex(),
@@ -20,7 +20,7 @@ public class PresentInstructionDTOCreator {
                 AbstractInstructionTwoLabels instructionTwoLabels =
                         (AbstractInstructionTwoLabels)instruction;
                 return new PresentInstructionTwoLabelsDTO(
-                        instructionTwoLabels.getInstructionData(),
+                        type,
                         instructionTwoLabels.getVariableCopy(),
                         instructionTwoLabels.getLabel(),
                         instructionTwoLabels.getTargetLabel(),
@@ -32,7 +32,7 @@ public class PresentInstructionDTOCreator {
                 AbstractInstructionTwoVariables instructionTwoVariables =
                         (AbstractInstructionTwoVariables)instruction;
                 return new PresentInstructionTwoVariablesDTO(
-                        instructionTwoVariables.getInstructionData(),
+                        type,
                         instructionTwoVariables.getVariableCopy(),
                         instructionTwoVariables.getSecondaryVariable(),
                         instructionTwoVariables.getLabel(),
@@ -44,7 +44,7 @@ public class PresentInstructionDTOCreator {
                 ConstantAssignmentInstruction constantAssignmentInstruction =
                         (ConstantAssignmentInstruction)instruction;
                 return new PresentConstantAssignmentInstructionDTO(
-                        constantAssignmentInstruction.getInstructionData(),
+                        type,
                         constantAssignmentInstruction.getVariableCopy(),
                         constantAssignmentInstruction.getLabel(),
                         constantAssignmentInstruction.getConstantValue(),
@@ -56,7 +56,7 @@ public class PresentInstructionDTOCreator {
                 JumpEqualConstant jumpEqualConstant =
                         (JumpEqualConstant)instruction;
                 return new PresentJumpEqualConstantInstructionDTO(
-                        jumpEqualConstant.getInstructionData(),
+                        type,
                         jumpEqualConstant.getVariableCopy(),
                         jumpEqualConstant.getLabel(),
                         jumpEqualConstant.getTargetLabel(),
@@ -69,7 +69,7 @@ public class PresentInstructionDTOCreator {
                 JumpEqualVariable jumpEqualVariable =
                         (JumpEqualVariable)instruction;
                 return new PresentJumpEqualVariableDTO(
-                        jumpEqualVariable.getInstructionData(),
+                        type,
                         jumpEqualVariable.getVariableCopy(),
                         jumpEqualVariable.getSecondaryVariable(),
                         jumpEqualVariable.getLabel(),

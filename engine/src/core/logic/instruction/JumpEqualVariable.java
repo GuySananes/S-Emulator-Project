@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 public class JumpEqualVariable extends AbstractInstructionTwoVariables implements Expandable {
 
-    private final Label targetLabel;
+    private Label targetLabel;
 
     public JumpEqualVariable(Variable variable, Variable secondaryVariable, Label targetLabel) {
         this(variable, secondaryVariable, targetLabel, FixedLabel.EMPTY);
@@ -26,19 +27,23 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
         this.targetLabel = targetLabel;
     }
 
+    public void setTargetLabel(Label targetLabel) {
+        this.targetLabel = targetLabel;
+    }
+
     public Label getTargetLabel() {
         return targetLabel;
     }
 
     @Override
-    public Label execute(ExecutionContext context) {
+    public LabelCycle execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         long secondaryValue = context.getVariableValue(getSecondaryVariable());
         if (variableValue == secondaryValue) {
-            return targetLabel;
+            return new LabelCycle(targetLabel, Integer.parseInt(getInstructionData().getCycleRepresentation()));
         }
 
-        return FixedLabel.EMPTY;
+        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
     }
 
     @Override
@@ -99,5 +104,10 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), targetLabel);
+    }
+
+    @Override
+    public SInstruction clone() {
+        return new JumpEqualVariable(getVariable(), getSecondaryVariable(), targetLabel, getLabel());
     }
 }

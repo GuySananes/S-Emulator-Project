@@ -8,7 +8,7 @@ import java.util.Set;
 
 public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
 
-    private final Label targetLabel;
+    private Label targetLabel;
 
     public AbstractInstructionTwoLabels(InstructionData instructionData,
                                         Label targetLabel) {
@@ -32,6 +32,10 @@ public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
                                         Variable variable, Label label,
                                         Label targetLabel) {
         super(instructionData, variable, label);
+        this.targetLabel = targetLabel;
+    }
+
+    public void setTargetLabel(Label targetLabel) {
         this.targetLabel = targetLabel;
     }
 

@@ -1,6 +1,7 @@
 package core.logic.instruction;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycle;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -22,13 +23,13 @@ public class JumpZero extends AbstractInstructionTwoLabels implements Expandable
     }
 
     @Override
-    public Label execute(ExecutionContext context) {
+    public LabelCycle execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         if (variableValue == 0) {
-            return getTargetLabel();
+            return new LabelCycle(getTargetLabel(), Integer.parseInt(getInstructionData().getCycleRepresentation()));
         }
 
-        return FixedLabel.EMPTY;
+        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
     }
 
     @Override
@@ -52,5 +53,8 @@ public class JumpZero extends AbstractInstructionTwoLabels implements Expandable
         return expansion;
     }
 
-
+    @Override
+    public SInstruction clone() {
+        return new JumpZero(getVariable(), getLabel(), getTargetLabel());
+    }
 }
