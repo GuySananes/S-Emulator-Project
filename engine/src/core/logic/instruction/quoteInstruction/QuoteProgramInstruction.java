@@ -3,17 +3,17 @@ package core.logic.instruction.quoteInstruction;
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
 import core.logic.execution.ResultCycle;
-import core.logic.instruction.AbstractInstruction;
-import core.logic.instruction.AssignmentInstruction;
-import core.logic.instruction.InstructionData;
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
+import core.logic.variable.VariableImpl;
+import core.logic.variable.VariableType;
 import expansion.Expandable;
 import expansion.ExpansionContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,16 +59,129 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
         SProgram toExpand = functionArgument.getProgram();
         toExpand = toExpand.clone();
         List<SInstruction> toChange = toExpand.getInstructionList();
-        Map<Variable, Variable> xToz = new HashMap<>();
-        Label exit;
-        //every instruction in toChange, if it has a variable x, change it to a new z
-        //dave x to z in the map xToz
-        //y should also be changed to a new z
-        //every label should be changed to a new label
-        //should consider the different instruction types. some have 1 variable, some have 2, some have labels.
-        //same for labels
+        Map<Variable, Variable> xyToz = new HashMap<>();
+        Map<Label, Label> oldLToNewL = new HashMap<>();
+        for (SInstruction instruction : toChange) {
+            Variable var = instruction.getVariable();
+            if(var != null) {
+                Variable z;
+                if (!xyToz.containsKey(var)) {
+                    z = context.generateZ();
+                    xyToz.put(var, z);
+                } else {
+                    z = xyToz.get(var);
+                }
+
+                instruction.setVariable(z);
+            }
+
+            Label label = instruction.getLabel();
+            if(label != FixedLabel.EMPTY) {
+                Label newLabel;
+                if(!oldLToNewL.containsKey(label)) {
+                    newLabel = context.generateLabel();
+                    oldLToNewL.put(label, newLabel);
+                }
+                else {
+                    newLabel = oldLToNewL.get(label);
+                }
+
+                instruction.setLabel(newLabel);
+            }
+
+            if(instruction instanceof AbstractInstructionTwoLabels twoLabels) {
+                Label targetLabel = twoLabels.getTargetLabel();
+                if(targetLabel != FixedLabel.EMPTY) {
+                    Label newTargetLabel;
+                    if(!oldLToNewL.containsKey(targetLabel)) {
+                        newTargetLabel = context.generateLabel();
+                        oldLToNewL.put(targetLabel, newTargetLabel);
+                    }
+                    else {
+                        newTargetLabel = oldLToNewL.get(targetLabel);
+                    }
+
+                    twoLabels.setTargetLabel(newTargetLabel);
+                }
+            }
+
+            if(instruction instanceof AbstractInstructionTwoVariables twoVariables) {
+                Variable secondaryVar = twoVariables.getSecondaryVariable();
+                if(secondaryVar != null) {
+                    Variable z;
+                    if (!xyToz.containsKey(secondaryVar)) {
+                        z = context.generateZ();
+                        xyToz.put(secondaryVar, z);
+                    } else {
+                        z = xyToz.get(secondaryVar);
+                    }
+
+                    twoVariables.setSecondaryVariable(z);
+                }
+            }
+
+            if(instruction instanceof AbstractInstructionTwoLabels twoLabels) {
+                Label targetLabel = twoLabels.getTargetLabel();
+                if(targetLabel != FixedLabel.EMPTY) {
+                    Label newTargetLabel;
+                    if(!oldLToNewL.containsKey(targetLabel)) {
+                        newTargetLabel = context.generateLabel();
+                        oldLToNewL.put(targetLabel, newTargetLabel);
+                    }
+                    else {
+                        newTargetLabel = oldLToNewL.get(targetLabel);
+                    }
+
+                    twoLabels.setTargetLabel(newTargetLabel);
+                }
+            }
+
+            if(instruction instanceof JumpEqualVariable jeqv) {
+                Label targetLabel = jeqv.getTargetLabel();
+                if(targetLabel != FixedLabel.EMPTY) {
+                    Label newTargetLabel;
+                    if(!oldLToNewL.containsKey(targetLabel)) {
+                        newTargetLabel = context.generateLabel();
+                        oldLToNewL.put(targetLabel, newTargetLabel);
+                    }
+                    else {
+                        newTargetLabel = oldLToNewL.get(targetLabel);
+                    }
+
+                    jeqv.setTargetLabel(newTargetLabel);
+                }
+            }
+        }
+
+        List<SInstruction> expanded = new ArrayList<>();
+        expanded.add(new NoOpInstruction(Variable.RESULT, getLabel()));
+        List<Argument> arguments = functionArgument.getArguments();
+        for (int i = 0; i < arguments.size(); i++) {
+            Variable x = new VariableImpl(VariableType.INPUT, i + 1);
+            if(xyToz.containsKey(x)) {
+                Variable z = xyToz.get(x);
+                Variable zDeepCopy = new VariableImpl(VariableType.WORK, z.getNumber());
+                if(arguments.get(i) instanceof Variable var) {
+                    expanded.add(new AssignmentInstruction(zDeepCopy, new VariableImpl(var.getType(), var.getNumber())));
+                }
+
+                else {
+                    expanded.add(new QuoteProgramInstruction(zDeepCopy, (FunctionArgument) arguments.get(i)));
+                }
+            }
+        }
+
+        expanded.addAll(toChange);
+        expanded.add(new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT)));
 
 
 
+
+
+
+
+
+
+        return expanded;
     }
 }
