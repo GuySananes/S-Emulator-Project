@@ -173,6 +173,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
 
         expanded.addAll(toChange);
         expanded.add(new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT)));
+        Label l = getLabel();
 
 
 
