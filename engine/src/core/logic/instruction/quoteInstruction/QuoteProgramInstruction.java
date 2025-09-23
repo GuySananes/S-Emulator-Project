@@ -166,7 +166,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                 }
 
                 else {
-                     expanded.add(new QuoteProgramInstruction(zDeepCopy, (FunctionArgument) arguments.get(i)));
+                    expanded.add(new QuoteProgramInstruction(zDeepCopy, (FunctionArgument) arguments.get(i)));
                 }
             }
         }
