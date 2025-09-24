@@ -14,6 +14,7 @@ public class Program {
     private final ObservableList<Variable> variables = FXCollections.observableArrayList();
     private final StringProperty filePath = new SimpleStringProperty();
     private final BooleanProperty isLoaded = new SimpleBooleanProperty(false);
+    private final IntegerProperty currentDegree = new SimpleIntegerProperty(0);
 
     // Constructors
     public Program() {}
@@ -30,6 +31,7 @@ public class Program {
     public IntegerProperty totalInstructionsProperty() { return totalInstructions; }
     public StringProperty filePathProperty() { return filePath; }
     public BooleanProperty isLoadedProperty() { return isLoaded; }
+    public IntegerProperty currentDegreeProperty() { return currentDegree; }
 
     // Observable lists for UI binding
     public ObservableList<Instruction> getInstructions() { return instructions; }
@@ -56,6 +58,10 @@ public class Program {
 
     public boolean isLoaded() { return isLoaded.get(); }
     public void setLoaded(boolean loaded) { this.isLoaded.set(loaded); }
+
+    public int getCurrentDegree() { return currentDegree.get(); }
+    public void setCurrentDegree(int currentDegree) { this.currentDegree.set(currentDegree); }
+
 
     // Utility methods
     public void addInstruction(Instruction instruction) {

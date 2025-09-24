@@ -2,8 +2,13 @@ package javafx.controller;
 
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.model.ui.*;
-import javafx.scene.control.*;
+import javafx.model.ui.Instruction;
+import javafx.model.ui.Program;
+import javafx.model.ui.Variable;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TextField;
 import javafx.service.FileLoadingService;
 import javafx.service.ModelConverter;
 import javafx.stage.FileChooser;
@@ -134,6 +139,9 @@ public class FileLoadingController {
         currentProgram.setMaxDegree(uiProgram.getMaxDegree());
         currentProgram.setMinDegree(uiProgram.getMinDegree());
         currentProgram.setTotalCycles(uiProgram.getTotalCycles());
+
+        // Reset to original program (degree 0) when loading
+        currentProgram.setCurrentDegree(0);
 
         updateUICollections(dto);
         updateSummary.accept("File loaded successfully: " + file.getName());

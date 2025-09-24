@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+
+
 /**
  * Handles all program execution and debugging operations
  */
@@ -46,6 +48,8 @@ public class ProgramExecutionController {
     private final BiConsumer<String, String> showErrorDialog;
 
     private final ProgramExecutionService executionService = new ProgramExecutionService();
+
+    private int currentDisplayDegree = 0;
 
     public ProgramExecutionController(Program currentProgram,
                                       ExecutionResult executionResult,
@@ -251,13 +255,94 @@ public class ProgramExecutionController {
         }
     }
 
-    // Placeholder methods for future implementation
-    public void handleCollapse() {
-        updateSummary.accept("Program collapsed");
-    }
 
     public void handleExpand() {
-        updateSummary.accept("Program expanded");
+        if (!currentProgram.isLoaded()) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        try {
+            Engine engine = EngineImpl.getInstance();
+            expand.ExpandDTO expandDTO = engine.expandProgram();
+
+            int maxDegree = expandDTO.getMaxDegree();
+
+            if (maxDegree == 0) {
+                showErrorDialog.accept("Cannot Expand", "The program cannot be expanded.");
+                return;
+            }
+
+            // Check if we can expand further
+            if (currentDisplayDegree >= maxDegree) {
+                updateSummary.accept("Already at maximum expansion degree (" + maxDegree + ")");
+                return;
+            }
+
+            // Expand by 1
+            int newDegree = currentDisplayDegree + 1;
+            expandToDisplay(expandDTO, newDegree);
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Expansion Error", "Failed to expand program: " + e.getMessage());
+            updateSummary.accept("Expansion failed: " + e.getMessage());
+        }
+    }
+
+    public void handleCollapse() {
+        if (!currentProgram.isLoaded()) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        try {
+            Engine engine = EngineImpl.getInstance();
+            expand.ExpandDTO expandDTO = engine.expandProgram();
+
+            int minDegree = expandDTO.getMinDegree();
+
+            // Check if we can collapse further
+            if (currentDisplayDegree <= minDegree) {
+                updateSummary.accept("Already at minimum degree (" + minDegree + ")");
+                return;
+            }
+
+            // Collapse by 1
+            int newDegree = currentDisplayDegree - 1;
+            expandToDisplay(expandDTO, newDegree);
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Collapse Error", "Failed to collapse program: " + e.getMessage());
+            updateSummary.accept("Collapse failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Helper method to expand/collapse to a specific degree and update UI
+     */
+    private void expandToDisplay(expand.ExpandDTO expandDTO, int targetDegree) {
+        try {
+            // Expand to the target degree
+            PresentProgramDTO expandedProgram = expandDTO.expand(targetDegree);
+
+            // Update instructions table with new degree
+            instructions.clear();
+            instructions.addAll(ModelConverter.convertInstructions(expandedProgram));
+
+            // Update current degree tracking
+            currentDisplayDegree = targetDegree;
+            currentProgram.setCurrentDegree(targetDegree);
+
+            // Update summary
+            if (targetDegree == 0) {
+                updateSummary.accept("Showing original program (degree 0)");
+            } else {
+                updateSummary.accept("Expanded to degree " + targetDegree);
+            }
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Display Error", "Failed to display program at degree " + targetDegree + ": " + e.getMessage());
+        }
     }
 
     public void handleHighlight() {
