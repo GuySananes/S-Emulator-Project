@@ -12,6 +12,7 @@ import core.logic.variable.VariableImpl;
 import core.logic.variable.VariableType;
 import expansion.Expandable;
 import expansion.ExpansionContext;
+import expansion.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,8 +154,10 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
             }
         }
 
-        List<SInstruction> expanded = new ArrayList<>();
-        expanded.add(new NoOpInstruction(Variable.RESULT, getLabel()));
+        List<SInstruction> expansion = new ArrayList<>(toChange.size() + 2);
+        List<SInstruction> parentChain = createParentChain();
+        SInstruction toAdd = new NoOpInstruction(Variable.RESULT, getLabel());
+        Utils.registerInstruction(toAdd, parentChain, expansion);
         List<Argument> arguments = functionArgument.getArguments();
         for (int i = 0; i < arguments.size(); i++) {
             Variable x = new VariableImpl(VariableType.INPUT, i + 1);
@@ -162,25 +165,21 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                 Variable z = xyToz.get(x);
                 Variable zDeepCopy = new VariableImpl(VariableType.WORK, z.getNumber());
                 if(arguments.get(i) instanceof Variable var) {
-                    expanded.add(new AssignmentInstruction(zDeepCopy, new VariableImpl(var.getType(), var.getNumber())));
+                    toAdd = new AssignmentInstruction(zDeepCopy, new VariableImpl(var.getType(), var.getNumber()));
+                    Utils.registerInstruction(toAdd, parentChain, expansion);
                 }
 
                 else {
-                    expanded.add(new QuoteProgramInstruction(zDeepCopy, (FunctionArgument) arguments.get(i)));
+                    toAdd = new QuoteProgramInstruction(zDeepCopy, (FunctionArgument) arguments.get(i));
+                    Utils.registerInstruction(toAdd, parentChain, expansion);
                 }
             }
         }
 
-        expanded.addAll(toChange);
-        expanded.add(new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT)));
+        Utils.registerInstructions(toChange, parentChain, expansion);
+        toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT));
+        Utils.registerInstruction(toAdd, parentChain, expansion);
 
-
-
-
-
-
-
-
-        return expanded;
+        return expansion;
     }
 }
