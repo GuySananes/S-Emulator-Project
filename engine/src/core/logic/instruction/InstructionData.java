@@ -14,7 +14,8 @@ public enum InstructionData {
     JUMP_ZERO("JUMP_ZERO", "2", "S", 2),
     JUMP_EQUAL_CONSTANT("JUMP_EQUAL_CONSTANT", "2", "S", 3),
     JUMP_EQUAL_VARIABLE("JUMP_EQUAL_VARIABLE", "2", "S", 3),
-    QUOTE_PROGRAM("QUOTE_PROGRAM", "run + 5", "S", -1);
+    QUOTE_PROGRAM("QUOTE_PROGRAM", "execution + 5", "S", -1),
+    Jump_Equal_Function("JUMP_EQUAL_FUNCTION", "execution + 6", "S", -1);
 
 
 

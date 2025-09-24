@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class QuoteProgramInstruction extends AbstractInstruction implements Expandable {
 
-    FunctionArgument functionArgument;
+    private final FunctionArgument functionArgument;
 
     public QuoteProgramInstruction(Variable variable, FunctionArgument functionArgument) {
         this(variable, FixedLabel.EMPTY, functionArgument);
