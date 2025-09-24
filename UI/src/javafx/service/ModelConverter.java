@@ -1,11 +1,12 @@
 package javafx.service;
 
-import javafx.model.Instruction;
-import javafx.model.Program;
-import javafx.model.SLabel;
-import javafx.model.Variable;
+import javafx.model.ui.Instruction;
+import javafx.model.ui.Program;
+import javafx.model.ui.SLabel;
+import javafx.model.ui.Variable;
 
 // DTOs actually present per user
+import javafx.model.ui.Statistic;
 import present.PresentProgramDTO;
 import present.PresentInstructionDTO;
 import expand.ExpandDTO;
@@ -112,12 +113,12 @@ public class ModelConverter {
      * Convert ProgramStatisticDTO representation to a single Statistic row.
      * ProgramStatisticDTO only exposes a list + representation; we present one aggregated row.
      */
-    public static javafx.model.Statistic convertStatistics(ProgramStatisticDTO stats) {
-        if (stats == null) return new javafx.model.Statistic();
+    public static Statistic convertStatistics(ProgramStatisticDTO stats) {
+        if (stats == null) return new Statistic();
         String rep;
         try { rep = stats.getRepresentation(); } catch (Exception e) { rep = ""; }
         // We lack discrete cycle / instruction counts here; store representation length heuristics.
-        return new javafx.model.Statistic("Runs", 0, 0, rep); // executionTime field reused to show representation text.
+        return new Statistic("Runs", 0, 0, rep); // executionTime field reused to show representation text.
     }
 
     /**

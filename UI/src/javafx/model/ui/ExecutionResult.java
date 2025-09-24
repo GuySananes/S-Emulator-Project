@@ -1,4 +1,4 @@
-package javafx.model;
+package javafx.model.ui;
 
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;

@@ -4,21 +4,28 @@ import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
 import core.logic.program.SProgram;
 import exception.NoProgramException;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.controller.dialog.InputDialog;
 import javafx.fxml.FXML;
-import javafx.model.*;
+import javafx.model.ui.*;
 import javafx.scene.control.*;
 import javafx.service.FileLoadingService;
 import javafx.service.ModelConverter;
 import javafx.service.ProgramExecutionService;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import present.PresentProgramDTO;
+import run.RunProgramDTO;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class EmulatorController {
 
@@ -314,67 +321,185 @@ public class EmulatorController {
     }
 
     private void handleStartRegular() {
-        if (loadedEngineProgram == null) {
+        if (!currentProgram.isLoaded()) {
             showErrorDialog("No Program", "Please load a program first.");
             return;
         }
 
-        // Update UI state
-        executionResult.reset();
-        executionResult.setRunning(true);
-        executionResult.setStatus("Running");
-        executionResult.addToHistory("Regular execution started");
-        updateSummary("Starting regular execution...");
+        try {
+            // Step 1: Get RunProgramDTO from engine
+            Engine engine = EngineImpl.getInstance();
+            RunProgramDTO runDTO = engine.runProgram();
 
-        // Get input values from execution inputs text area
-        Long[] inputs = parseInputValues();
+            // Step 2: Handle degree selection
+            if (runDTO.getMaxDegree() == 0) {
+                updateSummary("Program cannot be expanded, will be executed as is.");
+                runDTO.setDegree(0);
+            } else {
+                // For now, use degree 0 (original program). Later you can add UI for degree selection
+                runDTO.setDegree(0);
+                updateSummary("Executing with degree 0 (original program)");
+            }
 
-        // Create execution task using service with inputs
-        Task<core.logic.execution.ExecutionResult> executionTask =
-            executionService.createExecutionTask(loadedEngineProgram, inputs);
+            // Step 3: Show input dialog for required inputs
+            Set<core.logic.variable.Variable> requiredInputs = runDTO.getInputs();
 
-        // Handle execution completion
-        executionTask.setOnSucceeded(event -> {
-            core.logic.execution.ExecutionResult result = executionTask.getValue();
-            updateUIWithExecutionResult(result);
-            updateSummary("Regular execution completed");
-        });
+            InputDialog inputDialog = new InputDialog(requiredInputs);
+            inputDialog.initOwner(loadFileButton.getScene().getWindow());
+            inputDialog.initModality(Modality.WINDOW_MODAL);
 
-        // Handle execution errors
-        executionTask.setOnFailed(event -> {
-            Throwable exception = executionTask.getException();
-            showErrorDialog("Execution Error", "Execution failed: " + exception.getMessage());
-            updateSummary("Execution failed: " + exception.getMessage());
-            executionResult.setRunning(false);
-        });
+            Optional<List<Long>> inputResult = inputDialog.showAndWait();
 
-        // Run execution in background
-        Thread executionThread = new Thread(executionTask);
-        executionThread.setDaemon(true);
-        executionThread.start();
+            if (!inputResult.isPresent()) {
+                updateSummary("Execution cancelled by user");
+                return; // User cancelled
+            }
+
+            List<Long> inputValues = inputResult.get();
+            runDTO.setInputs(inputValues);
+
+            // Step 4: Execute the program
+            updateSummary("Executing program with inputs: " + inputValues);
+            executionResult.reset();
+            executionResult.setRunning(true);
+            executionResult.setStatus("Running");
+
+            // Execute in background to keep UI responsive
+            Task<Void> executionTask = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    // Run the program
+                    core.logic.execution.ExecutionResult result = runDTO.runProgram();
+
+                    // Update UI on JavaFX thread
+                    Platform.runLater(() -> {
+                        try {
+                            updateUIAfterExecution(runDTO, result);
+                        } catch (Exception e) {
+                            showErrorDialog("Execution Error", "Error updating UI: " + e.getMessage());
+                        }
+                    });
+
+                    return null;
+                }
+            };
+
+            executionTask.setOnFailed(event -> {
+                Throwable exception = executionTask.getException();
+                showErrorDialog("Execution Error", "Execution failed: " + exception.getMessage());
+                executionResult.setRunning(false);
+                executionResult.setStatus("Failed");
+                updateSummary("Execution failed: " + exception.getMessage());
+            });
+
+            Thread executionThread = new Thread(executionTask);
+            executionThread.setDaemon(true);
+            executionThread.start();
+
+        } catch (Exception e) {
+            showErrorDialog("Execution Error", "Failed to start execution: " + e.getMessage());
+            updateSummary("Failed to start execution: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Updates UI after program execution following ConsoleUI pattern
+     */
+    private void updateUIAfterExecution(RunProgramDTO runDTO, core.logic.execution.ExecutionResult result) throws Exception {
+        // Update execution result
+        executionResult.setCompleted(true);
+        executionResult.setRunning(false);
+        executionResult.setStatus("Completed");
+        executionResult.setCycles(result.getCycles());
+
+        // Get program representation (executed program, potentially expanded)
+        PresentProgramDTO programPresent = runDTO.getPresentProgramDTO();
+        executionResult.addToHistory("Program Representation updated");
+
+        // Update instructions table with executed program
+        instructions.clear();
+        instructions.addAll(ModelConverter.convertInstructions(programPresent));
+
+        // Get variables and their values (like ConsoleUI does)
+        Set<core.logic.variable.Variable> programVariables = runDTO.getOrderedVariablesCopy();
+        List<Long> variableValues = runDTO.getOrderedValuesCopy();
+
+        // Update variables table with execution results
+        updateVariablesTableWithResults(programVariables, variableValues);
+
+        // Update summary with result
+        updateSummary("Execution completed - Result: " + result.getResult() + ", Cycles: " + result.getCycles());
+
+        // Add to execution history
+        executionResult.addToHistory("Result: " + result.getResult());
+        executionResult.addToHistory("Execution Cycles: " + result.getCycles());
     }
 
     /**
-     * Parses input values from the execution inputs text area
+     * Updates variables table with execution results (like ConsoleUI variable display)
      */
-    private Long[] parseInputValues() {
-        String inputText = executionInputs.getText().trim();
-        if (inputText.isEmpty()) {
-            return new Long[0]; // No inputs
+    private void updateVariablesTableWithResults(Set<core.logic.variable.Variable> programVariables,
+                                                 List<Long> variableValues) {
+        variables.clear();
+
+        if (programVariables == null || variableValues == null) {
+            return;
         }
 
-        try {
-            String[] inputStrings = inputText.split("[,\\s]+");
-            Long[] inputs = new Long[inputStrings.length];
-            for (int i = 0; i < inputStrings.length; i++) {
-                inputs[i] = Long.parseLong(inputStrings[i].trim());
-            }
-            return inputs;
-        } catch (NumberFormatException e) {
-            showErrorDialog("Invalid Input", "Please enter valid numbers separated by commas or spaces.");
-            return new Long[0];
+        // Convert to list to maintain order
+        List<core.logic.variable.Variable> orderedVars = new ArrayList<>(programVariables);
+
+        // Create UI variables with their execution values
+        for (int i = 0; i < Math.min(orderedVars.size(), variableValues.size()); i++) {
+            core.logic.variable.Variable engineVar = orderedVars.get(i);
+            Long value = variableValues.get(i);
+
+            // Create Variable for UI table with execution result
+            Variable uiVar = new Variable(
+                    engineVar.getRepresentation(),  // name
+                    value.intValue(),               // value from execution
+                    engineVar.getType().name()      // type
+            );
+
+            variables.add(uiVar);
         }
+
+        executionResult.addToHistory("Variables updated with execution results");
     }
+
+    /**
+     * Shows dialog to select program execution degree
+     */
+    private int selectExecutionDegree(RunProgramDTO runDTO) {
+        if (runDTO.getMaxDegree() == 0) {
+            return 0; // No expansion possible
+        }
+
+        TextInputDialog dialog = new TextInputDialog("0");
+        dialog.setTitle("Select Execution Degree");
+        dialog.setHeaderText("Choose program expansion degree");
+        dialog.setContentText("Enter degree (" + runDTO.getMinDegree() + " - " + runDTO.getMaxDegree() + "):");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            try {
+                int degree = Integer.parseInt(result.get());
+                if (degree >= runDTO.getMinDegree() && degree <= runDTO.getMaxDegree()) {
+                    return degree;
+                } else {
+                    showErrorDialog("Invalid Degree", "Degree must be between " +
+                            runDTO.getMinDegree() + " and " + runDTO.getMaxDegree());
+                    return selectExecutionDegree(runDTO); // Recursive retry
+                }
+            } catch (NumberFormatException e) {
+                showErrorDialog("Invalid Input", "Please enter a valid number.");
+                return selectExecutionDegree(runDTO); // Recursive retry
+            }
+        }
+        return 0; // Default if cancelled
+    }
+
 
     private void handleStartDebug() {
         if (loadedEngineProgram == null) {
@@ -513,3 +638,4 @@ public class EmulatorController {
         summaryLine.setText(message);
     }
 }
+

@@ -39,7 +39,7 @@ public class FileLoadingService {
         try {
             return engine.presentProgram();
         } catch (NoProgramException e) {
-            // This should not happen immediately after successful load; wrap as runtime.
+            // This should not happen immediately after a successful load; wrap as runtime.
             throw new IllegalStateException("Program unexpectedly unavailable after load", e);
         }
     }

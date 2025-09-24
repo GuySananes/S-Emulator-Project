@@ -1,4 +1,4 @@
-package javafx.model;
+package javafx.model.ui;
 
 import javafx.beans.property.*;
 
@@ -31,3 +31,4 @@ public class Variable {
     public String getType() { return type.get(); }
     public void setType(String type) { this.type.set(type); }
 }
+
