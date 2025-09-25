@@ -1,5 +1,6 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
+import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -69,8 +70,8 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public Variable getVariable() {
-        return variable;
+    public Label getLabelDeepCopy() {
+        return label != null ? label.deepCopy() : null;
     }
 
     @Override
@@ -98,8 +99,13 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public Variable getVariableCopy() {
-        return variable != null ? variable.copy() : null;
+    public Variable getVariable() {
+        return variable;
+    }
+
+    @Override
+    public Variable getVariableDeepCopy() {
+        return variable != null ? variable.deepCopy() : null;
     }
 
     @Override
@@ -107,16 +113,6 @@ public abstract class AbstractInstruction implements SInstruction {
         Set<Variable> variables = new HashSet<>();
         if (variable != null) {
             variables.add(variable);
-        }
-
-        return variables;
-    }
-
-    @Override
-    public Set<Variable> getVariablesCopy() {
-        Set<Variable> variables = new HashSet<>();
-        if (variable != null) {
-            variables.add(variable.copy());
         }
 
         return variables;
@@ -133,7 +129,7 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public String thisRepresentation() {
+    public String getRepresentation() {
         return "#" + index +
                 " (" + instructionData.getInstructionType() + ") " +
                 "[ " + label.getRepresentation() + " ] " +
@@ -142,14 +138,12 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
-    public final String getRepresentation() {
+    public final String getParentsRepresentation() {
         StringBuilder sb = new StringBuilder();
-
-        sb.append(thisRepresentation());
 
         if (parents != null && !parents.isEmpty()) {
             for (SInstruction parent : parents) {
-                sb.append(" >>> ").append(parent.thisRepresentation());
+                sb.append(" >>> ").append(parent.getRepresentation());
             }
         }
 

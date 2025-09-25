@@ -1,6 +1,6 @@
 package core.logic.program;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
@@ -128,11 +128,11 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getOrderedVariablesCopy() {
+    public Set<Variable> getOrderedVariablesDeepCopy() {
         Set<Variable> orderedVariables = getOrderedVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : orderedVariables) {
-            copy.add(variable.copy());
+            copy.add(variable.deepCopy());
         }
 
         return copy;
@@ -148,11 +148,11 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getInputVariablesCopy(){
+    public Set<Variable> getInputVariablesDeepCopy(){
         Set<Variable> inputVariables = getInputVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : inputVariables) {
-            copy.add(variable.copy());
+            copy.add(variable.deepCopy());
         }
 
         return copy;
@@ -168,10 +168,20 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
+    public Set<Label> getOrderedLabelsDeepCopy() {
+        Set<Label> orderedLabels = getOrderedLabels();
+        Set<Label> copy = new TreeSet<>(new LabelComparator());
+        for (Label label : orderedLabels) {
+            copy.add(label.deepCopy());
+        }
+
+        return copy;
+    }
+
+    @Override
     public SInstruction getInstructionByLabel(Label label) {
-        // Special case: if the label is EXIT, the program should end
         if ("EXIT".equals(label.getRepresentation())) {
-            return null; // Returning null indicates program termination
+            return null;
         }
 
         for (SInstruction instruction : instructionList) {
@@ -203,12 +213,12 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SProgram clone() {
-        SProgram clone = new SProgramImpl(this.name);
+        SProgram clonedProgram = new SProgramImpl(this.name);
         for (SInstruction instruction : this.instructionList) {
-            clone.addInstruction(instruction.clone());
+            clonedProgram.addInstruction(instruction.clone());
         }
 
-        return clone;
+        return clonedProgram;
     }
 
 

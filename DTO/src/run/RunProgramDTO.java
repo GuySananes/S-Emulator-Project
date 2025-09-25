@@ -8,16 +8,13 @@ import java.util.Set;
 import core.logic.execution.ResultCycle;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
-import core.logic.program.RunCount;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
 import exception.ProgramNotExecutedYetException;
 import expansion.Expansion;
-import present.PresentProgramDTO;
-import present.PresentProgramDTOCreator;
-import statistic.SingleRunStatisticImpl;
-import statistic.StatisticManagerImpl;
+import present.create.PresentDTOCreator;
+import present.program.PresentProgramDTO;
 
 public class RunProgramDTO {
 
@@ -53,7 +50,7 @@ public class RunProgramDTO {
     }
 
     public Set<Variable> getInputs(){
-        return program.getInputVariablesCopy();
+        return program.getInputVariablesDeepCopy();
     }
 
     public void setInputs(List<Long> input){
@@ -73,11 +70,7 @@ public class RunProgramDTO {
         }
 
         programExecutor = new ProgramExecutorImpl(program);
-        result = programExecutor.run(input.toArray(new Long[0]));
-        RunCount.incrementRunCount(this.program);
-        StatisticManagerImpl.getInstance().addRunStatistic(this.program,
-                new SingleRunStatisticImpl(RunCount.getRunCount(this.program),
-                degree, input, result.getResult(), result.getCycles()));
+        result = programExecutor.run(input, degree);
 
         return result;
     }
@@ -86,14 +79,14 @@ public class RunProgramDTO {
         if(programExecutor == null){
             throw new ProgramNotExecutedYetException();
         }
-        return Objects.requireNonNullElse(expandedProgram, program).getOrderedVariablesCopy();
+        return Objects.requireNonNullElse(expandedProgram, program).getOrderedVariablesDeepCopy();
     }
 
     public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
         if(programExecutor == null){
             throw new ProgramNotExecutedYetException();
         }
-        return programExecutor.getOrderedValuesCopy();
+        return programExecutor.getOrderedValues();
     }
 
     public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
@@ -101,7 +94,7 @@ public class RunProgramDTO {
             throw new ProgramNotExecutedYetException();
         }
 
-        return PresentProgramDTOCreator.create(Objects.requireNonNullElse(expandedProgram, program));
+        return PresentDTOCreator.createPresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));
     }
 
 

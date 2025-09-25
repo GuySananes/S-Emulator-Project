@@ -1,7 +1,8 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
+import core.logic.instruction.InstructionData;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
@@ -19,20 +20,23 @@ public interface SInstruction {
     LabelCycle execute(ExecutionContext context);
     String getCycleRepresentation();
     Label getLabel();
+    Label getLabelDeepCopy();
     Variable getVariable();
     List<SInstruction> getParents();
     int getIndex();
+    Variable getVariableDeepCopy();
+    Set<Variable> getVariables();
+    Set<Label> getLabels();
+    String getRepresentation();
+    String getParentsRepresentation();
+    InstructionData getInstructionData();
+    int getDegree();
+
     void setIndex(int index);
     void setParents(List<SInstruction> parents);
     void setVariable(Variable variable);
     void setLabel(Label label);
-    Variable getVariableCopy();
-    Set<Variable> getVariables();
-    Set<Variable> getVariablesCopy();
-    Set<Label> getLabels();
-    String thisRepresentation();
-    String getRepresentation();
-    InstructionData getInstructionData();
-    int getDegree();
+
     SInstruction clone();//currently without parents and index
+
 }

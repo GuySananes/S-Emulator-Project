@@ -1,0 +1,154 @@
+package present.create;
+
+import core.logic.instruction.*;
+import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstruction.Argument;
+import core.logic.instruction.quoteInstruction.FunctionArgument;
+import core.logic.instruction.quoteInstruction.QuoteProgramInstruction;
+import core.logic.program.SFunction;
+import core.logic.program.SProgram;
+import core.logic.variable.Variable;
+import present.quote.ArgumentDTO;
+import present.quote.FunctionArgumentDTO;
+import present.mostInstructions.*;
+import present.program.PresentFunctionDTO;
+import present.program.PresentProgramDTO;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PresentDTOCreator {
+
+    public static PresentProgramDTO createPresentProgramDTO(SProgram program){
+        List<SInstruction> instructions = program.getInstructionList();
+        List<PresentInstructionDTO> presentInstructionDTOList =
+                instructions.stream()
+                        .map(PresentDTOCreator::createPresentInstructionDTO)
+                        .collect(Collectors.toList());
+
+        if (program instanceof SFunction) {
+            return new PresentFunctionDTO(
+                    ((SFunction)program).getUserName(),
+                    program.getName(),
+                    program.getInputVariablesDeepCopy(),
+                    program.getOrderedLabelsDeepCopy(),
+                    presentInstructionDTOList, program.getRepresentation());
+        }
+
+        return new PresentProgramDTO(
+                program.getName(),
+                program.getInputVariablesDeepCopy(),
+                program.getOrderedLabelsDeepCopy(),
+                presentInstructionDTOList, program.getRepresentation());
+    }
+
+    public static PresentInstructionDTO createPresentInstructionDTO(SInstruction instruction) {
+        InstructionData type = instruction.getInstructionData();
+        switch (type) {
+            case INCREASE, DECREASE, NO_OP, ZERO_VARIABLE -> {
+                return new PresentInstructionDTO(
+                        type,
+                        instruction.getVariableDeepCopy(),
+                        instruction.getLabelDeepCopy(),
+                        instruction.getIndex(),
+                        instruction.getRepresentation());
+            }
+
+            case JUMP_NOT_ZERO, GOTO_LABEL, JUMP_ZERO -> {
+                AbstractInstructionTwoLabels instructionTwoLabels =
+                        (AbstractInstructionTwoLabels)instruction;
+                return new PresentInstructionTwoLabelsDTO(
+                        type,
+                        instructionTwoLabels.getVariableDeepCopy(),
+                        instructionTwoLabels.getLabelDeepCopy(),
+                        instructionTwoLabels.getTargetLabelDeepCopy(),
+                        instructionTwoLabels.getIndex(),
+                        instructionTwoLabels.getRepresentation());
+            }
+
+            case ASSIGNMENT -> {
+                AbstractInstructionTwoVariables instructionTwoVariables =
+                        (AbstractInstructionTwoVariables)instruction;
+                return new PresentInstructionTwoVariablesDTO(
+                        type,
+                        instructionTwoVariables.getVariableDeepCopy(),
+                        instructionTwoVariables.getSecondaryVariableDeepCopy(),
+                        instructionTwoVariables.getLabelDeepCopy(),
+                        instructionTwoVariables.getIndex(),
+                        instructionTwoVariables.getRepresentation());
+            }
+
+            case CONSTANT_ASSIGNMENT -> {
+                ConstantAssignmentInstruction constantAssignmentInstruction =
+                        (ConstantAssignmentInstruction)instruction;
+                return new PresentConstantAssignmentInstructionDTO(
+                        type,
+                        constantAssignmentInstruction.getVariableDeepCopy(),
+                        constantAssignmentInstruction.getLabelDeepCopy(),
+                        constantAssignmentInstruction.getConstantValue(),
+                        constantAssignmentInstruction.getIndex(),
+                        constantAssignmentInstruction.getRepresentation());
+            }
+
+            case JUMP_EQUAL_CONSTANT -> {
+                JumpEqualConstant jumpEqualConstant =
+                        (JumpEqualConstant)instruction;
+                return new PresentJumpEqualConstantInstructionDTO(
+                        type,
+                        jumpEqualConstant.getVariableDeepCopy(),
+                        jumpEqualConstant.getLabelDeepCopy(),
+                        jumpEqualConstant.getTargetLabelDeepCopy(),
+                        jumpEqualConstant.getConstantValue(),
+                        jumpEqualConstant.getIndex(),
+                        jumpEqualConstant.getRepresentation());
+            }
+
+            case JUMP_EQUAL_VARIABLE -> {
+                JumpEqualVariable jumpEqualVariable =
+                        (JumpEqualVariable)instruction;
+                return new PresentJumpEqualVariableDTO(
+                        type,
+                        jumpEqualVariable.getVariableDeepCopy(),
+                        jumpEqualVariable.getSecondaryVariableDeepCopy(),
+                        jumpEqualVariable.getLabelDeepCopy(),
+                        jumpEqualVariable.getTargetLabelDeepCopy(),
+                        jumpEqualVariable.getIndex(),
+                        jumpEqualVariable.getRepresentation());
+            }
+
+            case QUOTE_PROGRAM -> {
+                QuoteProgramInstruction quoteProgramInstruction =
+                        (QuoteProgramInstruction)instruction;
+                return new PresentQuoteProgramInstructionDTO(
+                        type,
+                        quoteProgramInstruction.getVariableDeepCopy(),
+                        quoteProgramInstruction.getLabelDeepCopy(),
+                        createFunctionArgumentDTO(quoteProgramInstruction.getFunctionArgument()),
+                        quoteProgramInstruction.getIndex(),
+                        quoteProgramInstruction.getRepresentation());
+            }
+
+            default -> throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
+        }
+    }
+
+    private static FunctionArgumentDTO createFunctionArgumentDTO(FunctionArgument functionArgument) {
+        SProgram program = functionArgument.getProgram();
+        String programOrFunctionName = program instanceof SFunction ?
+                ((SFunction)program).getUserName() :
+                program.getName();
+
+        List<Argument> arguments = functionArgument.getArguments();
+        List<ArgumentDTO> argumentDTOList = new ArrayList<>(arguments.size());
+        for (Argument argument : arguments) {
+            if (argument instanceof FunctionArgument) {
+                argumentDTOList.add(createFunctionArgumentDTO((FunctionArgument) argument));
+            } else {
+                argumentDTOList.add(((Variable)argument).deepCopy());
+            }
+        }
+
+        return new FunctionArgumentDTO(programOrFunctionName, argumentDTOList, functionArgument.getRepresentation());
+    }
+}

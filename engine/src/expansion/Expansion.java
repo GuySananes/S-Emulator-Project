@@ -1,7 +1,7 @@
 package expansion;
 
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.program.SProgram;
 import core.logic.program.SProgramImpl;
 

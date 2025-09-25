@@ -22,22 +22,18 @@ public class LabelImpl implements Label {
             throw new IllegalArgumentException("Label string cannot be null or empty.");
         }
 
-        // Normalize the label string to uppercase
         labelString = labelString.trim().toUpperCase();
 
-        // Special case for EXIT label
         if ("EXIT".equals(labelString)) {
             this.label = "EXIT";
             this.number = -1; // Special number for EXIT label
             return;
         }
 
-        // Check if the label starts with 'L'
         if (!labelString.startsWith("L")) {
             throw new IllegalArgumentException("Label must start with 'L' or 'l', got: " + labelString);
         }
 
-        // Extract the number part
         String numberStr = labelString.substring(1);
         try {
             this.number = Integer.parseInt(numberStr);
@@ -57,6 +53,11 @@ public class LabelImpl implements Label {
 
     @Override
     public String getRepresentation() {return label;}
+
+    @Override
+    public Label deepCopy() {
+        return new LabelImpl(label);
+    }
 
     @Override
     public boolean equals(Object o) {

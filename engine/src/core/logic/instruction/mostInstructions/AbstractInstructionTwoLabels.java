@@ -1,5 +1,6 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
+import core.logic.instruction.InstructionData;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
@@ -41,6 +42,10 @@ public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
 
     public Label getTargetLabel() {
         return targetLabel;
+    }
+
+    public Label getTargetLabelDeepCopy() {
+        return targetLabel.deepCopy();
     }
 
     @Override

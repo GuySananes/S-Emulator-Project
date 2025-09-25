@@ -5,6 +5,8 @@ import core.logic.execution.ResultCycle;
 import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class FunctionArgument implements Argument {
@@ -42,20 +44,16 @@ public class FunctionArgument implements Argument {
         ProgramExecutorImpl executor = new ProgramExecutorImpl(program);
         ResultCycle result;
         int totalCycles = 0;
-        Long[] input = new Long[arguments.size()];
-        for (int i = 0; i < arguments.size(); i++) {
-            result = arguments.get(i).evaluate(context);
-            input[i] = result.getResult();
+        List<Long> input = new ArrayList<>(arguments.size());
+        for (Argument argument : arguments) {
+            result = argument.evaluate(context);
+            input.add(result.getResult());
             totalCycles += result.getCycles();
         }
 
-        result = executor.run(input);
+        result = executor.run(input, 0);
         totalCycles += result.getCycles();
         return new ResultCycle(result.getResult(), totalCycles);
     }
 
-    @Override
-    public Argument clone() {
-        return this;
-    }
 }

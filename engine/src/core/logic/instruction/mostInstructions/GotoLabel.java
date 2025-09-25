@@ -1,7 +1,8 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
+import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -12,25 +13,26 @@ import expansion.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZeroVariableInstruction extends AbstractInstruction implements Expandable {
+public class GotoLabel extends AbstractInstructionTwoLabels implements Expandable {
 
-    public ZeroVariableInstruction(Variable variable) {
-        super(InstructionData.ZERO_VARIABLE, variable);
+
+    public GotoLabel(Label targetLabel) {
+        this(FixedLabel.EMPTY, targetLabel);
     }
 
-    public ZeroVariableInstruction(Variable variable, Label label) {
-        super(InstructionData.ZERO_VARIABLE, variable, label);
+    public GotoLabel(Label label, Label targetLabel) {
+        super(InstructionData.GOTO_LABEL, label, targetLabel);
     }
 
     @Override
     public LabelCycle execute(ExecutionContext context) {
-        context.updateVariable(getVariable(), 0);
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+        return new LabelCycle(getTargetLabel(), Integer.parseInt(getInstructionData().getCycleRepresentation()));
+
     }
 
     @Override
     public String getCommandRepresentation() {
-        return getVariable().getRepresentation() + " <- 0";
+        return "GOTO " + getTargetLabel().getRepresentation();
     }
 
     @Override
@@ -38,10 +40,10 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
         List<SInstruction> parentChain = createParentChain();
         SInstruction toAdd;
         List<SInstruction> expansion = new ArrayList<>(2);
-        Label label = (getLabel() == FixedLabel.EMPTY ? context.generateLabel() : getLabel());
-        toAdd = new DecreaseInstruction(getVariable(), label);
+        Variable z = context.generateZ();
+        toAdd = new IncreaseInstruction(z, getLabel());
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new JumpNotZeroInstruction(getVariable(), label);
+        toAdd = new JumpNotZeroInstruction(z, getTargetLabel());
         Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
@@ -49,7 +51,6 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
 
     @Override
     public SInstruction clone() {
-        return new ZeroVariableInstruction(getVariable(), getLabel());
+        return new GotoLabel(getLabel(), getTargetLabel());
     }
-
 }

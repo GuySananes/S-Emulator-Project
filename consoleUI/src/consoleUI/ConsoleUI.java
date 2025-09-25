@@ -7,7 +7,7 @@ import core.logic.variable.Variable;
 import exception.ProgramValidationException;
 import exception.XMLUnmarshalException;
 import expand.ExpandDTO;
-import present.PresentProgramDTO;
+import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
 

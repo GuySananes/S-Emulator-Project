@@ -4,8 +4,8 @@ import core.logic.program.SProgram;
 import exception.DegreeOutOfRangeException;
 import exception.NoProgramException;
 import expansion.Expansion;
-import present.PresentProgramDTO;
-import present.PresentProgramDTOCreator;
+import present.create.PresentDTOCreator;
+import present.program.PresentProgramDTO;
 
 public class ExpandDTO {
     private final SProgram program;
@@ -39,6 +39,6 @@ public class ExpandDTO {
             throw new DegreeOutOfRangeException(getMinDegree(), getMaxDegree());
         }
 
-        return PresentProgramDTOCreator.create(Expansion.expand(program, degree));
+        return PresentDTOCreator.createPresentProgramDTO(Expansion.expand(program, degree));
     }
 }

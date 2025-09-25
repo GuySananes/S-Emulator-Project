@@ -1,6 +1,6 @@
 package core.logic.program;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
@@ -14,10 +14,11 @@ public interface SProgram {
     void addInstructions(List<SInstruction> instructions);
     List<SInstruction> getInstructionList();
     Set<Variable> getOrderedVariables();
-    Set<Variable> getOrderedVariablesCopy();
+    Set<Variable> getOrderedVariablesDeepCopy();
     Set<Label> getOrderedLabels();
+    Set<Label> getOrderedLabelsDeepCopy();
     Set<Variable> getInputVariables();
-    Set<Variable> getInputVariablesCopy();
+    Set<Variable> getInputVariablesDeepCopy();
     int getDegree();
     SProgram clone();
     String getRepresentation();

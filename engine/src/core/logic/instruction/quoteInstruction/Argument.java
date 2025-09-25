@@ -6,5 +6,4 @@ import core.logic.execution.ResultCycle;
 public interface Argument {
     ResultCycle evaluate(ExecutionContext context);
     String getRepresentation();
-    Argument clone();
 }

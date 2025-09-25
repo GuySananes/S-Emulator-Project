@@ -1,6 +1,6 @@
 package core.logic.program;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 
 public class SFunction extends SProgramImpl{
     private final String userName;

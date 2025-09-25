@@ -1,7 +1,8 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
+import core.logic.instruction.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -24,14 +25,14 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
 
     @Override
     public LabelCycle execute(ExecutionContext context) {
-        long secondaryValue = context.getVariableValue(getSecondaryVariable());
+        long secondaryValue = context.getVariableValue(getSecondVariable());
         context.updateVariable(getVariable(), secondaryValue);
         return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
     }
 
     @Override
     public String getCommandRepresentation() {
-        return getVariable().getRepresentation() + " <- " + getSecondaryVariable().getRepresentation();
+        return getVariable().getRepresentation() + " <- " + getSecondVariable().getRepresentation();
     }
 
     @Override
@@ -47,21 +48,21 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
 
         toAdd = new ZeroVariableInstruction(getVariable(), getLabel());
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new JumpNotZeroInstruction(getSecondaryVariable(), L1);
+        toAdd = new JumpNotZeroInstruction(getSecondVariable(), L1);
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new GotoLabel(L3);
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new DecreaseInstruction(getSecondaryVariable(), L1);
+        toAdd = new DecreaseInstruction(getSecondVariable(), L1);
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new IncreaseInstruction(z1);
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new JumpNotZeroInstruction(getSecondaryVariable(), L1);
+        toAdd = new JumpNotZeroInstruction(getSecondVariable(), L1);
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new DecreaseInstruction(z1, L2);
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new IncreaseInstruction(getVariable());
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new IncreaseInstruction(getSecondaryVariable());
+        toAdd = new IncreaseInstruction(getSecondVariable());
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new JumpNotZeroInstruction(z1, L2);
         Utils.registerInstruction(toAdd, parentChain, expansion);
@@ -73,7 +74,7 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
 
     @Override
     public SInstruction clone(){
-        return new AssignmentInstruction(getVariable(), getSecondaryVariable(), getLabel());
+        return new AssignmentInstruction(getVariable(), getSecondVariable(), getLabel());
     }
 
 

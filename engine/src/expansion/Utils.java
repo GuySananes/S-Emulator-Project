@@ -1,6 +1,6 @@
 package expansion;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 
 import java.util.List;
 

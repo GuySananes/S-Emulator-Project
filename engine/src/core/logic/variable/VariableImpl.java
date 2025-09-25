@@ -31,7 +31,7 @@ public class VariableImpl implements Variable {
     }
 
     @Override
-    public Variable copy() {
+    public Variable deepCopy() {
         return new VariableImpl(type, number);
     }
 

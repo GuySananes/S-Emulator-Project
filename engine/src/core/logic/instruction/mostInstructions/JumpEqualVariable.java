@@ -1,7 +1,8 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
+import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -35,10 +36,14 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
         return targetLabel;
     }
 
+    public Label getTargetLabelDeepCopy() {
+        return targetLabel.deepCopy();
+    }
+
     @Override
     public LabelCycle execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
-        long secondaryValue = context.getVariableValue(getSecondaryVariable());
+        long secondaryValue = context.getVariableValue(getSecondVariable());
         if (variableValue == secondaryValue) {
             return new LabelCycle(targetLabel, Integer.parseInt(getInstructionData().getCycleRepresentation()));
         }
@@ -49,7 +54,7 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
     @Override
     public String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = "
-                + getSecondaryVariable().getRepresentation() +
+                + getSecondVariable().getRepresentation() +
                 " GOTO " + targetLabel.getRepresentation();
     }
 
@@ -73,7 +78,7 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
 
         toAdd = new AssignmentInstruction(z1, getVariable(), getLabel());
         Utils.registerInstruction(toAdd, parentChain, expansion);
-        toAdd = new AssignmentInstruction(z2, getSecondaryVariable());
+        toAdd = new AssignmentInstruction(z2, getSecondVariable());
         Utils.registerInstruction(toAdd, parentChain, expansion);
         toAdd = new JumpZero(z1, L2, L3);
         Utils.registerInstruction(toAdd, parentChain, expansion);
@@ -108,6 +113,6 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
 
     @Override
     public SInstruction clone() {
-        return new JumpEqualVariable(getVariable(), getSecondaryVariable(), targetLabel, getLabel());
+        return new JumpEqualVariable(getVariable(), getSecondVariable(), targetLabel, getLabel());
     }
 }

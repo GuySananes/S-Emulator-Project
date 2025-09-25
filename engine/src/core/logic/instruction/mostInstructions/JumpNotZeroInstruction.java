@@ -1,13 +1,14 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
+import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
 
 
-public class JumpNotZeroInstruction extends AbstractInstructionTwoLabels{
+public class JumpNotZeroInstruction extends AbstractInstructionTwoLabels {
 
     public JumpNotZeroInstruction(Variable variable, Label targetLabel) {
         this(variable, FixedLabel.EMPTY, targetLabel);

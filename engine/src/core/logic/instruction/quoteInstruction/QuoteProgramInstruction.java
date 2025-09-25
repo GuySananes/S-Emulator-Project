@@ -4,6 +4,7 @@ import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
 import core.logic.execution.ResultCycle;
 import core.logic.instruction.*;
+import core.logic.instruction.mostInstructions.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
@@ -30,6 +31,10 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     public QuoteProgramInstruction(Variable variable, Label label, FunctionArgument functionArgument) {
         super(InstructionData.QUOTE_PROGRAM, variable, label);
         this.functionArgument = functionArgument;
+    }
+
+    public FunctionArgument getFunctionArgument() {
+        return functionArgument;
     }
 
     @Override
@@ -107,7 +112,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
             }
 
             if(instruction instanceof AbstractInstructionTwoVariables twoVariables) {
-                Variable secondaryVar = twoVariables.getSecondaryVariable();
+                Variable secondaryVar = twoVariables.getSecondVariable();
                 if(secondaryVar != null) {
                     Variable z;
                     if (!xyToz.containsKey(secondaryVar)) {
@@ -117,7 +122,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                         z = xyToz.get(secondaryVar);
                     }
 
-                    twoVariables.setSecondaryVariable(z);
+                    twoVariables.setSecondVariable(z);
                 }
             }
 

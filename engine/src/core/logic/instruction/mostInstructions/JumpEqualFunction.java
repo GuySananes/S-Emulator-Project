@@ -1,8 +1,9 @@
-package core.logic.instruction;
+package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
 import core.logic.execution.ResultCycle;
+import core.logic.instruction.InstructionData;
 import core.logic.instruction.quoteInstruction.FunctionArgument;
 import core.logic.instruction.quoteInstruction.QuoteProgramInstruction;
 import core.logic.label.FixedLabel;

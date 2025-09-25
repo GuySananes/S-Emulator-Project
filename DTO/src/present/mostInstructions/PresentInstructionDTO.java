@@ -1,8 +1,10 @@
-package present;
+package present.mostInstructions;
 
 import core.logic.instruction.InstructionData;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
+
+import java.util.List;
 
 public class PresentInstructionDTO {
 
@@ -11,13 +13,17 @@ public class PresentInstructionDTO {
     private final Label label;
     private final int index;
     private final String representation;
+    private final List<PresentInstructionDTO> parents;
+    private final String parentsRepresentation;
 
-    public PresentInstructionDTO(InstructionData instructionData, Variable variable, Label label, int index, String representation) {
+    public PresentInstructionDTO(InstructionData instructionData, Variable variable, Label label, int index, String representation, List<PresentInstructionDTO> parents, String parentsRepresentation) {
         this.instructionData = instructionData;
         this.variable = variable;
         this.label = label;
         this.index = index;
         this.representation = representation;
+        this.parents = parents;
+        this.parentsRepresentation = parentsRepresentation;
     }
 
     public InstructionData getInstructionData() {
@@ -32,11 +38,19 @@ public class PresentInstructionDTO {
         return label;
     }
 
+    public int getIndex() {
+        return index;
+    }
+
     public String getRepresentation() {
         return representation;
     }
 
-    public int getIndex() {
-        return index;
+    public List<PresentInstructionDTO> getParents() {
+        return parents;
+    }
+
+    public String getParentsRepresentation() {
+        return parentsRepresentation;
     }
 }
