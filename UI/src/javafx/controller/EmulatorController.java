@@ -24,6 +24,7 @@ public class EmulatorController {
     @FXML private Label cyclesLabel;
     @FXML private ProgressIndicator loadProgress;
     @FXML private Label loadStatusLabel;
+    @FXML private Label currentDegreeLabel;
 
     // All execution/debug buttons
     @FXML private Button startRegularButton;
@@ -83,7 +84,8 @@ public class EmulatorController {
 
         bindingController = new UIBindingController(
                 currentProgram, executionResult,
-                loadedFilePath, cyclesLabel, historyChain
+                loadedFilePath, cyclesLabel, historyChain,
+                currentDegreeLabel
         );
     }
 

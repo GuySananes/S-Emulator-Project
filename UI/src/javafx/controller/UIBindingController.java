@@ -17,17 +17,20 @@ public class UIBindingController {
     private final TextField loadedFilePath;
     private final Label cyclesLabel;
     private final TextArea historyChain;
+    private final Label currentDegreeLabel;
 
     public UIBindingController(Program currentProgram,
                                ExecutionResult executionResult,
                                TextField loadedFilePath,
                                Label cyclesLabel,
-                               TextArea historyChain) {
+                               TextArea historyChain,
+                               Label currentDegreeLabel) {
         this.currentProgram = currentProgram;
         this.executionResult = executionResult;
         this.loadedFilePath = loadedFilePath;
         this.cyclesLabel = cyclesLabel;
         this.historyChain = historyChain;
+        this.currentDegreeLabel = currentDegreeLabel;
     }
 
     public void setupAllBindings() {
@@ -36,6 +39,13 @@ public class UIBindingController {
     }
 
     private void setupProgramBindings() {
+        // Bind the degree label to show "current / max"
+        currentDegreeLabel.textProperty().bind(
+                currentProgram.currentDegreeProperty().asString()
+                        .concat(" / ")
+                        .concat(currentProgram.maxDegreeProperty().asString())
+        );
+
         // Bind program name to loaded file path (when no file is selected)
         loadedFilePath.textProperty().bind(
                 javafx.beans.binding.Bindings.when(currentProgram.filePathProperty().isNotEmpty())

@@ -1,5 +1,8 @@
 package javafx.controller;
 
+import core.logic.engine.Engine;
+import core.logic.engine.EngineImpl;
+import core.logic.program.SProgram;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.model.ui.Instruction;
@@ -136,15 +139,38 @@ public class FileLoadingController {
         currentProgram.setFilePath(file.getAbsolutePath());
         currentProgram.setName(uiProgram.getName());
         currentProgram.setLoaded(true);
-        currentProgram.setMaxDegree(uiProgram.getMaxDegree());
-        currentProgram.setMinDegree(uiProgram.getMinDegree());
         currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-        // Reset to original program (degree 0) when loading
-        currentProgram.setCurrentDegree(0);
+        // Get degree information from the engine using RunProgramDTO
+        // This is more reliable than ExpandDTO
+        try {
+            Engine engine = EngineImpl.getInstance();
+            run.RunProgramDTO runDTO = engine.runProgram();
+
+            currentProgram.setMaxDegree(runDTO.getMaxDegree());
+            currentProgram.setMinDegree(runDTO.getMinDegree());
+            currentProgram.setCurrentDegree(0); // Always start at degree 0
+
+        } catch (Exception e) {
+            // Fallback: Try to get SProgram directly
+            try {
+                Engine engine = EngineImpl.getInstance();
+                SProgram sProgram = engine.getLoadedProgram();
+                currentProgram.setMaxDegree(sProgram.calculateMaxDegree());
+                currentProgram.setMinDegree(sProgram.getMinDegree());
+                currentProgram.setCurrentDegree(0);
+            } catch (Exception fallbackException) {
+                // Final fallback to defaults
+                currentProgram.setMaxDegree(0);
+                currentProgram.setMinDegree(0);
+                currentProgram.setCurrentDegree(0);
+                updateSummary.accept("Warning: Could not determine program expansion degrees");
+            }
+        }
 
         updateUICollections(dto);
-        updateSummary.accept("File loaded successfully: " + file.getName());
+        updateSummary.accept("File loaded successfully: " + file.getName() +
+                " (Max degree: " + currentProgram.getMaxDegree() + ")");
     }
 
     private void updateUICollections(PresentProgramDTO dto) {
