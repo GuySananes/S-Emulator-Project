@@ -47,16 +47,11 @@ public class PresentDTOCreator {
         InstructionData type = instruction.getInstructionData();
         List<PresentInstructionDTO> parentsDTO = instruction.getParents() == null
                 ? new ArrayList<>()
-                : instruction.getParents().stream()
-                .map(PresentDTOCreator::createPresentInstructionDTO)
-                .toList();
+                : createPresentInstructionDTOList(instruction.getParents());
         String parentsRepresentation = instruction.getParentsRepresentation();
 
 
-
-
-
-       switch (type) {
+        switch (type) {
             case INCREASE, DECREASE, NO_OP, ZERO_VARIABLE -> {
                 return new PresentInstructionDTO(
                         type,
@@ -70,7 +65,7 @@ public class PresentDTOCreator {
 
             case JUMP_NOT_ZERO, GOTO_LABEL, JUMP_ZERO -> {
                 AbstractInstructionTwoLabels instructionTwoLabels =
-                        (AbstractInstructionTwoLabels)instruction;
+                        (AbstractInstructionTwoLabels) instruction;
                 return new PresentInstructionTwoLabelsDTO(
                         type,
                         instructionTwoLabels.getVariableDeepCopy(),
@@ -82,7 +77,7 @@ public class PresentDTOCreator {
 
             case ASSIGNMENT -> {
                 AbstractInstructionTwoVariables instructionTwoVariables =
-                        (AbstractInstructionTwoVariables)instruction;
+                        (AbstractInstructionTwoVariables) instruction;
                 return new PresentInstructionTwoVariablesDTO(
                         type,
                         instructionTwoVariables.getVariableDeepCopy(),
@@ -94,7 +89,7 @@ public class PresentDTOCreator {
 
             case CONSTANT_ASSIGNMENT -> {
                 ConstantAssignmentInstruction constantAssignmentInstruction =
-                        (ConstantAssignmentInstruction)instruction;
+                        (ConstantAssignmentInstruction) instruction;
                 return new PresentConstantAssignmentInstructionDTO(
                         type,
                         constantAssignmentInstruction.getVariableDeepCopy(),
@@ -106,7 +101,7 @@ public class PresentDTOCreator {
 
             case JUMP_EQUAL_CONSTANT -> {
                 JumpEqualConstant jumpEqualConstant =
-                        (JumpEqualConstant)instruction;
+                        (JumpEqualConstant) instruction;
                 return new PresentJumpEqualConstantInstructionDTO(
                         type,
                         jumpEqualConstant.getVariableDeepCopy(),
@@ -119,7 +114,7 @@ public class PresentDTOCreator {
 
             case JUMP_EQUAL_VARIABLE -> {
                 JumpEqualVariable jumpEqualVariable =
-                        (JumpEqualVariable)instruction;
+                        (JumpEqualVariable) instruction;
                 return new PresentJumpEqualVariableDTO(
                         type,
                         jumpEqualVariable.getVariableDeepCopy(),
@@ -132,7 +127,7 @@ public class PresentDTOCreator {
 
             case QUOTE_PROGRAM -> {
                 QuoteProgramInstruction quoteProgramInstruction =
-                        (QuoteProgramInstruction)instruction;
+                        (QuoteProgramInstruction) instruction;
                 return new PresentQuoteProgramInstructionDTO(
                         type,
                         quoteProgramInstruction.getVariableDeepCopy(),
@@ -142,14 +137,16 @@ public class PresentDTOCreator {
                         quoteProgramInstruction.getRepresentation());
 
 
-            default -> throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
+                default ->
+                        throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
+            }
         }
     }
 
-    private static FunctionArgumentDTO createFunctionArgumentDTO(FunctionArgument functionArgument) {
+    private static FunctionArgumentDTO createFunctionArgumentDTO (FunctionArgument functionArgument){
         SProgram program = functionArgument.getProgram();
         String programOrFunctionName = program instanceof SFunction ?
-                ((SFunction)program).getUserName() :
+                ((SFunction) program).getUserName() :
                 program.getName();
 
         List<Argument> arguments = functionArgument.getArguments();
@@ -158,10 +155,16 @@ public class PresentDTOCreator {
             if (argument instanceof FunctionArgument) {
                 argumentDTOList.add(createFunctionArgumentDTO((FunctionArgument) argument));
             } else {
-                argumentDTOList.add(((Variable)argument).deepCopy());
+                argumentDTOList.add(((Variable) argument).deepCopy());
             }
         }
 
         return new FunctionArgumentDTO(programOrFunctionName, argumentDTOList, functionArgument.getRepresentation());
+    }
+
+    private static List<PresentInstructionDTO> createPresentInstructionDTOList(List<SInstruction> instructions) {
+        return instructions.stream()
+                .map(PresentDTOCreator::createPresentInstructionDTO)
+                .toList();
     }
 }
