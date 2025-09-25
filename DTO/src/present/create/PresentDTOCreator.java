@@ -45,14 +45,27 @@ public class PresentDTOCreator {
 
     public static PresentInstructionDTO createPresentInstructionDTO(SInstruction instruction) {
         InstructionData type = instruction.getInstructionData();
-        switch (type) {
+        List<PresentInstructionDTO> parentsDTO = instruction.getParents() == null
+                ? new ArrayList<>()
+                : instruction.getParents().stream()
+                .map(PresentDTOCreator::createPresentInstructionDTO)
+                .toList();
+        String parentsRepresentation = instruction.getParentsRepresentation();
+
+
+
+
+
+       switch (type) {
             case INCREASE, DECREASE, NO_OP, ZERO_VARIABLE -> {
                 return new PresentInstructionDTO(
                         type,
                         instruction.getVariableDeepCopy(),
                         instruction.getLabelDeepCopy(),
                         instruction.getIndex(),
-                        instruction.getRepresentation());
+                        instruction.getRepresentation(),
+
+                        );
             }
 
             case JUMP_NOT_ZERO, GOTO_LABEL, JUMP_ZERO -> {
@@ -127,7 +140,7 @@ public class PresentDTOCreator {
                         createFunctionArgumentDTO(quoteProgramInstruction.getFunctionArgument()),
                         quoteProgramInstruction.getIndex(),
                         quoteProgramInstruction.getRepresentation());
-            }
+
 
             default -> throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
         }
