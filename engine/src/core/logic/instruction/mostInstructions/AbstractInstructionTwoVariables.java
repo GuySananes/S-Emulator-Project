@@ -33,7 +33,7 @@ public abstract class AbstractInstructionTwoVariables extends AbstractInstructio
         return secondVariable;
     }
 
-    public Variable getSecondaryVariableDeepCopy() {
+    public Variable getSecondVariableDeepCopy() {
         return secondVariable.deepCopy();
     }
 

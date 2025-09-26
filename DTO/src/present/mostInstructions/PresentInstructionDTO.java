@@ -1,8 +1,10 @@
 package present.mostInstructions;
 
 import core.logic.instruction.InstructionData;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
+import present.create.PresentDTOCreator;
 
 import java.util.List;
 
@@ -24,6 +26,28 @@ public class PresentInstructionDTO {
         this.representation = representation;
         this.parents = parents;
         this.parentsRepresentation = parentsRepresentation;
+    }
+
+    public PresentInstructionDTO(SInstruction instruction) {
+        this.instructionData = instruction.getInstructionData();
+        this.variable = instruction.getVariable();
+        this.label = instruction.getLabel();
+        this.index = instruction.getIndex();
+        this.representation = instruction.getCycleRepresentation();
+        this.parents = instruction.getParents().stream()
+                .map(PresentDTOCreator::createPresentInstructionDTO)
+                .toList();
+        this.parentsRepresentation = instruction.getParentsRepresentation();
+    }
+
+    public PresentInstructionDTO(PresentInstructionDTO presentInstructionDTO) {
+        this.instructionData = presentInstructionDTO.instructionData;
+        this.variable = presentInstructionDTO.variable;
+        this.label = presentInstructionDTO.label;
+        this.index = presentInstructionDTO.index;
+        this.representation = presentInstructionDTO.representation;
+        this.parents = presentInstructionDTO.parents;
+        this.parentsRepresentation = presentInstructionDTO.parentsRepresentation;
     }
 
     public InstructionData getInstructionData() {
