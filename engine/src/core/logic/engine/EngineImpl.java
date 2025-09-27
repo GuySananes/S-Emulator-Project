@@ -1,6 +1,10 @@
 package core.logic.engine;
 
 import core.logic.execution.RunCount;
+import core.logic.instruction.mostInstructions.SInstruction;
+import core.logic.instruction.quoteInstructions.Argument;
+import core.logic.instruction.quoteInstructions.FunctionArgument;
+import core.logic.instruction.quoteInstructions.Quotable;
 import exception.*;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
@@ -10,11 +14,14 @@ import core.logic.program.SProgram;
 import statistic.ProgramStatisticDTO;
 import statistic.StatisticManagerImpl;
 
+import java.util.*;
+
 public class EngineImpl implements Engine {
 
     private static final Engine instance = new EngineImpl();
 
     private SProgram program = null;
+    private final Map<String, SProgram> contextPrograms = new HashMap<>();
 
     private EngineImpl() { }
 
@@ -23,11 +30,19 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public void loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
+    public Set<String> loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
 
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
 
+    }
+
+    public void chooseContextProgram(String programName) throws NoSuchProgramInContextException {
+        if (!contextPrograms.containsKey(programName)) {
+            throw new NoSuchProgramInContextException();
+        }
+
+        program = contextPrograms.get(programName);
     }
 
 
@@ -74,5 +89,28 @@ public class EngineImpl implements Engine {
         }
 
         return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
+    }
+
+    private Set<String> getOrderedContextProgramsNames(SProgram program) {
+        Set<String> names = new LinkedHashSet<>();
+        names.add(program.getName());
+        List<SInstruction> instructions = program.getInstructionList();
+        for(SInstruction instruction : instructions) {
+            if(instruction instanceof Quotable quotable) {
+                extractProgramNamesFromFunctionArgument(quotable.getFunctionArgument(), names);
+            }
+        }
+
+        return names;
+    }
+
+    private void extractProgramNamesFromFunctionArgument(FunctionArgument functionArgument, Set<String> names) {
+        names.add(functionArgument.getProgram().getName());
+        List<Argument> arguments = functionArgument.getArguments();
+        for(Argument argument : arguments) {
+            if(argument instanceof FunctionArgument funcArg) {
+                extractProgramNamesFromFunctionArgument(funcArg, names);
+            }
+        }
     }
 }

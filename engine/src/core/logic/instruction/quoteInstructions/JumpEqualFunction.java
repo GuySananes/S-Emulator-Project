@@ -1,11 +1,12 @@
-package core.logic.instruction.mostInstructions;
+package core.logic.instruction.quoteInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
 import core.logic.execution.ResultCycle;
 import core.logic.instruction.InstructionData;
-import core.logic.instruction.quoteInstruction.FunctionArgument;
-import core.logic.instruction.quoteInstruction.QuoteProgramInstruction;
+import core.logic.instruction.mostInstructions.AbstractInstructionTwoLabels;
+import core.logic.instruction.mostInstructions.JumpEqualVariable;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -16,7 +17,7 @@ import expansion.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JumpEqualFunction extends AbstractInstructionTwoLabels implements Expandable {
+public class JumpEqualFunction extends AbstractInstructionTwoLabels implements Expandable, Quotable {
 
     private final FunctionArgument functionArgument;
 
@@ -27,6 +28,11 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
 
     public JumpEqualFunction(Variable variable, Label targetLabel, FunctionArgument functionArgument) {
         this(variable, FixedLabel.EMPTY, targetLabel, functionArgument);
+    }
+
+    @Override
+    public FunctionArgument getFunctionArgument() {
+        return functionArgument;
     }
 
     @Override

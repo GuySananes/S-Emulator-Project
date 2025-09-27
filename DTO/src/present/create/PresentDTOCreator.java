@@ -2,9 +2,9 @@ package present.create;
 
 import core.logic.instruction.*;
 import core.logic.instruction.mostInstructions.*;
-import core.logic.instruction.quoteInstruction.Argument;
-import core.logic.instruction.quoteInstruction.FunctionArgument;
-import core.logic.instruction.quoteInstruction.QuoteProgramInstruction;
+import core.logic.instruction.quoteInstructions.Argument;
+import core.logic.instruction.quoteInstructions.FunctionArgument;
+import core.logic.instruction.quoteInstructions.QuoteProgramInstruction;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;

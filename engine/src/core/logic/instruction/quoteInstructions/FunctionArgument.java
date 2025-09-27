@@ -1,4 +1,4 @@
-package core.logic.instruction.quoteInstruction;
+package core.logic.instruction.quoteInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.ResultCycle;

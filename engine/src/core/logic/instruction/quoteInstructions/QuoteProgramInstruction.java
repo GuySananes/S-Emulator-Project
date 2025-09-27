@@ -1,4 +1,4 @@
-package core.logic.instruction.quoteInstruction;
+package core.logic.instruction.quoteInstructions;
 
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.LabelCycle;
@@ -17,7 +17,7 @@ import expansion.Utils;
 
 import java.util.*;
 
-public class QuoteProgramInstruction extends AbstractInstruction implements Expandable {
+public class QuoteProgramInstruction extends AbstractInstruction implements Expandable, Quotable {
 
     private final FunctionArgument functionArgument;
 
@@ -30,6 +30,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
         this.functionArgument = functionArgument;
     }
 
+    @Override
     public FunctionArgument getFunctionArgument() {
         return functionArgument;
     }

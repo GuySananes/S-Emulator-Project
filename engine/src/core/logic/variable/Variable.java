@@ -1,6 +1,6 @@
 package core.logic.variable;
 
-import core.logic.instruction.quoteInstruction.Argument;
+import core.logic.instruction.quoteInstructions.Argument;
 import present.quote.ArgumentDTO;
 
 public interface Variable extends Comparable<Variable>, Argument, ArgumentDTO {
