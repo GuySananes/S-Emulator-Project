@@ -8,6 +8,7 @@ import core.logic.program.SProgram;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FunctionArgument implements Argument {
     private final SProgram program;
@@ -58,5 +59,17 @@ public class FunctionArgument implements Argument {
 
     public int getDegree() {
         return program.getDegree();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        FunctionArgument that = (FunctionArgument) o;
+        return Objects.equals(program, that.program) && Objects.equals(arguments, that.arguments);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(program, arguments);
     }
 }

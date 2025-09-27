@@ -2,6 +2,8 @@ package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
 
+import java.util.Objects;
+
 public class SFunction extends SProgramImpl{
     private final String userName;
 
@@ -24,4 +26,16 @@ public class SFunction extends SProgramImpl{
         return clone;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        SFunction sFunction = (SFunction) o;
+        return Objects.equals(userName, sFunction.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), userName);
+    }
 }

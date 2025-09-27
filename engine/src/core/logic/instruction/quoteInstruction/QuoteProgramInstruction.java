@@ -15,10 +15,7 @@ import expansion.Expandable;
 import expansion.ExpansionContext;
 import expansion.Utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class QuoteProgramInstruction extends AbstractInstruction implements Expandable {
 
@@ -191,5 +188,18 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     @Override
     public int getDegree() {
         return functionArgument.getDegree();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        QuoteProgramInstruction that = (QuoteProgramInstruction) o;
+        return Objects.equals(functionArgument, that.functionArgument);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), functionArgument);
     }
 }

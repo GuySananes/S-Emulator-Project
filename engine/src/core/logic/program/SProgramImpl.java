@@ -219,12 +219,12 @@ public class SProgramImpl implements SProgram{
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         SProgramImpl sProgram = (SProgramImpl) o;
-        return index == sProgram.index && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels);
+        return index == sProgram.index && degree == sProgram.degree && numOfBasicInstructions == sProgram.numOfBasicInstructions && numOfStaticInstructions == sProgram.numOfStaticInstructions && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels) && Objects.equals(originalProgram, sProgram.originalProgram);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels);
+        return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels, degree, originalProgram, numOfBasicInstructions, numOfStaticInstructions);
     }
 
     @Override
