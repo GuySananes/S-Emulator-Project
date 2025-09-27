@@ -2,13 +2,12 @@ package consoleUI;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
-import core.logic.execution.ExecutionResult;
-import core.logic.program.SProgram;
+import core.logic.execution.ResultCycle;
 import core.logic.variable.Variable;
 import exception.ProgramValidationException;
 import exception.XMLUnmarshalException;
 import expand.ExpandDTO;
-import present.PresentProgramDTO;
+import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
 
@@ -92,7 +91,7 @@ public class ConsoleUI {
                                 .map(Long::parseLong)
                                 .toList();
                         runDTO.setInputs(inputValues);
-                        ExecutionResult result = runDTO.runProgram();
+                        ResultCycle result = runDTO.runProgram();
                         PresentProgramDTO programPresent = runDTO.getPresentProgramDTO();
                         System.out.println("Program Representation: \n" + programPresent.getRepresentation());
                         System.out.println("Result: " + result.getResult());

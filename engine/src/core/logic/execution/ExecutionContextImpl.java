@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class ExecutionContextImpl implements ExecutionContext {
 
@@ -31,10 +30,10 @@ public class ExecutionContextImpl implements ExecutionContext {
         }
 
     @Override
-    public void updateInputVariables(Long... inputVariables) {
+    public void updateInputVariables(List<Long> inputVariables) {
 
-        for (int i = 0; i < inputVariables.length; i++) {
-            Long value = inputVariables[i];
+        for (int i = 0; i < inputVariables.size(); i++) {
+            Long value = inputVariables.get(i);
 
             if (value == null) {
                 continue;
@@ -72,7 +71,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     @Override
-    public List<Long> getOrderedValuesCopy(Set<Variable> orderedVariables) {
+    public List<Long> getOrderedValues(Set<Variable> orderedVariables) {
         List<Long> result = new ArrayList<>(orderedVariables.size());
         for (Variable var : orderedVariables) {
             Long value = variablesToValues.get(var);
@@ -83,6 +82,6 @@ public class ExecutionContextImpl implements ExecutionContext {
             result.add(value);
         }
 
-        return Collections.unmodifiableList(result);
+        return result;
     }
 }

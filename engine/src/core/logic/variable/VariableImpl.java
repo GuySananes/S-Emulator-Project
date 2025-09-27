@@ -1,5 +1,8 @@
 package core.logic.variable;
 
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.ResultCycle;
+
 import java.util.Objects;
 
 public class VariableImpl implements Variable {
@@ -28,7 +31,7 @@ public class VariableImpl implements Variable {
     }
 
     @Override
-    public Variable copy() {
+    public Variable deepCopy() {
         return new VariableImpl(type, number);
     }
 
@@ -58,4 +61,16 @@ public class VariableImpl implements Variable {
 
         return Integer.compare(this.number, other.getNumber());
     }
+
+    @Override
+    public ResultCycle evaluate(ExecutionContext context) {
+        long value = context.getVariableValue(this);
+        return new ResultCycle(value, 0);
+    }
+
+    @Override
+    public Variable clone() {
+        return this;
+    }
+
 }

@@ -17,4 +17,10 @@ public enum FixedLabel implements Label{
 
     @Override
     public abstract String getRepresentation();
+
+    @Override
+    public Label deepCopy() {
+        return this;
+    }
+
 }

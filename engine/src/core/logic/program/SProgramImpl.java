@@ -1,6 +1,6 @@
 package core.logic.program;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
@@ -10,20 +10,26 @@ import java.util.*;
 
 public class SProgramImpl implements SProgram{
 
-    private int index = 1;
-    private final String name;
-    private final List<SInstruction> instructionList;
-    private Set<Variable> orderedVariables = null;
-    private Set<Variable> inputVariables = null;
-    private Set<Label> orderedLabels = null;
-    private static final int MIN_DEGREE = 0;
+    protected int index = 1;
+    protected final String name;
+    protected final List<SInstruction> instructionList;
+    protected Set<Variable> orderedVariables = null;
+    protected Set<Variable> inputVariables = null;
+    protected Set<Label> orderedLabels = null;
+    protected int degree = -1;
+    protected SProgram originalProgram;
+    protected int numOfBasicInstructions = 0;
+    protected int numOfStaticInstructions = 0;
+    protected static final int MIN_DEGREE = 0;
 
-    public SProgramImpl(String name) {
+
+    public SProgramImpl(String name, SProgram originalProgram) {
+        this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
         instructionList = new ArrayList<>();
     }
 
-    private Set<Variable> calculateOrderedVariables() {
+    protected Set<Variable> calculateOrderedVariables() {
         Set<Variable> variables = new TreeSet<>();
         for (SInstruction instruction : instructionList) {
             variables.addAll(instruction.getVariables());
@@ -32,7 +38,7 @@ public class SProgramImpl implements SProgram{
         return variables;
     }
 
-    private Set<Variable> calculateOrderedInputVariables() {
+    protected Set<Variable> calculateOrderedInputVariables() {
         Set<Variable> orderedVariables = getOrderedVariables();
         Set<Variable> inputVariables = new TreeSet<>();
         for(Variable variable : orderedVariables) {
@@ -44,7 +50,7 @@ public class SProgramImpl implements SProgram{
         return inputVariables;
     }
 
-    private Set<Label> calculateOrderedLabels() {
+    protected Set<Label> calculateOrderedLabels() {
         Set<Label> labels = new TreeSet<>(new LabelComparator());
         for (SInstruction instruction : instructionList) {
             labels.addAll(instruction.getLabels());
@@ -53,40 +59,7 @@ public class SProgramImpl implements SProgram{
         return labels;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void addInstruction(SInstruction instruction) {
-        if(instruction == null){
-            throw new IllegalArgumentException("Instruction cannot be null when adding to program");
-        }
-
-        instruction.setIndex(index++);
-
-        instructionList.add(instruction);
-    }
-
-    @Override
-    public void addInstructions(List<SInstruction> instructions) {
-        if(instructions == null){
-            throw new IllegalArgumentException("Instructions List cannot be null when added to program");
-        }
-
-        for(SInstruction instruction : instructions){
-            addInstruction(instruction);
-        }
-    }
-
-    @Override
-    public List<SInstruction> getInstructionList() {
-        return instructionList;
-    }
-
-    @Override
-    public int calculateMaxDegree() {
+    protected int calculateDegree() {
         int maxDegree = 0;
         for (SInstruction instruction : instructionList) {
             int degree = instruction.getDegree();
@@ -99,13 +72,46 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public int calculateCycles() {
-        int totalCycles = 0;
-        for (SInstruction instruction : instructionList) {
-            totalCycles += instruction.getCycles();
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public SProgram getOriginalProgram() {
+        return originalProgram;
+    }
+
+    @Override
+    public int getDegree() {
+        if(degree == -1){
+            degree = calculateDegree();
         }
 
-        return totalCycles;
+        return degree;
+    }
+
+    @Override
+    public void addInstruction(SInstruction instruction) {
+        if(instruction.isBasic()){
+            numOfBasicInstructions++;
+        } else {
+            numOfStaticInstructions++;
+        }
+
+        instruction.setIndex(index++);
+        instructionList.add(instruction);
+    }
+
+    @Override
+    public void addInstructions(List<SInstruction> instructions) {
+        for(SInstruction instruction : instructions){
+            addInstruction(instruction);
+        }
+    }
+
+    @Override
+    public List<SInstruction> getInstructionList() {
+        return Collections.unmodifiableList(instructionList);
     }
 
     @Override
@@ -128,11 +134,11 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getOrderedVariablesCopy() {
+    public Set<Variable> getOrderedVariablesDeepCopy() {
         Set<Variable> orderedVariables = getOrderedVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : orderedVariables) {
-            copy.add(variable.copy());
+            copy.add(variable.deepCopy());
         }
 
         return copy;
@@ -148,11 +154,11 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getInputVariablesCopy(){
+    public Set<Variable> getInputVariablesDeepCopy(){
         Set<Variable> inputVariables = getInputVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : inputVariables) {
-            copy.add(variable.copy());
+            copy.add(variable.deepCopy());
         }
 
         return copy;
@@ -168,10 +174,20 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
+    public Set<Label> getOrderedLabelsDeepCopy() {
+        Set<Label> orderedLabels = getOrderedLabels();
+        Set<Label> copy = new TreeSet<>(new LabelComparator());
+        for (Label label : orderedLabels) {
+            copy.add(label.deepCopy());
+        }
+
+        return copy;
+    }
+
+    @Override
     public SInstruction getInstructionByLabel(Label label) {
-        // Special case: if the label is EXIT, the program should end
         if ("EXIT".equals(label.getRepresentation())) {
-            return null; // Returning null indicates program termination
+            return null;
         }
 
         for (SInstruction instruction : instructionList) {
@@ -190,14 +206,36 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
+    public int getNumOfBasicInstructions() {
+        return numOfBasicInstructions;
+    }
+
+    @Override
+    public int getNumOfStaticInstructions() {
+        return numOfStaticInstructions;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         SProgramImpl sProgram = (SProgramImpl) o;
-        return index == sProgram.index && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels);
+        return index == sProgram.index && degree == sProgram.degree && numOfBasicInstructions == sProgram.numOfBasicInstructions && numOfStaticInstructions == sProgram.numOfStaticInstructions && Objects.equals(name, sProgram.name) && Objects.equals(instructionList, sProgram.instructionList) && Objects.equals(orderedVariables, sProgram.orderedVariables) && Objects.equals(inputVariables, sProgram.inputVariables) && Objects.equals(orderedLabels, sProgram.orderedLabels) && Objects.equals(originalProgram, sProgram.originalProgram);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels);
+        return Objects.hash(index, name, instructionList, orderedVariables, inputVariables, orderedLabels, degree, originalProgram, numOfBasicInstructions, numOfStaticInstructions);
     }
+
+    @Override
+    public SProgram clone() {
+        SProgram clonedProgram = new SProgramImpl(this.name, this.originalProgram);
+        for (SInstruction instruction : this.instructionList) {
+            clonedProgram.addInstruction(instruction.clone());
+        }
+
+        return clonedProgram;
+    }
+
+
 }

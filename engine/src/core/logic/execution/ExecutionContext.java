@@ -11,7 +11,7 @@ public interface ExecutionContext {
 
     void updateVariable(Variable variable, long value);
 
-    void updateInputVariables(Long... inputVariables);
+    void updateInputVariables(List<Long> inputVariables);
 
-    List<Long> getOrderedValuesCopy(Set<Variable> orderedVariables);
+    List<Long> getOrderedValues(Set<Variable> orderedVariables);
 }

@@ -1,11 +1,13 @@
 package core.logic.execution;
 
-import core.logic.instruction.SInstruction;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.ProgramNotExecutedYetException;
+import statistic.SingleRunStatisticImpl;
+import statistic.StatisticManagerImpl;
 
 import java.util.List;
 
@@ -19,28 +21,24 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         if(program == null){
             throw new IllegalArgumentException("Program cannot be null when creating ProgramExecutorImpl");
         }
-        if(program.getInstructionList().isEmpty()){
-            throw new IllegalArgumentException("Program must have at least one instruction");
-        }
+
         this.program = program;
         this.currentInstructionIndex = 0;
     }
 
     @Override
-    public ExecutionResult run(Long... input) {
+    public ResultCycle run(List<Long> input, int degree) {
         context = new ExecutionContextImpl(program);
         context.updateInputVariables(input);
         currentInstructionIndex = 0;
         int cycles = -1;
 
         List<SInstruction> instructions = program.getInstructionList();
-        if (instructions.isEmpty()) {
-            throw new IllegalStateException("Cannot execute empty program");
-        }
 
         SInstruction currentInstruction = instructions.get(currentInstructionIndex);
+        LabelCycle labelCycle;
         Label nextLabel;
-        int maxIterations = 10000; // Prevent infinite loops
+        int maxIterations = 1000000; // Prevent infinite loops
         int iterationCount = 0;
 
         do {
@@ -48,8 +46,9 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                 throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
             }
 
-            nextLabel = currentInstruction.execute(context);
-            cycles += currentInstruction.getCycles();
+            labelCycle = currentInstruction.execute(context);
+            nextLabel = labelCycle.getLabel();
+            cycles += labelCycle.getCycles();
 
             if (nextLabel == FixedLabel.EMPTY) {
                 currentInstructionIndex++;
@@ -66,24 +65,25 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                     throw new RuntimeException("Instruction not found in program: " + currentInstruction);
                 }
             } else {
-                // Either FixedLabel.EXIT or "EXIT" label - terminate the program
                 currentInstruction = null;
             }
         } while (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation()) && currentInstruction != null);
 
-        // Ensure we have a result variable
-        if (Variable.RESULT == null) {
-            throw new RuntimeException("Result variable not defined");
-        }
+        Long result = context.getVariableValue(Variable.RESULT);
 
-        return new ExecutionResult(context.getVariableValue(Variable.RESULT), cycles);
+        RunCount.incrementRunCount(this.program);
+        StatisticManagerImpl.getInstance().addRunStatistic(this.program,
+                new SingleRunStatisticImpl(RunCount.getRunCount(this.program),
+                        degree, input, result, cycles));
+
+        return new ResultCycle(result, cycles);
     }
 
     @Override
-    public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
+    public List<Long> getOrderedValues() throws ProgramNotExecutedYetException {
         if(context == null){
-            throw new ProgramNotExecutedYetException(); // Use no-argument constructor
+            throw new ProgramNotExecutedYetException();
         }
-        return context.getOrderedValuesCopy(program.getOrderedVariables());
+        return context.getOrderedValues(program.getOrderedVariables());
     }
 }

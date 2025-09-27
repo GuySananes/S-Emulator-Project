@@ -1,10 +1,10 @@
 package jaxb;
 
+import core.logic.instruction.mostInstructions.*;
 import jaxb.engine.src.jaxb.schema.generated.*;
 import core.logic.program.SProgram;
 import core.logic.program.SProgramImpl;
-import core.logic.instruction.SInstruction;
-import core.logic.instruction.*;
+import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableImpl;
 import core.logic.variable.VariableType;
@@ -130,7 +130,7 @@ public class JAXBToEngineConverter {
         }
 
         // Create the real engine program
-        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName());
+        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName(), null);
 
         // Convert instructions
         if (jaxbProgram.getSInstructions() != null) {
