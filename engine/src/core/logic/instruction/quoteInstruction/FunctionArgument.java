@@ -56,4 +56,7 @@ public class FunctionArgument implements Argument {
         return new ResultCycle(result.getResult(), totalCycles);
     }
 
+    public int getDegree() {
+        return program.getDegree();
+    }
 }

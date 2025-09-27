@@ -130,7 +130,7 @@ public class JAXBToEngineConverter {
         }
 
         // Create the real engine program
-        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName());
+        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName(), null);
 
         // Convert instructions
         if (jaxbProgram.getSInstructions() != null) {

@@ -11,37 +11,10 @@ import core.logic.variable.Variable;
 import present.quote.ArgumentDTO;
 import present.quote.FunctionArgumentDTO;
 import present.mostInstructions.*;
-import present.program.PresentFunctionDTO;
-import present.program.PresentProgramDTO;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PresentDTOCreator {
-
-    public static PresentProgramDTO createPresentProgramDTO(SProgram program){
-        List<SInstruction> instructions = program.getInstructionList();
-        List<PresentInstructionDTO> presentInstructionDTOList =
-                instructions.stream()
-                        .map(PresentDTOCreator::createPresentInstructionDTO)
-                        .collect(Collectors.toList());
-
-        if (program instanceof SFunction) {
-            return new PresentFunctionDTO(
-                    ((SFunction)program).getUserName(),
-                    program.getName(),
-                    program.getInputVariablesDeepCopy(),
-                    program.getOrderedLabelsDeepCopy(),
-                    presentInstructionDTOList, program.getRepresentation());
-        }
-
-        return new PresentProgramDTO(
-                program.getName(),
-                program.getInputVariablesDeepCopy(),
-                program.getOrderedLabelsDeepCopy(),
-                presentInstructionDTOList, program.getRepresentation());
-    }
 
     public static PresentInstructionDTO createPresentInstructionDTO(SInstruction instruction) {
         InstructionData type = instruction.getInstructionData();
@@ -103,9 +76,8 @@ public class PresentDTOCreator {
             }
 
 
-                default ->
-                        throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
-            }
+            default ->
+                    throw new IllegalStateException("in PresentInstructionDTOCreator: unexpected instruction type: " + type);
         }
     }
 
@@ -129,3 +101,4 @@ public class PresentDTOCreator {
     }
 
 }
+

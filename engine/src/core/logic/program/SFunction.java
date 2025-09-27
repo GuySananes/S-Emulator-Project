@@ -5,8 +5,8 @@ import core.logic.instruction.mostInstructions.SInstruction;
 public class SFunction extends SProgramImpl{
     private final String userName;
 
-    public SFunction(String name, String userName) {
-        super(name);
+    public SFunction(String name, String userName, SProgram originalProgram) {
+        super(name, originalProgram);
         this.userName = userName;
     }
 
@@ -16,7 +16,7 @@ public class SFunction extends SProgramImpl{
 
     @Override
     public SProgram clone() {
-        SProgram clone = new SFunction(this.name, this.userName);
+        SProgram clone = new SFunction(this.name, this.userName, this.originalProgram);
         for (SInstruction instruction : this.instructionList) {
             clone.addInstruction(instruction.clone());
         }

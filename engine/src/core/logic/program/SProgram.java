@@ -10,6 +10,7 @@ import java.util.Set;
 public interface SProgram {
 
     String getName();
+    SProgram getOriginalProgram();
     void addInstruction(SInstruction instruction);
     void addInstructions(List<SInstruction> instructions);
     List<SInstruction> getInstructionList();

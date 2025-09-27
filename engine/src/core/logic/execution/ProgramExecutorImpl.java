@@ -3,7 +3,6 @@ package core.logic.execution;
 import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
-import core.logic.program.RunCount;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.ProgramNotExecutedYetException;

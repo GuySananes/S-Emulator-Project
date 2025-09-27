@@ -16,11 +16,13 @@ public class SProgramImpl implements SProgram{
     protected Set<Variable> orderedVariables = null;
     protected Set<Variable> inputVariables = null;
     protected Set<Label> orderedLabels = null;
-    protected int cycles = -1;
     protected int degree = -1;
+    protected SProgram originalProgram;
     protected static final int MIN_DEGREE = 0;
 
-    public SProgramImpl(String name) {
+
+    public SProgramImpl(String name, SProgram originalProgram) {
+        this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
         instructionList = new ArrayList<>();
     }
@@ -70,6 +72,11 @@ public class SProgramImpl implements SProgram{
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public SProgram getOriginalProgram() {
+        return originalProgram;
     }
 
     @Override
@@ -213,7 +220,7 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SProgram clone() {
-        SProgram clonedProgram = new SProgramImpl(this.name);
+        SProgram clonedProgram = new SProgramImpl(this.name, this.originalProgram);
         for (SInstruction instruction : this.instructionList) {
             clonedProgram.addInstruction(instruction.clone());
         }

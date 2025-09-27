@@ -2,6 +2,7 @@ package expansion;
 
 
 import core.logic.instruction.mostInstructions.SInstruction;
+import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 import core.logic.program.SProgramImpl;
 
@@ -12,8 +13,8 @@ import java.util.List;
 public class Expansion {
 
     public static SProgram expand(SProgram program, int degree) {
-        if (degree < 0 || degree > program.getDegree()) {
-            throw new IllegalArgumentException("Degree must be between 0 and "
+        if (degree < program.getMinDegree() + 1 || degree > program.getDegree()) {
+            throw new IllegalArgumentException("Degree must be between 1 and "
                     + program.getDegree() + " when expanding program");
         }
 
@@ -24,7 +25,16 @@ public class Expansion {
             instructions = expand(instructions, expansionContext);
         }
 
-        SProgram expandedProgram = new SProgramImpl(program.getName() + (degree > 0 ? "_" + degree + "D" : ""));
+        SProgram expandedProgram;
+        String programName = program.getName() + "_" + degree + "D";
+
+        if(program instanceof SFunction sf) {
+            expandedProgram = new SFunction(programName, sf.getUserName(), program);
+        }
+        else {
+            expandedProgram = new SProgramImpl(programName, program);
+        }
+
         expandedProgram.addInstructions(instructions);
         return expandedProgram;
     }

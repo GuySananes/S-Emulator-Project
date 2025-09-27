@@ -187,4 +187,9 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
 
         return expansion;
     }
+
+    @Override
+    public int getDegree() {
+        return functionArgument.getDegree();
+    }
 }

@@ -94,7 +94,7 @@ public class RunProgramDTO {
             throw new ProgramNotExecutedYetException();
         }
 
-        return PresentDTOCreator.createPresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));
+        return new PresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));
     }
 
 

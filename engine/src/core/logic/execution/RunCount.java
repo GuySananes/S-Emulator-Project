@@ -1,4 +1,6 @@
-package core.logic.program;
+package core.logic.execution;
+
+import core.logic.program.SProgram;
 
 import java.util.HashMap;
 import java.util.Map;
