@@ -1,7 +1,6 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
-
 import java.util.Objects;
 
 public class SFunction extends SProgramImpl{
