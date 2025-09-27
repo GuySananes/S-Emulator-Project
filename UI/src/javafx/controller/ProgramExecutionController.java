@@ -4,10 +4,10 @@ package javafx.controller;
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
 import exception.DegreeOutOfRangeException;
+import exception.NoProgramException;
+import exception.ProgramHasNoStatisticException;
 import exception.ProgramNotExecutedYetException;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.controller.dialog.InputDialog;
 import javafx.model.ui.*;
 import javafx.scene.control.Button;
@@ -16,6 +16,8 @@ import javafx.service.ProgramExecutionService;
 import javafx.stage.Modality;
 import present.PresentProgramDTO;
 import run.RunProgramDTO;
+import statistic.ProgramStatisticDTO;
+import statistic.SingleRunStatistic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,14 +49,19 @@ public class ProgramExecutionController {
     private final Consumer<String> updateSummary;
     private final BiConsumer<String, String> showErrorDialog;
 
+    private final ObservableList<Statistic> statistics;
+
     private final ProgramExecutionService executionService = new ProgramExecutionService();
 
     private int currentDisplayDegree = 0;
+    private int currentExpansionDegree = 0;
+    private boolean isProgramExpanded = false;
 
     public ProgramExecutionController(Program currentProgram,
                                       ExecutionResult executionResult,
                                       ObservableList<Instruction> instructions,
                                       ObservableList<Variable> variables,
+                                      ObservableList<Statistic> statistics,
                                       Button startRegularButton, Button startDebugButton,
                                       Button stopButton, Button resumeButton,
                                       Button stepOverButton, Button stepBackButton,
@@ -65,6 +72,8 @@ public class ProgramExecutionController {
         this.executionResult = executionResult;
         this.instructions = instructions;
         this.variables = variables;
+        this.statistics = statistics;
+
         this.startRegularButton = startRegularButton;
         this.startDebugButton = startDebugButton;
         this.stopButton = stopButton;
@@ -72,6 +81,7 @@ public class ProgramExecutionController {
         this.stepOverButton = stepOverButton;
         this.stepBackButton = stepBackButton;
         this.rerunButton = rerunButton;
+
         this.updateSummary = updateSummary;
         this.showErrorDialog = showErrorDialog;
     }
@@ -140,25 +150,22 @@ public class ProgramExecutionController {
     }
 
     private void executeProgram(RunProgramDTO runDTO, List<Long> inputValues) {
-        updateSummary.accept("Executing program with inputs: " + inputValues);
-        executionResult.reset();
-        executionResult.setRunning(true);
-        executionResult.setStatus("Running");
-
-        Task<Void> executionTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                core.logic.execution.ExecutionResult result = runDTO.runProgram();
-                Platform.runLater(() -> updateUIAfterExecution(runDTO, result));
-                return null;
+        try {
+            // If program is expanded, set the expansion degree
+            if (isProgramExpanded && currentExpansionDegree > 0) {
+                runDTO.setDegree(currentExpansionDegree);
             }
-        };
 
-        executionTask.setOnFailed(event -> handleExecutionFailure(executionTask.getException()));
+            runDTO.setInputs(inputValues);
+            core.logic.execution.ExecutionResult result = runDTO.runProgram();
 
-        Thread executionThread = new Thread(executionTask);
-        executionThread.setDaemon(true);
-        executionThread.start();
+            updateUIAfterExecution(runDTO, result);
+            updateSummary.accept("Program executed successfully - " + result.getCycles() + " cycles" +
+                    (isProgramExpanded ? " (expanded degree " + currentExpansionDegree + ")" : ""));
+
+        } catch (Exception e) {
+            handleExecutionFailure(e);
+        }
     }
 
     private void updateUIAfterExecution(RunProgramDTO runDTO, core.logic.execution.ExecutionResult result) {
@@ -283,12 +290,17 @@ public class ProgramExecutionController {
             int newDegree = currentDisplayDegree + 1;
             expandToDisplay(expandDTO, newDegree);
 
+            // Track the expansion state
+            currentExpansionDegree = newDegree;
+            isProgramExpanded = true;
+
         } catch (Exception e) {
             showErrorDialog.accept("Expansion Error", "Failed to expand program: " + e.getMessage());
             updateSummary.accept("Expansion failed: " + e.getMessage());
         }
     }
 
+    // Update handleCollapse to track state
     public void handleCollapse() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
@@ -296,26 +308,27 @@ public class ProgramExecutionController {
         }
 
         try {
-            Engine engine = EngineImpl.getInstance();
-            expand.ExpandDTO expandDTO = engine.expandProgram();
-
-            int minDegree = expandDTO.getMinDegree();
-
-            // Check if we can collapse further
-            if (currentDisplayDegree <= minDegree) {
-                updateSummary.accept("Already at minimum degree (" + minDegree + ")");
+            if (currentDisplayDegree <= 0) {
+                updateSummary.accept("Already at minimum degree (0)");
                 return;
             }
 
-            // Collapse by 1
+            Engine engine = EngineImpl.getInstance();
+            expand.ExpandDTO expandDTO = engine.expandProgram();
+
             int newDegree = currentDisplayDegree - 1;
             expandToDisplay(expandDTO, newDegree);
+
+            // Track the expansion state
+            currentExpansionDegree = newDegree;
+            isProgramExpanded = newDegree > 0;
 
         } catch (Exception e) {
             showErrorDialog.accept("Collapse Error", "Failed to collapse program: " + e.getMessage());
             updateSummary.accept("Collapse failed: " + e.getMessage());
         }
     }
+
 
     /**
      * Helper method to expand/collapse to a specific degree and update UI
@@ -350,6 +363,76 @@ public class ProgramExecutionController {
     }
 
     public void handleShowStats() {
-        updateSummary.accept("Statistics displayed");
+        try {
+            // Use the engine's statistics DTO
+            Engine engine = EngineImpl.getInstance();
+            ProgramStatisticDTO statsDTO = engine.presentProgramStats();
+
+            // Get the list of individual run statistics from the DTO
+            List<SingleRunStatistic> programStats = statsDTO.getProgramStatisticCopy();
+
+            // Clear existing statistics and populate with new data
+            statistics.clear();
+
+            // Add individual run statistics first
+            for (int i = 0; i < programStats.size(); i++) {
+                SingleRunStatistic runStat = programStats.get(i);
+
+                Statistic uiStatistic = new Statistic(
+                        "Run #" + runStat.getRunNumber() + " (Degree: " + runStat.getRunDegree() + ")",
+                        (int) runStat.getCycles(),
+                        0, // Total instructions - you can calculate this if needed
+                        formatExecutionDetails(runStat)
+                );
+
+                statistics.add(uiStatistic);
+            }
+
+            // Add summary statistics in a cleaner way
+            addSummaryStatistics(statistics, programStats);
+
+            updateSummary.accept("Statistics displayed - " + programStats.size() + " program runs shown.");
+
+        } catch (NoProgramException e) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+        } catch (ProgramNotExecutedYetException e) {
+            showErrorDialog.accept("No Statistics", "Please run the program first to see statistics.");
+        } catch (ProgramHasNoStatisticException e) {
+            updateSummary.accept("No statistics available for this program.");
+        } catch (Exception e) {
+            showErrorDialog.accept("Statistics Error", "Failed to load statistics: " + e.getMessage());
+        }
+    }
+
+    private void addSummaryStatistics(ObservableList<Statistic> statisticsList, List<SingleRunStatistic> programStats) {
+        if (programStats.isEmpty()) return;
+
+        // Calculate summary statistics
+        long totalCycles = programStats.stream().mapToLong(SingleRunStatistic::getCycles).sum();
+        double avgCycles = (double) totalCycles / programStats.size();
+        long maxCycles = programStats.stream().mapToLong(SingleRunStatistic::getCycles).max().orElse(0);
+        long minCycles = programStats.stream().mapToLong(SingleRunStatistic::getCycles).min().orElse(0);
+
+        // Add separator
+        statisticsList.add(new Statistic("=== SUMMARY ===", 0, 0, ""));
+
+        // Add summary rows - use the 2-column format properly
+        statisticsList.add(new Statistic("Total Runs", programStats.size(), 0, ""));
+        statisticsList.add(new Statistic("Total Cycles", (int) totalCycles, 0, ""));
+        statisticsList.add(new Statistic("Average Cycles", (int) Math.round(avgCycles), 0, String.format("%.1f per run", avgCycles)));
+        statisticsList.add(new Statistic("Min Cycles", (int) minCycles, 0, "Best performance"));
+        statisticsList.add(new Statistic("Max Cycles", (int) maxCycles, 0, "Worst performance"));
+    }
+
+    private String formatExecutionDetails(SingleRunStatistic runStat) {
+        StringBuilder details = new StringBuilder();
+        details.append("Result: ").append(runStat.getResult());
+
+        List<Long> inputs = runStat.getInputCopy();
+        if (!inputs.isEmpty()) {
+            details.append(", Inputs: ").append(inputs.toString());
+        }
+
+        return details.toString();
     }
 }
