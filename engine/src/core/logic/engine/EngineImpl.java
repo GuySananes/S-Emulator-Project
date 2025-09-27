@@ -1,13 +1,11 @@
 package core.logic.engine;
 
 import core.logic.execution.RunCount;
-import core.logic.instruction.mostInstructions.SInstruction;
-import core.logic.instruction.quoteInstructions.Argument;
-import core.logic.instruction.quoteInstructions.FunctionArgument;
-import core.logic.instruction.quoteInstructions.Quotable;
+import core.logic.program.SFunction;
 import exception.*;
 import expand.ExpandDTO;
 import jaxb.JAXBLoader;
+import present.program.PresentFunctionDTO;
 import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import core.logic.program.SProgram;
@@ -21,7 +19,8 @@ public class EngineImpl implements Engine {
     private static final Engine instance = new EngineImpl();
 
     private SProgram program = null;
-    private final Map<String, SProgram> contextPrograms = new HashMap<>();
+    private ContextPrograms contextPrograms = null;
+
 
     private EngineImpl() {}
 
@@ -34,34 +33,39 @@ public class EngineImpl implements Engine {
 
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
-
-
-
-
-
+        contextPrograms = new ContextPrograms(program);
+        return contextPrograms.getNames();
     }
-
-    public void chooseContextProgram(String programName) throws NoSuchProgramInContextException {
-        if (!contextPrograms.containsKey(programName)) {
-            throw new NoSuchProgramInContextException();
-        }
-
-        program = contextPrograms.get(programName);
-    }
-
 
     @Override
-    public PresentProgramDTO presentProgram() throws NoProgramException {
-        if (program == null) {
+    public void chooseContextProgram(String programName) throws NoProgramException, NoSuchProgramInContextException {
+        if(program == null) {
             throw new NoProgramException();
         }
 
-        return PresentProgramDTOCreator.create(program);
+        if(!contextPrograms.getNames().contains(programName)) {
+            throw new NoSuchProgramInContextException();
+        }
+
+        program = contextPrograms.getNameToProgram().get(programName);
+    }
+
+    @Override
+    public PresentProgramDTO presentProgram() throws NoProgramException {
+        if(program == null) {
+            throw new NoProgramException();
+        }
+
+        if(program instanceof SFunction sf) {
+            return new PresentFunctionDTO(sf);
+        }
+
+        return new PresentProgramDTO(program);
     }
 
     @Override
     public ExpandDTO expandProgram() throws NoProgramException {
-        if (program == null) {
+        if(program == null) {
             throw new NoProgramException();
         }
 
@@ -70,7 +74,7 @@ public class EngineImpl implements Engine {
 
     @Override
     public RunProgramDTO runProgram() throws NoProgramException {
-        if (program == null) {
+        if(program == null) {
             throw new NoProgramException();
         }
 
@@ -79,7 +83,7 @@ public class EngineImpl implements Engine {
 
     @Override
     public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException {
-        if (program == null) {
+        if(program == null) {
             throw new NoProgramException();
         }
 
@@ -93,28 +97,5 @@ public class EngineImpl implements Engine {
         }
 
         return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
-    }
-
-    private Set<String> getOrderedContextProgramsNames(SProgram program) {
-        Set<String> names = new LinkedHashSet<>();
-        names.add(program.getName());
-        List<SInstruction> instructions = program.getInstructionList();
-        for(SInstruction instruction : instructions) {
-            if(instruction instanceof Quotable quotable) {
-                extractProgramNamesFromFunctionArgument(quotable.getFunctionArgument(), names);
-            }
-        }
-
-        return names;
-    }
-
-    private void extractProgramNamesFromFunctionArgument(FunctionArgument functionArgument, Set<String> names) {
-        names.add(functionArgument.getProgram().getName());
-        List<Argument> arguments = functionArgument.getArguments();
-        for(Argument argument : arguments) {
-            if(argument instanceof FunctionArgument funcArg) {
-                extractProgramNamesFromFunctionArgument(funcArg, names);
-            }
-        }
     }
 }
