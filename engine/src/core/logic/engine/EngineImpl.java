@@ -23,7 +23,7 @@ public class EngineImpl implements Engine {
     private SProgram program = null;
     private final Map<String, SProgram> contextPrograms = new HashMap<>();
 
-    private EngineImpl() { }
+    private EngineImpl() {}
 
     public static Engine getInstance() {
         return instance;
