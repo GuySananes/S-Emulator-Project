@@ -19,17 +19,21 @@ public class PresentProgramDTO {
     private final String representation;
     private final int currentProgramDegree;
     private final int originMaxDegree;
+    private final int numOfBasicInstructions;
+    private final int numOfStaticInstructions;
 
     public PresentProgramDTO(SProgram program) {
-        programName = program.getName();
-        Xs = program.getInputVariablesDeepCopy();
-        labels = program.getOrderedLabelsDeepCopy();
-        instructionList = program.getInstructionList().stream()
+        this.programName = program.getName();
+        this.Xs = program.getInputVariablesDeepCopy();
+        this.labels = program.getOrderedLabelsDeepCopy();
+        this.instructionList = program.getInstructionList().stream()
                         .map(PresentDTOCreator::createPresentInstructionDTO)
                         .collect(Collectors.toList());
-        representation = program.getRepresentation();
-        currentProgramDegree = program.getOriginalProgram().getDegree() - program.getDegree();
-        originMaxDegree = program.getOriginalProgram().getDegree();
+        this.representation = program.getRepresentation();
+        this.currentProgramDegree = program.getOriginalProgram().getDegree() - program.getDegree();
+        this.originMaxDegree = program.getOriginalProgram().getDegree();
+        this.numOfBasicInstructions = program.getNumOfBasicInstructions();
+        this.numOfStaticInstructions = program.getNumOfStaticInstructions();
     }
 
     public String getProgramName() { return programName;}

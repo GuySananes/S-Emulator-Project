@@ -18,6 +18,8 @@ public class SProgramImpl implements SProgram{
     protected Set<Label> orderedLabels = null;
     protected int degree = -1;
     protected SProgram originalProgram;
+    protected int numOfBasicInstructions = 0;
+    protected int numOfStaticInstructions = 0;
     protected static final int MIN_DEGREE = 0;
 
 
@@ -90,21 +92,18 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public void addInstruction(SInstruction instruction) {
-        if(instruction == null){
-            throw new IllegalArgumentException("Instruction cannot be null when adding to program");
+        if(instruction.isBasic()){
+            numOfBasicInstructions++;
+        } else {
+            numOfStaticInstructions++;
         }
 
         instruction.setIndex(index++);
-
         instructionList.add(instruction);
     }
 
     @Override
     public void addInstructions(List<SInstruction> instructions) {
-        if(instructions == null){
-            throw new IllegalArgumentException("Instructions List cannot be null when added to program");
-        }
-
         for(SInstruction instruction : instructions){
             addInstruction(instruction);
         }
@@ -204,6 +203,16 @@ public class SProgramImpl implements SProgram{
     @Override
     public int getMinDegree() {
         return MIN_DEGREE;
+    }
+
+    @Override
+    public int getNumOfBasicInstructions() {
+        return numOfBasicInstructions;
+    }
+
+    @Override
+    public int getNumOfStaticInstructions() {
+        return numOfStaticInstructions;
     }
 
     @Override

@@ -45,4 +45,6 @@ public enum InstructionData {
     }
 
     public int getDegree() { return degree; }
+
+    public boolean isBasic() { return instructionType.equals("B"); }
 }

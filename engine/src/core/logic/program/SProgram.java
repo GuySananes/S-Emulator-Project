@@ -25,5 +25,7 @@ public interface SProgram {
     String getRepresentation();
     SInstruction getInstructionByLabel(Label Label);
     int getMinDegree();
+    int getNumOfStaticInstructions();
+    int getNumOfBasicInstructions();
 
 }

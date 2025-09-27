@@ -161,6 +161,11 @@ public abstract class AbstractInstruction implements SInstruction {
     }
 
     @Override
+    public boolean isBasic() {
+        return instructionData.isBasic();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

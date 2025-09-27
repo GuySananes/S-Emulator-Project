@@ -38,5 +38,6 @@ public interface SInstruction {
     void setLabel(Label label);
 
     SInstruction clone();//currently without parents and index
+    boolean isBasic();
 
 }
