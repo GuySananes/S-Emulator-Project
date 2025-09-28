@@ -82,20 +82,38 @@ public class EngineImpl implements Engine {
     }
 
     @Override
+    public RunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException {
+
+        if(program == null) {
+            throw new NoProgramException();
+        }
+
+        if(RunCount.getRunCount(program.getName()) == 0) {
+            throw new ProgramNotExecutedYetException();
+        }
+
+        if(runNumber < 1 || runNumber > RunCount.getRunCount(program.getName())) {
+            throw new NoSuchRunException();
+        }
+
+        return new RunProgramDTO(program);
+    }
+
+    @Override
     public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException {
         if(program == null) {
             throw new NoProgramException();
         }
 
-        if(RunCount.getRunCount(program) == 0) {
+        if(RunCount.getRunCount(program.getName()) == 0) {
             throw new ProgramNotExecutedYetException();
         }
 
-        if(StatisticManagerImpl.getInstance().getProgramStatistics(program) == null ||
-                StatisticManagerImpl.getInstance().getProgramStatistics(program).isEmpty()) {
+        if(StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()) == null ||
+                StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()).isEmpty()) {
             throw new ProgramHasNoStatisticException();
         }
 
-        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
+        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()));
     }
 }

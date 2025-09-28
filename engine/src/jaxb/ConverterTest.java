@@ -45,7 +45,7 @@ public class ConverterTest {
 
         jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
 
-        // Create GOTO instruction with undefined label
+        // Create GOTO instruction with an undefined label
         jaxb.engine.src.jaxb.schema.generated.SInstruction gotoInstruction = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
         gotoInstruction.setType("basic");
         gotoInstruction.setName("GOTO_LABEL");

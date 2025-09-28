@@ -18,10 +18,6 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     private ExecutionContext context;
 
     public ProgramExecutorImpl(SProgram program) {
-        if(program == null){
-            throw new IllegalArgumentException("Program cannot be null when creating ProgramExecutorImpl");
-        }
-
         this.program = program;
         this.currentInstructionIndex = 0;
     }
@@ -71,9 +67,9 @@ public class ProgramExecutorImpl implements ProgramExecutor {
 
         Long result = context.getVariableValue(Variable.RESULT);
 
-        RunCount.incrementRunCount(this.program);
-        StatisticManagerImpl.getInstance().addRunStatistic(this.program,
-                new SingleRunStatisticImpl(RunCount.getRunCount(this.program),
+        RunCount.incrementRunCount(this.program.getName());
+        StatisticManagerImpl.getInstance().addRunStatistic(this.program.getName(),
+                new SingleRunStatisticImpl(RunCount.getRunCount(this.program.getName()),
                         degree, input, result, cycles));
 
         return new ResultCycle(result, cycles);

@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface StatisticManager {
 
-    void addRunStatistic(SProgram program, SingleRunStatistic statistic);
+    void addRunStatistic(String program, SingleRunStatistic statistic);
 
-    List<SingleRunStatistic> getProgramStatistics(SProgram program);
+    List<SingleRunStatistic> getProgramStatistics(String program);
 }
