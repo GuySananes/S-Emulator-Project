@@ -1,10 +1,8 @@
 package statistic;
 
-import core.logic.program.SProgram;
-
 import java.util.*;
 
-public class StatisticManager implements StatisticManager{
+public class StatisticManager{
 
     private static final StatisticManager instance = new StatisticManager();
     public static StatisticManager getInstance() {return instance;}

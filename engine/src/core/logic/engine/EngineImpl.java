@@ -10,23 +10,18 @@ import run.RunProgramDTO;
 import core.logic.program.SProgram;
 import statistic.ProgramStatisticDTO;
 import statistic.StatisticManager;
-import statistic.StatisticManagerImpl;
-
 import java.util.*;
 
 public class EngineImpl implements Engine {
 
     private static final Engine instance = new EngineImpl();
-
-    private SProgram program = null;
-    private ContextPrograms contextPrograms = null;
-
-
     private EngineImpl() {}
-
     public static Engine getInstance() {
         return instance;
     }
+
+    private SProgram program = null;
+    private ContextPrograms contextPrograms = null;
 
     @Override
     public Set<String> loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
@@ -82,38 +77,46 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public RunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException {
+    public RunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException, NoSuchRunException {
 
+        StatisticManager statisticManager = StatisticManager.getInstance();
         if(program == null) {
             throw new NoProgramException();
         }
-
-        if(StatisticManager.getInstance().getRunCount(program.getName()) == 0) {
+        if(statisticManager.getRunCount(program.getName()) == 0) {
             throw new ProgramNotExecutedYetException();
         }
-
-        if(runNumber < StatisticManager.getInstance().getStartCount() || runNumber > StatisticManager.getInstance().getRunCount(program.getName())) {
-            throw new NoSuchRunException();
+        if(runNumber < statisticManager.getStartCount() || runNumber > statisticManager.getRunCount(program.getName())) {
+            throw new NoSuchRunException(statisticManager.getStartCount(), statisticManager.getRunCount(program.getName()));
         }
 
-        return new RunProgramDTO(program);
+        RunProgramDTO runProgramDTO = new RunProgramDTO(program);
+        try {
+            runProgramDTO.setDegree(statisticManager.getProgramStatistics(program.getName()).get(runNumber - 1).getRunDegree());
+            runProgramDTO.setInputs(statisticManager.getProgramStatistics(program.getName()).get(runNumber - 1).getInput());
+        } catch (DegreeOutOfRangeException | RunInputException e) {
+            throw new RuntimeException("Unexpected error while re-running program: " + e.getMessage());
+        }
+
+        return runProgramDTO;
     }
 
     @Override
     public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException {
+        StatisticManager statisticManager = StatisticManager.getInstance();
         if(program == null) {
             throw new NoProgramException();
         }
 
-        if(StatisticManager.getInstance().getRunCount(program.getName()) == 0) {
+        if(statisticManager.getRunCount(program.getName()) == 0) {
             throw new ProgramNotExecutedYetException();
         }
 
-        if(StatisticManager.getInstance().getProgramStatistics(program.getName()) == null ||
-                StatisticManager.getInstance().getProgramStatistics(program.getName()).isEmpty()) {
+        if(statisticManager.getProgramStatistics(program.getName()) == null ||
+                statisticManager.getProgramStatistics(program.getName()).isEmpty()) {
             throw new ProgramHasNoStatisticException();
         }
 
-        return new ProgramStatisticDTO(StatisticManager.getInstance().getProgramStatistics(program.getName()));
+        return new ProgramStatisticDTO(statisticManager.getProgramStatistics(program.getName()));
     }
 }

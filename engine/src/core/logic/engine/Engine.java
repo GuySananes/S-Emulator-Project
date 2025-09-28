@@ -16,5 +16,6 @@ public interface Engine {
     PresentProgramDTO presentProgram() throws NoProgramException;
     ExpandDTO expandProgram() throws NoProgramException;
     RunProgramDTO runProgram() throws NoProgramException;
+    RunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException, NoSuchRunException;
     ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException;
 }

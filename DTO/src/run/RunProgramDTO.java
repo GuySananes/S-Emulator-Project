@@ -45,7 +45,6 @@ public class RunProgramDTO {
             throw new DegreeOutOfRangeException(getMinDegree() , getMaxDegree());
         }
         this.degree = degree;
-
     }
 
     public Set<Variable> getInputs(){
