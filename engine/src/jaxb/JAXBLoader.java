@@ -6,10 +6,9 @@ import exception.XMLUnmarshalException;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
-import core.logic.program.SProgram;
+import jaxb.engine.src.jaxb.schema.generated.SProgram;
+
 import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 public class JAXBLoader {
 
