@@ -57,4 +57,7 @@ public abstract class AbstractInstructionTwoVariables extends AbstractInstructio
     public int hashCode() {
         return Objects.hash(super.hashCode(), secondVariable);
     }
+
+    @Override
+    public abstract SInstruction clone();
 }

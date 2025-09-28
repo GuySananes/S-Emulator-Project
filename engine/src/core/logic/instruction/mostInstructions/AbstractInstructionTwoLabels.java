@@ -68,4 +68,7 @@ public abstract class AbstractInstructionTwoLabels extends AbstractInstruction {
     public int hashCode() {
         return Objects.hash(super.hashCode(), targetLabel);
     }
+
+    @Override
+    public abstract SInstruction clone();
 }

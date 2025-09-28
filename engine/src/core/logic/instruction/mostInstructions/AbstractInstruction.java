@@ -177,4 +177,7 @@ public abstract class AbstractInstruction implements SInstruction {
     public int hashCode() {
         return Objects.hash(instructionData, label, variable);
     }
+
+    @Override
+    public abstract SInstruction clone();
 }
