@@ -123,7 +123,7 @@ public class EngineImpl implements Engine {
         }
     }
 
-    @Override // newly added implementation
+    @Override
     public SProgram getLoadedProgram() throws NoProgramException {
         if (program == null) {
             throw new NoProgramException();
