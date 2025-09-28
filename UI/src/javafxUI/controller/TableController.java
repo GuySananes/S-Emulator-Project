@@ -1,11 +1,11 @@
 
-package javafx.controller;
+package javafxUI.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.model.ui.Instruction;
-import javafx.model.ui.Statistic;
-import javafx.model.ui.Variable;
+import javafxUI.model.ui.Instruction;
+import javafxUI.model.ui.Statistic;
+import javafxUI.model.ui.Variable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;

@@ -1,22 +1,16 @@
 
-package javafx.service;
+package javafxUI.service;
 
-import javafx.model.ui.Instruction;
-import javafx.model.ui.Program;
-import javafx.model.ui.SLabel;
-import javafx.model.ui.Variable;
-import javafx.model.ui.Statistic;
-import present.PresentProgramDTO;
-import present.PresentInstructionDTO;
+import core.logic.instruction.mostInstructions.SInstruction;
 import expand.ExpandDTO;
+import javafxUI.model.ui.*;
+import present.mostInstructions.PresentInstructionDTO;
+import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
-import core.logic.program.SProgram;
-import core.logic.instruction.SInstruction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * DTO + legacy converter.
@@ -67,10 +61,18 @@ public class ModelConverter {
     private static int getInstructionCycles(PresentInstructionDTO instructionDTO) {
         // Try to get cycles from InstructionData if available
         if (instructionDTO.getInstructionData() != null) {
-            return instructionDTO.getInstructionData().getCycles();
+            try {
+                String cycleString = instructionDTO.getInstructionData().getCycleRepresentation();
+                if (cycleString != null && !cycleString.trim().isEmpty()) {
+                    return Integer.parseInt(cycleString.trim());
+                }
+            } catch (NumberFormatException e) {
+                // If parsing fails, fall through to fallback logic
+            }
         }
 
-        // Fallback: try to derive cycles from instruction type if InstructionData is null
+
+                // Fallback: try to derive cycles from instruction type if InstructionData is null
         String representation = instructionDTO.getRepresentation();
         if (representation != null) {
             String lower = representation.toLowerCase();
@@ -149,7 +151,7 @@ public class ModelConverter {
     }
 
     /* ===================== LEGACY ENGINE CONVERSIONS ===================== */
-
+/*
     public static Program convertProgram(SProgram engineProgram) {
         Program program = new Program();
         if (engineProgram == null) return program;
@@ -165,27 +167,9 @@ public class ModelConverter {
 
         return program;
     }
+    */
 
-    public static List<Instruction> convertInstructions(List<SInstruction> engineInstructions) {
-        List<Instruction> instructions = new ArrayList<>();
-        if (engineInstructions == null) return instructions;
-
-        for (int i = 0; i < engineInstructions.size(); i++) {
-            SInstruction engineInstruction = engineInstructions.get(i);
-            String formattedInstruction = legacyFormatInstruction(i + 1, engineInstruction);
-
-            instructions.add(new Instruction(
-                    i + 1,
-                    legacyDetermineType(engineInstruction),
-                    engineInstruction.getCycles(),
-                    formattedInstruction
-            ));
-        }
-
-        return instructions;
-    }
-
-    public static List<Variable> convertVariables(Set<core.logic.variable.Variable> engineVariables) {
+    /*public static List<Variable> convertVariables(Set<core.logic.variable.Variable> engineVariables) {
         List<Variable> variables = new ArrayList<>();
         if (engineVariables == null) return variables;
 
@@ -198,9 +182,9 @@ public class ModelConverter {
         }
 
         return variables;
-    }
+    }*/
 
-    public static List<SLabel> convertLabels(Set<core.logic.label.Label> engineLabels) {
+    /*public static List<SLabel> convertLabels(Set<core.logic.label.Label> engineLabels) {
         List<SLabel> labels = new ArrayList<>();
         if (engineLabels == null) return labels;
 
@@ -210,7 +194,7 @@ public class ModelConverter {
         }
 
         return labels;
-    }
+    }*/
 
     /* ===================== PRIVATE HELPER METHODS ===================== */
 

@@ -1,12 +1,13 @@
-package javafx.service;
 
-import core.logic.program.SProgram;
+package javafxUI.service;
+
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.ExecutionContextImpl;
-import core.logic.execution.ExecutionResult;
+import core.logic.execution.ResultCycle;
+import core.logic.program.SProgram;
 import javafx.concurrent.Task;
+
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -22,7 +23,7 @@ public class ProgramExecutionService {
     /**
      * Executes a program synchronously using actual engine API
      */
-    public ExecutionResult executeProgram(SProgram program, Long... inputs) {
+    public ResultCycle executeProgram(SProgram program, Long... inputs) {
         if (program == null) {
             throw new IllegalArgumentException("Program cannot be null");
         }
@@ -32,7 +33,7 @@ public class ProgramExecutionService {
         this.isExecuting = true;
 
         try {
-            return programExecutor.run(inputs);
+            return programExecutor.run(Arrays.asList(inputs), 0);
         } finally {
             this.isExecuting = false;
         }
@@ -41,21 +42,21 @@ public class ProgramExecutionService {
     /**
      * Executes a program asynchronously
      */
-    public CompletableFuture<ExecutionResult> executeProgramAsync(SProgram program, Long... inputs) {
+    public CompletableFuture<ResultCycle> executeProgramAsync(SProgram program, Long... inputs) {
         return CompletableFuture.supplyAsync(() -> executeProgram(program, inputs));
     }
 
     /**
      * Creates a JavaFX Task for program execution with progress monitoring
      */
-    public Task<ExecutionResult> createExecutionTask(SProgram program, Long... inputs) {
-        return new Task<ExecutionResult>() {
+    public Task<ResultCycle> createExecutionTask(SProgram program, Long... inputs) {
+        return new Task<ResultCycle>() {
             @Override
-            protected ExecutionResult call() throws Exception {
+            protected ResultCycle call() throws Exception {
                 updateMessage("Starting program execution...");
                 updateProgress(0, 1);
 
-                ExecutionResult result = executeProgram(program, inputs);
+                ResultCycle result = executeProgram(program, inputs);
 
                 updateMessage("Execution completed");
                 updateProgress(1, 1);
@@ -112,10 +113,10 @@ public class ProgramExecutionService {
     /**
      * Resumes execution from paused state
      */
-    public ExecutionResult resumeExecution(Long... inputs) {
+    public ResultCycle resumeExecution(Long... inputs) {
         if (isExecuting && isPaused && programExecutor != null) {
             this.isPaused = false;
-            return programExecutor.run(inputs);
+            return programExecutor.run(Arrays.asList(inputs), 0);
         }
         return null;
     }

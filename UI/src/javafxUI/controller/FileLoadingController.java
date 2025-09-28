@@ -1,22 +1,23 @@
-package javafx.controller;
+package javafxUI.controller;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
-import core.logic.program.SProgram;
+import expand.ExpandDTO;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.model.ui.Instruction;
-import javafx.model.ui.Program;
-import javafx.model.ui.Variable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
-import javafx.service.FileLoadingService;
-import javafx.service.ModelConverter;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import present.PresentProgramDTO;
+import javafxUI.model.ui.Instruction;
+import javafxUI.model.ui.Program;
+import javafxUI.model.ui.Variable;
+import javafxUI.service.FileLoadingService;
+import javafxUI.service.ModelConverter;
+import present.program.PresentProgramDTO;
+import run.RunProgramDTO;
 
 import java.io.File;
 import java.util.List;
@@ -141,23 +142,23 @@ public class FileLoadingController {
         currentProgram.setLoaded(true);
         currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-        // Get degree information from the engine using RunProgramDTO
-        // This is more reliable than ExpandDTO
+        // Get degree information using DTOs only
         try {
             Engine engine = EngineImpl.getInstance();
-            run.RunProgramDTO runDTO = engine.runProgram();
 
+            // Primary strategy: Use RunProgramDTO for degrees
+            RunProgramDTO runDTO = engine.runProgram();
             currentProgram.setMaxDegree(runDTO.getMaxDegree());
             currentProgram.setMinDegree(runDTO.getMinDegree());
             currentProgram.setCurrentDegree(0); // Always start at degree 0
 
         } catch (Exception e) {
-            // Fallback: Try to get SProgram directly
+            // Fallback: Use ExpandDTO for degrees
             try {
                 Engine engine = EngineImpl.getInstance();
-                SProgram sProgram = engine.getLoadedProgram();
-                currentProgram.setMaxDegree(sProgram.calculateMaxDegree());
-                currentProgram.setMinDegree(sProgram.getMinDegree());
+                ExpandDTO expandDTO = engine.expandProgram();
+                currentProgram.setMaxDegree(expandDTO.getMaxDegree());
+                currentProgram.setMinDegree(expandDTO.getMinDegree());
                 currentProgram.setCurrentDegree(0);
             } catch (Exception fallbackException) {
                 // Final fallback to defaults

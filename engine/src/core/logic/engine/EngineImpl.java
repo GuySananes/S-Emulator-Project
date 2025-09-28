@@ -100,7 +100,7 @@ public class EngineImpl implements Engine {
         return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program));
     }
 
-    private Set<String> getOrderedContextProgramsNames(SProgram program) {
+   /* private Set<String> getOrderedContextProgramsNames(SProgram program) {
         Set<String> names = new LinkedHashSet<>();
         names.add(program.getName());
         List<SInstruction> instructions = program.getInstructionList();
@@ -111,9 +111,9 @@ public class EngineImpl implements Engine {
         }
 
         return names;
-    }
+    }*/
 
-    private void extractProgramNamesFromFunctionArgument(FunctionArgument functionArgument, Set<String> names) {
+    /*private void extractProgramNamesFromFunctionArgument(FunctionArgument functionArgument, Set<String> names) {
         names.add(functionArgument.getProgram().getName());
         List<Argument> arguments = functionArgument.getArguments();
         for(Argument argument : arguments) {
@@ -122,7 +122,7 @@ public class EngineImpl implements Engine {
             }
         }
     }
-
+*/
     @Override // newly added implementation
     public SProgram getLoadedProgram() throws NoProgramException {
         if (program == null) {

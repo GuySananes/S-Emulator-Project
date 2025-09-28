@@ -1,5 +1,5 @@
 
-package javafx.controller;
+package javafxUI.controller;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
@@ -8,13 +8,14 @@ import exception.NoProgramException;
 import exception.ProgramHasNoStatisticException;
 import exception.ProgramNotExecutedYetException;
 import javafx.collections.ObservableList;
-import javafx.controller.dialog.InputDialog;
-import javafx.model.ui.*;
+import javafxUI.controller.dialog.InputDialog;
+import javafxUI.model.ui.*;
 import javafx.scene.control.Button;
-import javafx.service.ModelConverter;
-import javafx.service.ProgramExecutionService;
+import javafxUI.model.ui.*;
+import javafxUI.service.ModelConverter;
+import javafxUI.service.ProgramExecutionService;
 import javafx.stage.Modality;
-import present.PresentProgramDTO;
+import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticDTO;
 import statistic.SingleRunStatistic;
@@ -157,7 +158,7 @@ public class ProgramExecutionController {
             }
 
             runDTO.setInputs(inputValues);
-            core.logic.execution.ExecutionResult result = runDTO.runProgram();
+            core.logic.execution.ResultCycle result = runDTO.runProgram();
 
             updateUIAfterExecution(runDTO, result);
             updateSummary.accept("Program executed successfully - " + result.getCycles() + " cycles" +
@@ -168,12 +169,12 @@ public class ProgramExecutionController {
         }
     }
 
-    private void updateUIAfterExecution(RunProgramDTO runDTO, core.logic.execution.ExecutionResult result) {
+    private void updateUIAfterExecution(RunProgramDTO runDTO, core.logic.execution.ResultCycle result) {
         try {
             executionResult.setCompleted(true);
             executionResult.setRunning(false);
             executionResult.setStatus("Completed");
-            executionResult.setCycles(result.getCycles());
+            executionResult.setCycles((int) result.getCycles());
 
             // Get program representation (executed program, potentially expanded)
             PresentProgramDTO programPresent = runDTO.getPresentProgramDTO();

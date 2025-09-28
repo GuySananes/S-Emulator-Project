@@ -1,15 +1,16 @@
 
-package javafx.controller;
+package javafxUI.controller;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.model.ui.*;
+import javafxUI.model.ui.*;
 import javafx.scene.control.*;
-import javafx.service.ModelConverter;
-import present.PresentProgramDTO;
+import javafxUI.model.ui.*;
+import javafxUI.service.ModelConverter;
+import present.program.PresentProgramDTO;
 
 import java.util.ArrayList;
 import java.util.List;

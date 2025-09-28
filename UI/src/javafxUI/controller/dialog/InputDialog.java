@@ -1,5 +1,5 @@
 
-package javafx.controller.dialog;
+package javafxUI.controller.dialog;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

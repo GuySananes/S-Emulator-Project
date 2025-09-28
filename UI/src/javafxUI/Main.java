@@ -1,4 +1,4 @@
-package javafx;
+package javafxUI;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,7 +17,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Load the FXML file
-        URL fxmlLocation = getClass().getResource("/javafx/view/fxml/emulator.fxml");
+        URL fxmlLocation = getClass().getResource("/javafxUI/view/fxml/emulator.fxml");
         FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
         Parent root = fxmlLoader.load();
 
@@ -25,7 +25,7 @@ public class Main extends Application {
         Scene scene = new Scene(root, 1200, 800);
 
         // Load CSS stylesheet
-        scene.getStylesheets().add(getClass().getResource("/javafx/view/css/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/javafxUI/view/css/style.css").toExternalForm());
 
         primaryStage.setTitle("S-Emulator");
         primaryStage.setScene(scene);

@@ -1,8 +1,8 @@
-package javafx.service;
+package javafxUI.service;
 
 import core.logic.engine.Engine;
 import core.logic.engine.EngineImpl;
-import present.PresentProgramDTO;
+import present.program.PresentProgramDTO;
 import exception.XMLUnmarshalException;
 import exception.ProgramValidationException;
 import exception.NoProgramException;

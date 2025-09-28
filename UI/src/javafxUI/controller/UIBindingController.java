@@ -1,8 +1,8 @@
 
-package javafx.controller;
+package javafxUI.controller;
 
-import javafx.model.ui.ExecutionResult;
-import javafx.model.ui.Program;
+import javafxUI.model.ui.ExecutionResult;
+import javafxUI.model.ui.Program;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
