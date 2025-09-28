@@ -1,6 +1,5 @@
 package core.logic.engine;
 
-import core.logic.execution.RunCount;
 import core.logic.program.SFunction;
 import exception.*;
 import expand.ExpandDTO;
@@ -10,6 +9,7 @@ import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import core.logic.program.SProgram;
 import statistic.ProgramStatisticDTO;
+import statistic.StatisticManager;
 import statistic.StatisticManagerImpl;
 
 import java.util.*;
@@ -88,11 +88,11 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        if(RunCount.getRunCount(program.getName()) == 0) {
+        if(StatisticManager.getInstance().getRunCount(program.getName()) == 0) {
             throw new ProgramNotExecutedYetException();
         }
 
-        if(runNumber < 1 || runNumber > RunCount.getRunCount(program.getName())) {
+        if(runNumber < StatisticManager.getInstance().getStartCount() || runNumber > StatisticManager.getInstance().getRunCount(program.getName())) {
             throw new NoSuchRunException();
         }
 
@@ -105,15 +105,15 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
 
-        if(RunCount.getRunCount(program.getName()) == 0) {
+        if(StatisticManager.getInstance().getRunCount(program.getName()) == 0) {
             throw new ProgramNotExecutedYetException();
         }
 
-        if(StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()) == null ||
-                StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()).isEmpty()) {
+        if(StatisticManager.getInstance().getProgramStatistics(program.getName()) == null ||
+                StatisticManager.getInstance().getProgramStatistics(program.getName()).isEmpty()) {
             throw new ProgramHasNoStatisticException();
         }
 
-        return new ProgramStatisticDTO(StatisticManagerImpl.getInstance().getProgramStatistics(program.getName()));
+        return new ProgramStatisticDTO(StatisticManager.getInstance().getProgramStatistics(program.getName()));
     }
 }
