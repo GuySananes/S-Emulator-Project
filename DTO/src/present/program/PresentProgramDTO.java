@@ -1,7 +1,6 @@
 package present.program;
 
 import core.logic.program.SProgram;
-import core.logic.program.SProgramImpl;
 import core.logic.variable.Variable;
 import core.logic.label.Label;
 import present.create.PresentDTOCreator;
@@ -24,7 +23,7 @@ public class PresentProgramDTO {
 
     public PresentProgramDTO(SProgram program) {
         this.programName = program.getName();
-        this.Xs = program.getInputVariablesDeepCopy();
+        this.Xs = program.getOrderedInputVariablesDeepCopy();
         this.labels = program.getOrderedLabelsDeepCopy();
         this.instructionList = program.getInstructionList().stream()
                         .map(PresentDTOCreator::createPresentInstructionDTO)

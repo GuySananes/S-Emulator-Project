@@ -18,8 +18,8 @@ public interface SProgram {
     Set<Variable> getOrderedVariablesDeepCopy();
     Set<Label> getOrderedLabels();
     Set<Label> getOrderedLabelsDeepCopy();
-    Set<Variable> getInputVariables();
-    Set<Variable> getInputVariablesDeepCopy();
+    Set<Variable> getOrderedInputVariables();
+    Set<Variable> getOrderedInputVariablesDeepCopy();
     int getDegree();
     SProgram clone();
     String getRepresentation();

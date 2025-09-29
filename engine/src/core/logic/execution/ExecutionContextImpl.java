@@ -14,60 +14,40 @@ import java.util.ArrayList;
 public class ExecutionContextImpl implements ExecutionContext {
 
     private final Map<Variable, Long> variablesToValues;
+    private final List<Variable> inputVariables;
 
     public ExecutionContextImpl(SProgram program){
-            if(program == null){
-                throw new IllegalArgumentException("Program cannot be null when creating ExecutionContext");
-            }
-
+            inputVariables = new ArrayList<>(program.getOrderedInputVariables());
             variablesToValues = new TreeMap<>();
             Set<Variable> variables = program.getOrderedVariables();
             for(Variable variable : variables){
                 variablesToValues.put(variable, 0L);
             }
-            Variable resultVariable = new VariableImpl(VariableType.RESULT, 0);
-            variablesToValues.put(resultVariable, 0L);
+            if(!variablesToValues.containsKey(Variable.RESULT)) {
+                variablesToValues.put(Variable.RESULT, 0L);
+            }
         }
 
     @Override
-    public void updateInputVariables(List<Long> inputVariables) {
-
+    public void updateInputVariables(List<Long> input) {
         for (int i = 0; i < inputVariables.size(); i++) {
-            Long value = inputVariables.get(i);
-
-            if (value == null) {
-                continue;
+            Long value = input.get(i);
+            if (value < 0) {
+                throw new IllegalArgumentException("In ExecutionContextImpl::updateInputVariables: Input list cannot contain negative values");
             }
 
-            Variable variable = new VariableImpl(VariableType.INPUT, i + 1);
-
-            if (variablesToValues.containsKey(variable)) {
-                variablesToValues.put(variable, value);
-            }
+            variablesToValues.put(inputVariables.get(i), value);
         }
     }
 
     @Override
     public long getVariableValue(Variable variable) {
-        if(!variablesToValues.containsKey(variable)){
-            throw new IllegalArgumentException("Variable "
-                    + variable.getRepresentation() +
-                    " not found in context when getting value");
-        }
-
         return variablesToValues.get(variable);
     }
 
     @Override
     public void updateVariable(Variable variable, long value) {
-        if(!variablesToValues.containsKey(variable)){
-            throw new IllegalArgumentException("Variable "
-                    + variable.getRepresentation() +
-                    " not found in context when updating value");
-        }
-
         variablesToValues.put(variable, value);
-
     }
 
     @Override
@@ -75,10 +55,6 @@ public class ExecutionContextImpl implements ExecutionContext {
         List<Long> result = new ArrayList<>(orderedVariables.size());
         for (Variable var : orderedVariables) {
             Long value = variablesToValues.get(var);
-            if (value == null) {
-                throw new IllegalArgumentException("Variable "
-                        + var.getRepresentation() + " not found in context");
-            }
             result.add(value);
         }
 

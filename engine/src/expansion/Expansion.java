@@ -13,8 +13,8 @@ import java.util.List;
 public class Expansion {
 
     public static SProgram expand(SProgram program, int degree) {
-        if (degree < program.getMinDegree() + 1 || degree > program.getDegree()) {
-            throw new IllegalArgumentException("Degree must be between 1 and "
+        if (degree < program.getMinDegree() || degree > program.getDegree()) {
+            throw new IllegalArgumentException("Degree must be between " + program.getMinDegree() + " and "
                     + program.getDegree() + " when expanding program");
         }
 
@@ -26,13 +26,13 @@ public class Expansion {
         }
 
         SProgram expandedProgram;
-        String programName = program.getName() + "_" + degree + "D";
+        String name = program.getName() + "_" + degree + "D";
 
         if(program instanceof SFunction sf) {
-            expandedProgram = new SFunction(programName, sf.getUserName(), program);
+            expandedProgram = new SFunction(name, sf.getUserName(), program);
         }
         else {
-            expandedProgram = new SProgramImpl(programName, program);
+            expandedProgram = new SProgramImpl(name, program);
         }
 
         expandedProgram.addInstructions(instructions);

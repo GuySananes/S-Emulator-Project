@@ -7,8 +7,7 @@ import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.ProgramNotExecutedYetException;
 import statistic.SingleRunStatisticImpl;
-import statistic.StatisticManagerImpl;
-
+import statistic.StatisticManager;
 import java.util.List;
 
 public class ProgramExecutorImpl implements ProgramExecutor {
@@ -18,10 +17,6 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     private ExecutionContext context;
 
     public ProgramExecutorImpl(SProgram program) {
-        if(program == null){
-            throw new IllegalArgumentException("Program cannot be null when creating ProgramExecutorImpl");
-        }
-
         this.program = program;
         this.currentInstructionIndex = 0;
     }
@@ -69,11 +64,11 @@ public class ProgramExecutorImpl implements ProgramExecutor {
             }
         } while (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation()) && currentInstruction != null);
 
-        Long result = context.getVariableValue(Variable.RESULT);
+        long result = context.getVariableValue(Variable.RESULT);
 
-        RunCount.incrementRunCount(this.program);
-        StatisticManagerImpl.getInstance().addRunStatistic(this.program,
-                new SingleRunStatisticImpl(RunCount.getRunCount(this.program),
+        StatisticManager.getInstance().incrementRunCount(this.program.getName());
+        StatisticManager.getInstance().addRunStatistic(this.program.getName(),
+                new SingleRunStatisticImpl(StatisticManager.getInstance().getRunCount(this.program.getName()),
                         degree, input, result, cycles));
 
         return new ResultCycle(result, cycles);

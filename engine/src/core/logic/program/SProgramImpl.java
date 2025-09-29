@@ -145,7 +145,7 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getInputVariables() {
+    public Set<Variable> getOrderedInputVariables() {
         if(inputVariables == null){
             inputVariables = calculateOrderedInputVariables();
         }
@@ -154,8 +154,8 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
-    public Set<Variable> getInputVariablesDeepCopy(){
-        Set<Variable> inputVariables = getInputVariables();
+    public Set<Variable> getOrderedInputVariablesDeepCopy(){
+        Set<Variable> inputVariables = getOrderedInputVariables();
         Set<Variable> copy = new TreeSet<>();
         for (Variable variable : inputVariables) {
             copy.add(variable.deepCopy());

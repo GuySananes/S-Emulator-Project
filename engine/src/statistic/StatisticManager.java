@@ -1,13 +1,39 @@
 package statistic;
 
-import core.logic.program.SProgram;
+import java.util.*;
 
-import java.util.List;
-import java.util.Map;
+public class StatisticManager{
 
-public interface StatisticManager {
+    private static final StatisticManager instance = new StatisticManager();
+    public static StatisticManager getInstance() {return instance;}
+    private StatisticManager() {}
 
-    void addRunStatistic(SProgram program, SingleRunStatistic statistic);
+    private final Map<String, List<SingleRunStatistic>> statisticMap = new HashMap<>();
 
-    List<SingleRunStatistic> getProgramStatistics(SProgram program);
+    private final Map<String, Integer> runCount = new HashMap<>();
+
+    private static final int startCount = 1;
+
+
+    public int getStartCount() {
+        return startCount;
+    }
+
+    public List<SingleRunStatistic> getProgramStatistics(String progName) {
+        return Objects.requireNonNullElse(statisticMap.get(progName), List.of());
+    }
+
+
+    public void addRunStatistic(String progName, SingleRunStatistic statistic) {
+        statisticMap.computeIfAbsent(progName, pn -> new ArrayList<>()).add(statistic);
+    }
+
+
+    public int getRunCount(String progName) {
+        return runCount.computeIfAbsent(progName, p -> 0);
+    }
+
+    public void incrementRunCount(String progName) {
+        runCount.put(progName, getRunCount(progName) + 1);
+    }
 }

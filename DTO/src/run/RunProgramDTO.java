@@ -1,6 +1,5 @@
 package run;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -12,8 +11,8 @@ import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
 import exception.ProgramNotExecutedYetException;
+import exception.RunInputException;
 import expansion.Expansion;
-import present.create.PresentDTOCreator;
 import present.program.PresentProgramDTO;
 
 public class RunProgramDTO {
@@ -42,34 +41,37 @@ public class RunProgramDTO {
     }
 
     public void setDegree(int degree) throws DegreeOutOfRangeException {
-        if(degree < 0 || degree > getMaxDegree()){
+        if(degree < program.getMinDegree() || degree > getMaxDegree()){
             throw new DegreeOutOfRangeException(getMinDegree() , getMaxDegree());
         }
         this.degree = degree;
-
     }
 
     public Set<Variable> getInputs(){
-        return program.getInputVariablesDeepCopy();
+        return program.getOrderedInputVariablesDeepCopy();
     }
 
-    public void setInputs(List<Long> input){
-        if(input == null){
-            throw new IllegalArgumentException("Input list cannot be null when setting inputs");
+    public void setInputs(List<Long> input) throws RunInputException {
+        for(Long value : input){
+            if(value == null){
+                throw new RunInputException("Input values cannot be null");
+            } else if(value < 0){
+                throw new RunInputException("Input values cannot be negative");
+            }
         }
 
-        this.input = new ArrayList<>(input);
+        this.input = input;
     }
 
     public ResultCycle runProgram(){
         ResultCycle result;
-        SProgram program = this.program;
+        SProgram progToRun = this.program;
         if(degree > 0){
             expandedProgram = Expansion.expand(this.program, degree);
-            program = expandedProgram;
+            progToRun = expandedProgram;
         }
 
-        programExecutor = new ProgramExecutorImpl(program);
+        programExecutor = new ProgramExecutorImpl(progToRun);
         result = programExecutor.run(input, degree);
 
         return result;

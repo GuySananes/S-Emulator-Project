@@ -7,7 +7,7 @@ public interface SingleRunStatistic {
 
     int getRunDegree();
 
-    List<Long> getInputCopy();
+    List<Long> getInput();
 
     long getResult();
 
