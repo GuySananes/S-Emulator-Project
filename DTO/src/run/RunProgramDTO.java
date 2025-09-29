@@ -1,12 +1,8 @@
 package run;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import core.logic.execution.ResultCycle;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ProgramExecutorImpl;
+import core.logic.execution.ResultCycle;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.DegreeOutOfRangeException;
@@ -14,6 +10,10 @@ import exception.ProgramNotExecutedYetException;
 import exception.RunInputException;
 import expansion.Expansion;
 import present.program.PresentProgramDTO;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class RunProgramDTO {
 
@@ -79,21 +79,21 @@ public class RunProgramDTO {
 
     public Set<Variable> getOrderedVariablesCopy() throws ProgramNotExecutedYetException{
         if(programExecutor == null){
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
         return Objects.requireNonNullElse(expandedProgram, program).getOrderedVariablesDeepCopy();
     }
 
     public List<Long> getOrderedValuesCopy() throws ProgramNotExecutedYetException {
         if(programExecutor == null){
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
         return programExecutor.getOrderedValues();
     }
 
     public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
         if(programExecutor == null){
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
 
         return new PresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
@@ -34,7 +35,7 @@
                         <Button fx:id="collapseButton" style="-fx-background-color: #2E2E2E; -fx-text-fill: #E0E0E0;" text="Collapse" />
                         <Label fx:id="currentDegreeLabel" style="-fx-background-color: #2C2C2C; -fx-text-fill: #CCCCCC; -fx-padding: 5;" text="Current / Maximum degree" />
                         <Button fx:id="expandButton" style="-fx-background-color: #2E2E2E; -fx-text-fill: #E0E0E0;" text="Expand" />
-                        <Button fx:id="highlightButton" prefWidth="150" style="-fx-background-color: #3A3A3A; -fx-text-fill: #90CAF9;" text="Highlight selection" />
+                        <Button fx:id="highlightButton" prefWidth="150" style="-fx-background-color: #3A3A3A; -fx-text-fill: #90CAF9;" text="Clear Highlight" />
                     </children>
                 </HBox>
             </children>
@@ -47,6 +48,23 @@
             </padding>
             <children>
                 <Label style="-fx-font-size: 18px; -fx-text-fill: #B0BEC5;" text="Instructions table" />
+
+                <!-- Highlighting Control Section (Option 2) -->
+                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 8px; -fx-background-color: #2A2A2A; -fx-border-color: #555555; -fx-border-radius: 5px; -fx-background-radius: 5px;">
+                    <children>
+                        <Label style="-fx-text-fill: #90CAF9; -fx-font-weight: bold;" text="🔍 Highlight Instructions Containing:" />
+                        <TextField fx:id="highlightInputField"
+                                   promptText="Enter variable/label name"
+                                   prefWidth="200"
+                                   style="-fx-background-color: #1E1E1E; -fx-text-fill: #CCCCCC; -fx-border-color: #444444; -fx-prompt-text-fill: #888888;" />
+                        <Button fx:id="applyHighlightButton"
+                                text="Apply"
+                                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"
+                                minWidth="60" />
+                        <Label style="-fx-text-fill: #888888; -fx-font-style: italic;" text="(highlights in real-time)" />
+                    </children>
+                </HBox>
+
                 <TableView fx:id="instructionsTable" style="-fx-background-color: #2B2B2B; -fx-border-color: #444444; -fx-text-fill: #CCCCCC;" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn text="#" />

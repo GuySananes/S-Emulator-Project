@@ -77,7 +77,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     @Override
     public List<Long> getOrderedValues() throws ProgramNotExecutedYetException {
         if(context == null){
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
         return context.getOrderedValues(program.getOrderedVariables());
     }

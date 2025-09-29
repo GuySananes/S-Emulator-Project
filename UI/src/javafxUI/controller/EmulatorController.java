@@ -2,7 +2,6 @@
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
-import core.logic.engine.EngineImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -50,6 +49,8 @@ public class EmulatorController {
     @FXML private Button showStatsButton;
     @FXML private Button rerunButton;
     @FXML private TableView<Instruction> historicalChainTable = new TableView<>();
+    @FXML private TextField highlightInputField;
+    @FXML private Button applyHighlightButton;
 
     // Model objects (shared with sub-controllers)
     private final Program currentProgram = new Program();
@@ -130,12 +131,12 @@ public class EmulatorController {
     }
 
     // Add this new method to get expanded instructions for a specific instruction
+    // Add this new method to get expanded instructions for a specific instruction
     private List<Instruction> getExpandedInstructionsForInstruction(Instruction targetInstruction) throws Exception {
-        Engine engine = EngineImpl.getInstance();
-        expand.ExpandDTO expandDTO = engine.expandProgram();
+        Engine engine = Engine.getInstance(); // Changed from EngineImpl.getInstance()
 
-        // Expand the program to get the detailed view
-        PresentProgramDTO expandedProgram = expandDTO.expand(1); // Start with degree 1
+        // Use the engine's expandOrShrinkProgram method to get expanded view
+        PresentProgramDTO expandedProgram = engine.expandOrShrinkProgram(1); // Start with degree 1
 
         // Convert all expanded instructions
         List<Instruction> allExpandedInstructions = ModelConverter.convertInstructions(expandedProgram);
@@ -234,8 +235,66 @@ public class EmulatorController {
         // Program controls (delegate to execution controller)
         collapseButton.setOnAction(e -> executionController.handleCollapse());
         expandButton.setOnAction(e -> executionController.handleExpand());
-        highlightButton.setOnAction(e -> executionController.handleHighlight());
+
+        // Modified highlight button to use the input field
+        highlightButton.setOnAction(e -> handleHighlightButtonClick());
+
+        // Add Apply button handler
+        if (applyHighlightButton != null) {
+            applyHighlightButton.setOnAction(e -> handleApplyHighlightClick());
+        }
+
         showStatsButton.setOnAction(e -> executionController.handleShowStats());
+
+        // Add real-time highlighting as user types
+        if (highlightInputField != null) {
+            highlightInputField.textProperty().addListener((observable, oldValue, newValue) -> {
+                handleHighlightInputChange(newValue);
+            });
+        }
+    }
+
+    // New method to handle apply button click
+    private void handleApplyHighlightClick() {
+        if (highlightInputField != null) {
+            String inputText = highlightInputField.getText().trim();
+            if (inputText.isEmpty()) {
+                // Clear highlighting if input is empty
+                tableController.clearHighlighting();
+                updateSummary("Highlighting cleared");
+            } else {
+                // Highlight the variable/label
+                tableController.highlightVariable(inputText);
+                updateSummary("Highlighting instructions containing: " + inputText);
+            }
+        }
+    }
+
+    // New method to handle highlight button click
+    private void handleHighlightButtonClick() {
+        if (highlightInputField != null) {
+            String inputText = highlightInputField.getText().trim();
+            if (inputText.isEmpty()) {
+                // Clear highlighting if input is empty
+                tableController.clearHighlighting();
+                updateSummary("Highlighting cleared");
+            } else {
+                // Highlight the variable/label
+                tableController.highlightVariable(inputText);
+                updateSummary("Highlighting instructions containing: " + inputText);
+            }
+        }
+    }
+
+    // New method to handle real-time highlighting as user types
+    private void handleHighlightInputChange(String newValue) {
+        if (newValue == null || newValue.trim().isEmpty()) {
+            // Clear highlighting if input is empty
+            tableController.clearHighlighting();
+        } else {
+            // Highlight the variable/label in real-time
+            tableController.highlightVariable(newValue.trim());
+        }
     }
 
     private void setupDataBinding() {

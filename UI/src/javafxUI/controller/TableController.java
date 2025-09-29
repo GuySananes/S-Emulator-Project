@@ -29,6 +29,9 @@ public class TableController {
 
     private java.util.function.Consumer<Instruction> instructionExpansionCallback;
 
+    // track current highlighted variable
+    private String currentHighlightedVariable = null;
+
     public TableController(TableView<Instruction> instructionsTable,
                            TableView<Variable> variablesTable,
                            TableView<Statistic> statisticsTable,
@@ -85,19 +88,8 @@ public class TableController {
             }
         });
 
-        // Add double-click handler for instruction expansion
-        instructionsTable.setRowFactory(tv -> {
-            TableRow<Instruction> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    Instruction selectedInstruction = row.getItem();
-                    if (instructionExpansionCallback != null && selectedInstruction != null) {
-                        instructionExpansionCallback.accept(selectedInstruction);
-                    }
-                }
-            });
-            return row;
-        });
+        // Set up combined row factory that handles both highlighting AND double-click
+        setupInstructionsRowFactory();
 
         // Make instructions table 3 times taller
         instructionsTable.setPrefHeight(450);
@@ -115,7 +107,145 @@ public class TableController {
 
         variablesTable.getColumns().setAll(varNameCol, varValueCol);
         variablesTable.setItems(variables);
+
+        // Remove the automatic highlighting on selection since we're using input field now
+        // Keep this commented in case you want to restore it later
+        /*
+        variablesTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                highlightInstructionsUsingVariable(newSelection.getName());
+            } else {
+                clearInstructionHighlighting();
+            }
+        });
+        */
     }
+
+    /**
+     * Highlights all instructions in the instructions table that use the specified variable/label
+     */
+    private void highlightInstructionsUsingVariable(String variableName) {
+        currentHighlightedVariable = variableName;
+
+        // Refresh the table to apply the highlighting using the existing row factory
+        instructionsTable.refresh();
+    }
+
+    /**
+     * Clears any highlighting from the instructions table
+     */
+    private void clearInstructionHighlighting() {
+        currentHighlightedVariable = null;
+
+        // Refresh the table to remove the styling using the existing row factory
+        instructionsTable.refresh();
+    }
+
+    /**
+     * Checks if an instruction uses the specified variable/label
+     * This method analyzes the instruction description to find variable references
+     */
+    private boolean instructionUsesVariable(Instruction instruction, String variableName) {
+        if (variableName == null || instruction == null) {
+            return false;
+        }
+
+        String description = instruction.getDescription();
+        if (description == null) {
+            return false;
+        }
+
+        // Convert to lowercase for case-insensitive matching
+        String lowerDescription = description.toLowerCase();
+        String lowerVariableName = variableName.toLowerCase();
+
+        // Check for various patterns where variables might appear:
+
+        // 1. Direct variable name match (word boundary to avoid partial matches)
+        if (lowerDescription.matches(".*\\b" + java.util.regex.Pattern.quote(lowerVariableName) + "\\b.*")) {
+            return true;
+        }
+
+        // 2. Variable in square brackets [variableName]
+        if (lowerDescription.contains("[" + lowerVariableName + "]")) {
+            return true;
+        }
+
+        // 3. Variable with register notation (e.g., R1, R2, etc.)
+        if (lowerVariableName.matches("r\\d+") && lowerDescription.contains(lowerVariableName)) {
+            return true;
+        }
+
+        // 4. Variable as memory address or operand
+        if (lowerDescription.contains("(" + lowerVariableName + ")") ||
+                lowerDescription.contains(lowerVariableName + ",") ||
+                lowerDescription.contains("," + lowerVariableName) ||
+                lowerDescription.contains(" " + lowerVariableName + " ")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Public method to manually trigger highlighting for a specific variable
+     * Can be called from other controllers if needed
+     */
+    public void highlightVariable(String variableName) {
+        if (variableName == null || variableName.trim().isEmpty()) {
+            clearHighlighting();
+            return;
+        }
+
+        // Call the actual highlighting method
+        highlightInstructionsUsingVariable(variableName.trim());
+    }
+
+    /**
+     * Public method to clear highlighting
+     */
+    public void clearHighlighting() {
+        clearInstructionHighlighting();
+    }
+
+    /**
+     * Sets up the row factory for instructions table that handles both highlighting and double-click
+     */
+    private void setupInstructionsRowFactory() {
+        instructionsTable.setRowFactory(tv -> {
+            TableRow<Instruction> row = new TableRow<Instruction>() {
+                @Override
+                protected void updateItem(Instruction instruction, boolean empty) {
+                    super.updateItem(instruction, empty);
+
+                    if (empty || instruction == null) {
+                        setStyle("");
+                    } else {
+                        // Apply highlighting if a variable is selected
+                        if (currentHighlightedVariable != null &&
+                                instructionUsesVariable(instruction, currentHighlightedVariable)) {
+                            setStyle("-fx-background-color: #ffffcc; -fx-text-fill: black;"); // Light yellow highlight
+                        } else {
+                            setStyle(""); // Clear any previous styling
+                        }
+                    }
+                }
+            };
+
+            // Add double-click handler for instruction expansion
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    Instruction selectedInstruction = row.getItem();
+                    if (instructionExpansionCallback != null && selectedInstruction != null) {
+                        instructionExpansionCallback.accept(selectedInstruction);
+                    }
+                }
+            });
+
+            return row;
+        });
+    }
+
 
     private void setupHistoricalChainTable() {
         if (historicalChainTable == null) {
@@ -188,3 +318,4 @@ public class TableController {
         statisticsTable.setItems(statistics);
     }
 }
+

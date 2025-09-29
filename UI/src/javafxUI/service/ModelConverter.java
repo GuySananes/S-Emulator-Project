@@ -7,7 +7,7 @@ import javafxUI.model.ui.*;
 import present.mostInstructions.PresentInstructionDTO;
 import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
-import statistic.ProgramStatisticDTO;
+import statistic.ProgramStatisticsDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,7 +138,7 @@ public class ModelConverter {
         }
     }
 
-    public static Statistic convertStatistics(ProgramStatisticDTO stats) {
+    public static Statistic convertStatistics(ProgramStatisticsDTO stats) {
         if (stats == null) return new Statistic();
 
         String representation = getStatisticsRepresentation(stats);
@@ -248,7 +248,7 @@ public class ModelConverter {
         }
     }
 
-    private static String getStatisticsRepresentation(ProgramStatisticDTO stats) {
+    private static String getStatisticsRepresentation(ProgramStatisticsDTO stats) {
         try {
             return stats.getRepresentation();
         } catch (Exception e) {

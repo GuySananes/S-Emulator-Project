@@ -1,7 +1,6 @@
 package javafxUI.service;
 
 import core.logic.engine.Engine;
-import core.logic.engine.EngineImpl;
 import present.program.PresentProgramDTO;
 import exception.XMLUnmarshalException;
 import exception.ProgramValidationException;
@@ -20,7 +19,7 @@ public class FileLoadingService {
     private final Engine engine;
 
     public FileLoadingService() {
-        this.engine = EngineImpl.getInstance();
+        this.engine = Engine.getInstance();
     }
 
     public FileLoadingService(Engine engine) {
