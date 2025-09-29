@@ -33,7 +33,7 @@ public class PresentInstructionDTO {
         this.variable = instruction.getVariable();
         this.label = instruction.getLabel();
         this.index = instruction.getIndex();
-        this.representation = instruction.getCycleRepresentation();
+        this.representation = instruction.getRepresentation();
         this.parents = instruction.getParents().stream()
                 .map(PresentDTOCreator::createPresentInstructionDTO)
                 .toList();

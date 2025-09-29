@@ -8,7 +8,7 @@ import present.program.PresentFunctionDTO;
 import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
 import core.logic.program.SProgram;
-import statistic.ProgramStatisticDTO;
+import statistic.ProgramStatisticsDTO;
 import statistic.StatisticManager;
 import java.util.*;
 
@@ -84,7 +84,7 @@ public class EngineImpl implements Engine {
             throw new NoProgramException();
         }
         if(statisticManager.getRunCount(program.getName()) == 0) {
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
         if(runNumber < statisticManager.getStartCount() || runNumber > statisticManager.getRunCount(program.getName())) {
             throw new NoSuchRunException(statisticManager.getStartCount(), statisticManager.getRunCount(program.getName()));
@@ -102,21 +102,15 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException {
-        StatisticManager statisticManager = StatisticManager.getInstance();
+    public ProgramStatisticsDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException {
         if(program == null) {
             throw new NoProgramException();
         }
 
-        if(statisticManager.getRunCount(program.getName()) == 0) {
-            throw new ProgramNotExecutedYetException();
+        if(StatisticManager.getInstance().getRunCount(program.getName()) == 0) {
+            throw new ProgramNotExecutedYetException(program.getName());
         }
 
-        if(statisticManager.getProgramStatistics(program.getName()) == null ||
-                statisticManager.getProgramStatistics(program.getName()).isEmpty()) {
-            throw new ProgramHasNoStatisticException();
-        }
-
-        return new ProgramStatisticDTO(statisticManager.getProgramStatistics(program.getName()));
+        return new ProgramStatisticsDTO(program.getName());
     }
 }

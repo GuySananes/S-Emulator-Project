@@ -5,7 +5,7 @@ import exception.*;
 import expand.ExpandDTO;
 import present.program.PresentProgramDTO;
 import run.RunProgramDTO;
-import statistic.ProgramStatisticDTO;
+import statistic.ProgramStatisticsDTO;
 
 import java.util.Set;
 
@@ -17,5 +17,5 @@ public interface Engine {
     ExpandDTO expandProgram() throws NoProgramException;
     RunProgramDTO runProgram() throws NoProgramException;
     RunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException, NoSuchRunException;
-    ProgramStatisticDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException, ProgramHasNoStatisticException;
+    ProgramStatisticsDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException;
 }
