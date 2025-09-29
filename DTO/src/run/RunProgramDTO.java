@@ -91,13 +91,13 @@ public class RunProgramDTO {
         return programExecutor.getOrderedValues();
     }
 
-    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
+/*    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
         if(programExecutor == null){
             throw new ProgramNotExecutedYetException();
         }
 
         return new PresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));
-    }
+    }*/
 
 
 

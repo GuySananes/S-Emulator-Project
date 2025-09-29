@@ -33,7 +33,7 @@ public class Engine {
         return contextPrograms.getNames();
     }
 
-    public void chooseContextProgram(String progName) throws NoProgramException, NoSuchProgramInContextException {
+    public PresentProgramDTO chooseContextProgram(String progName) throws NoProgramException, NoSuchProgramInContextException {
         if(program == null) {
             throw new NoProgramException();
         }
@@ -42,7 +42,8 @@ public class Engine {
             throw new NoSuchProgramInContextException();
         }
 
-        effectiveProgram = contextPrograms.getNameToProgram().get(progName);
+        changeContextProgram(progName);
+        return getPresentDTOOfCurrentEffectiveProgram();
     }
 
     public PresentProgramDTO presentProgram() throws NoProgramException {
@@ -66,12 +67,7 @@ public class Engine {
         }
 
         effectiveProgram = Expansion.expand(program, degree);
-
-        if(effectiveProgram instanceof SFunction sf) {
-            return new PresentFunctionDTO(sf);
-        }
-
-        return new PresentProgramDTO(effectiveProgram);
+        return getPresentDTOOfCurrentEffectiveProgram();
     }
 
     public RunProgramDTO runProgram() throws NoProgramException {
@@ -116,5 +112,18 @@ public class Engine {
         }
 
         return new ProgramStatisticsDTO(program.getName());
+    }
+
+    private void changeContextProgram(String newProgName) {
+        program = contextPrograms.getNameToProgram().get(newProgName);
+        effectiveProgram = program;
+    }
+
+    private PresentProgramDTO getPresentDTOOfCurrentEffectiveProgram() {
+        if(effectiveProgram instanceof SFunction sf) {
+            return new PresentFunctionDTO(sf);
+        }
+
+        return new PresentProgramDTO(effectiveProgram);
     }
 }
