@@ -13,5 +13,5 @@ public interface ExecutionContext {
 
     void updateInputVariables(List<Long> inputVariables);
 
-    List<Long> getOrderedValues(Set<Variable> orderedVariables);
+    List<Long> getVariableValues(Set<Variable> orderedVariables);
 }

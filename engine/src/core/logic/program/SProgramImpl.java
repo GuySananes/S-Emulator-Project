@@ -1,6 +1,7 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
+import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
@@ -186,7 +187,7 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SInstruction getInstructionByLabel(Label label) {
-        if ("EXIT".equals(label.getRepresentation())) {
+        if (label == FixedLabel.EXIT) {
             return null;
         }
 

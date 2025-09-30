@@ -14,34 +14,14 @@ import exception.RunInputException;
 public class RunProgramDTO {
 
     private final SProgram program;
-/*
-    private SProgram expandedProgram = null;
-*/
     private List<Long> input = null;
     private ProgramExecutor programExecutor = null;
-
-
 
     public RunProgramDTO(SProgram program) {
         this.program = program;
     }
 
-/*    public int getMaxDegree(){
-        return program.getDegree();
-    }
-
-    public int getMinDegree(){
-        return program.getMinDegree();
-    }
-
-    public void setDegree(int degree) throws DegreeOutOfRangeException {
-        if(degree < program.getMinDegree() || degree > getMaxDegree()){
-            throw new DegreeOutOfRangeException(getMinDegree() , getMaxDegree());
-        }
-        this.degree = degree;
-    }*/
-
-    public Set<Variable> getInputs(){
+    public Set<Variable> getInputVariables(){
         return program.getOrderedInputVariablesDeepCopy();
     }
 
@@ -58,17 +38,8 @@ public class RunProgramDTO {
     }
 
     public ResultCycle runProgram(){
-        ResultCycle result;
-        /*SProgram progToRun = this.program;*/
-/*        if(degree > 0){
-            expandedProgram = Expansion.expand(this.program, degree);
-            progToRun = expandedProgram;
-        }*/
-
-        programExecutor = new ProgramExecutorImpl(/*progToRun*/program);
-        result = programExecutor.run(input);
-
-        return result;
+        programExecutor = new ProgramExecutorImpl(program);
+        return programExecutor.run(input);
     }
 
     public Set<Variable> getOrderedVariablesCopy() throws ProgramNotExecutedYetException{
@@ -87,20 +58,4 @@ public class RunProgramDTO {
         }
         return programExecutor.getOrderedValues();
     }
-
-/*    public PresentProgramDTO getPresentProgramDTO()throws ProgramNotExecutedYetException {
-        if(programExecutor == null){
-            throw new ProgramNotExecutedYetException();
-        }
-
-        return new PresentProgramDTO(Objects.requireNonNullElse(expandedProgram, program));
-    }*/
-
-
-
-
-
-
-
-
 }

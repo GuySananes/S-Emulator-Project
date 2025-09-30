@@ -36,7 +36,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         SInstruction currentInstruction = instructions.get(currentInstructionIndex);
         LabelCycle labelCycle;
         Label nextLabel;
-        int maxIterations = 1000000; // Prevent infinite loops
+        int maxIterations = 1000000;
         int iterationCount = 0;
 
         do {
@@ -53,7 +53,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
                 currentInstruction = currentInstructionIndex < instructions.size()
                         ? instructions.get(currentInstructionIndex)
                         : null;
-            } else if (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation())) {
+            } else if (nextLabel != FixedLabel.EXIT) {
                 currentInstruction = program.getInstructionByLabel(nextLabel);
                 if (currentInstruction == null) {
                     throw new RuntimeException("Invalid label reference: " + nextLabel);
@@ -65,10 +65,9 @@ public class ProgramExecutorImpl implements ProgramExecutor {
             } else {
                 currentInstruction = null;
             }
-        } while (nextLabel != FixedLabel.EXIT && !"EXIT".equals(nextLabel.getRepresentation()) && currentInstruction != null);
+        } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
 
         long result = context.getVariableValue(Variable.RESULT);
-
         statisticManager.incrementRunCount(originalProgram.getName());
         statisticManager.addRunStatistic(originalProgram.getName(),
                 new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
@@ -77,11 +76,18 @@ public class ProgramExecutorImpl implements ProgramExecutor {
         return new ResultCycle(result, cycles);
     }
 
+
+
+
+
+
+
+
     @Override
     public List<Long> getOrderedValues() throws ProgramNotExecutedYetException {
         if(context == null){
             throw new ProgramNotExecutedYetException(program.getName());
         }
-        return context.getOrderedValues(program.getOrderedVariables());
+        return context.getVariableValues(program.getOrderedVariables());
     }
 }

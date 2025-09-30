@@ -30,7 +30,10 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     @Override
     public void updateInputVariables(List<Long> input) {
-        for (int i = 0; i < inputVariables.size(); i++) {
+        if(input == null){
+            return;
+        }
+        for (int i = 0; i < input.size(); i++) {
             Long value = input.get(i);
             if (value < 0) {
                 throw new IllegalArgumentException("In ExecutionContextImpl::updateInputVariables: Input list cannot contain negative values");
@@ -51,7 +54,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     @Override
-    public List<Long> getOrderedValues(Set<Variable> orderedVariables) {
+    public List<Long> getVariableValues(Set<Variable> orderedVariables) {
         List<Long> result = new ArrayList<>(orderedVariables.size());
         for (Variable var : orderedVariables) {
             Long value = variablesToValues.get(var);
