@@ -13,16 +13,19 @@ import java.util.List;
 public class ProgramExecutorImpl implements ProgramExecutor {
 
     private final SProgram program;
+    private final SProgram originalProgram;
     private int currentInstructionIndex;
     private ExecutionContext context;
+    private final StatisticManager statisticManager = StatisticManager.getInstance();
 
     public ProgramExecutorImpl(SProgram program) {
         this.program = program;
+        this.originalProgram = program.getOriginalProgram();
         this.currentInstructionIndex = 0;
     }
 
     @Override
-    public ResultCycle run(List<Long> input, int degree) {
+    public ResultCycle run(List<Long> input) {
         context = new ExecutionContextImpl(program);
         context.updateInputVariables(input);
         currentInstructionIndex = 0;
@@ -66,10 +69,10 @@ public class ProgramExecutorImpl implements ProgramExecutor {
 
         long result = context.getVariableValue(Variable.RESULT);
 
-        StatisticManager.getInstance().incrementRunCount(this.program.getName());
-        StatisticManager.getInstance().addRunStatistic(this.program.getName(),
-                new SingleRunStatisticImpl(StatisticManager.getInstance().getRunCount(this.program.getName()),
-                        degree, input, result, cycles));
+        statisticManager.incrementRunCount(originalProgram.getName());
+        statisticManager.addRunStatistic(originalProgram.getName(),
+                new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
+                        originalProgram.getDegree() - program.getDegree(), input, result, cycles));
 
         return new ResultCycle(result, cycles);
     }
@@ -77,7 +80,7 @@ public class ProgramExecutorImpl implements ProgramExecutor {
     @Override
     public List<Long> getOrderedValues() throws ProgramNotExecutedYetException {
         if(context == null){
-            throw new ProgramNotExecutedYetException();
+            throw new ProgramNotExecutedYetException(program.getName());
         }
         return context.getOrderedValues(program.getOrderedVariables());
     }

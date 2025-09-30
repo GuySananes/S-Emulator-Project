@@ -52,7 +52,7 @@ public class FunctionArgument implements Argument {
             totalCycles += result.getCycles();
         }
 
-        result = executor.run(input, 0);
+        result = executor.run(input);
         totalCycles += result.getCycles();
         return new ResultCycle(result.getResult(), totalCycles);
     }

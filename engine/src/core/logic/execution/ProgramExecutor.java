@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ProgramExecutor {
 
-    ResultCycle run(List<Long> input, int degree);
+    ResultCycle run(List<Long> input);
 
     List<Long> getOrderedValues() throws ProgramNotExecutedYetException;
 }
