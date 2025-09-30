@@ -103,11 +103,11 @@ public class EmulatorController {
     private void setupTables() {
         tableController.setupAllTables();
 
-        // Set up the instruction expansion callback
-        tableController.setInstructionExpansionCallback(this::expandInstruction);
+        // The TableController will handle instruction double-click internally
+        // No need to set expansion callback anymore since the chain will show in the historical table
     }
 
-        // Modify this method to expand instruction into the table instead of history chain
+        // Modify this method to expand instruction into the table instead of a history chain
     private void expandInstruction(Instruction instruction) {
         try {
             // Get expanded instructions for this specific instruction

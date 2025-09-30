@@ -1,4 +1,3 @@
-
 package javafxUI.controller;
 
 import javafxUI.model.ui.ExecutionResult;
@@ -58,13 +57,17 @@ public class UIBindingController {
         // Bind execution result to cycles label
         cyclesLabel.textProperty().bind(executionResult.cyclesProperty().asString());
 
-        // Bind execution history to history chain
-        executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
-            StringBuilder history = new StringBuilder();
-            for (String step : executionResult.getExecutionHistory()) {
-                history.append(step).append("\n");
-            }
-            historyChain.setText(history.toString());
-        });
+        // Bind execution history to history chain - only if historyChain exists
+        if (historyChain != null) {
+            executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
+                StringBuilder history = new StringBuilder();
+                for (String step : executionResult.getExecutionHistory()) {
+                    history.append(step).append("\n");
+                }
+                historyChain.setText(history.toString());
+            });
+        }
+        // If historyChain is null (removed from FXML), the binding is simply skipped
+        // and no history display will be updated, which is the intended behavior
     }
 }
