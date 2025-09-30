@@ -322,3 +322,20 @@
     -fx-background-color: #2A2A2A;
     -fx-text-fill: #CCCCCC;
 }
+
+/* Highlighted table rows - Dark theme */
+.table-row-cell.highlighted-row {
+    -fx-background-color: #FFD54F !important; /* Bright yellow for dark theme */
+    -fx-text-fill: #000000 !important; /* Black text for contrast */
+}
+
+.table-row-cell.highlighted-row .table-cell {
+    -fx-background-color: #FFD54F !important;
+    -fx-text-fill: #000000 !important;
+}
+
+/* Highlighted row on hover - Dark theme */
+.table-row-cell.highlighted-row:hover {
+    -fx-background-color: #FFC107 !important; /* Slightly darker yellow on hover */
+    -fx-text-fill: #000000 !important;
+}

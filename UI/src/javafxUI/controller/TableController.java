@@ -233,9 +233,11 @@ public class TableController {
                         // Apply highlighting if a variable is selected
                         if (currentHighlightedVariable != null &&
                                 instructionUsesVariable(instruction, currentHighlightedVariable)) {
-                            setStyle("-fx-background-color: #FFFF99; -fx-text-fill: black;"); // Brighter yellow for dark theme
+                            // Use CSS classes instead of hardcoded colors to support theming
+                            getStyleClass().removeAll("highlighted-row");
+                            getStyleClass().add("highlighted-row");
                         } else {
-                            setStyle(""); // Clear any previous styling
+                            getStyleClass().removeAll("highlighted-row");
                         }
                     }
                 }
