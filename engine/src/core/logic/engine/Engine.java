@@ -28,7 +28,6 @@ public class Engine {
     private final StatisticManager statisticManager = StatisticManager.getInstance();
 
     public Set<String> loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
-
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
         contextPrograms = new ContextPrograms(program);
@@ -47,18 +46,6 @@ public class Engine {
 
         changeContextProgram(progName);
         return getPresentDTOOfCurrentEffectiveProgram();
-    }
-
-    public PresentProgramDTO presentProgram() throws NoProgramException {
-        if(program == null) {
-            throw new NoProgramException();
-        }
-
-        if(effectiveProgram instanceof SFunction sf) {
-            return new PresentFunctionDTO(sf);
-        }
-
-        return new PresentProgramDTO(effectiveProgram);
     }
 
     public PresentProgramDTO expandOrShrinkProgram(int degree) throws NoProgramException, DegreeOutOfRangeException {

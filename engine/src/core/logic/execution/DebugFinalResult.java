@@ -3,6 +3,7 @@ package core.logic.execution;
 import java.util.List;
 
 public class DebugFinalResult extends DebugResult {
+
     private final long result;
 
     public DebugFinalResult(long result, List<Long> values, int cycles) {

@@ -1,8 +1,8 @@
 package core.logic.instruction.quoteInstructions;
 
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ResultCycle;
-import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 
@@ -42,7 +42,7 @@ public class FunctionArgument implements Argument {
 
     @Override
     public ResultCycle evaluate(ExecutionContext context) {
-        ProgramExecutorImpl executor = new ProgramExecutorImpl(program);
+        ProgramExecutor executor = new ProgramExecutor(program);
         ResultCycle result;
         int totalCycles = 0;
         List<Long> input = new ArrayList<>(arguments.size());

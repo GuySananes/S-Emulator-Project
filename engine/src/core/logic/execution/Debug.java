@@ -10,6 +10,7 @@ import statistic.StatisticManager;
 import java.util.List;
 
 public class Debug{
+
     private final SProgram program;
     private final SProgram originalProgram;
     private int currentInstructionIndex = 0;
@@ -19,19 +20,26 @@ public class Debug{
     private final ExecutionContext context;
     List<Long> input = null;
     List<SInstruction> instructions;
+    DebugResult nextStepResult = new DebugResult();
     int maxIterations = 1000000;
     int iterationCount = 0;
+
     private final StatisticManager statisticManager = StatisticManager.getInstance();
 
     public Debug(SProgram program) {
         this.program = program;
         this.originalProgram = program.getOriginalProgram();
-        this.context = new ExecutionContextImpl(program);
+        this.context = new ExecutionContext(program);
         this.currentInstructionIndex = 0;
         this.instructions = program.getInstructionList();
     }
 
-    public DebugResult run() {
+    public void setInput(List<Long> input) {
+        this.input = input;
+        context.updateInputVariables(input);
+    }
+
+    public DebugResult nextStep() {
         if (!instructions.isEmpty()) {
             currentInstruction = instructions.get(currentInstructionIndex);
         }
@@ -71,10 +79,23 @@ public class Debug{
             currentInstruction = null;
         }
 
-        return new DebugResult(getOrderedValues(), currentInstructionIndex, cycles);
+        nextStepResult.setVariablesValue(getOrderedValues());
+        nextStepResult.setNextIndex(currentInstructionIndex);
+        nextStepResult.setCycles(cycles);
+
+        return nextStepResult;
+    }
+
+    public DebugFinalResult resume() {
+        while(true) {
+            nextStepResult = nextStep();
+            if (nextStepResult instanceof DebugFinalResult) {
+                return (DebugFinalResult) nextStepResult;
+            }
+        }
     }
 
     public List<Long> getOrderedValues() {
-        return context.getVariableValues(program.getOrderedVariables());
+        return context.getVariablesValue(program.getOrderedVariables());
     }
 }
