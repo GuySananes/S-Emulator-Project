@@ -14,54 +14,56 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="1040.0" prefWidth="1512.0" style="-fx-background-color: #1E1E1E;" xmlns="http://javafx.com/javafx/22.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafxUI.controller.EmulatorController">
+<BorderPane prefHeight="1040.0" prefWidth="1512.0" styleClass="main-background" xmlns="http://javafx.com/javafx/22.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="javafxUI.controller.EmulatorController">
     <top>
-        <VBox prefHeight="137.0" prefWidth="1512.0" spacing="10" style="-fx-background-color: #1E1E1E;">
+        <VBox prefHeight="137.0" prefWidth="1512.0" spacing="10" styleClass="top-bar">
             <padding>
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
             <children>
                 <HBox spacing="10">
                     <children>
-                        <Button fx:id="loadFileButton" prefWidth="150" style="-fx-background-color: #2E2E2E; -fx-text-fill: #E0E0E0;" text="Load File" />
-                        <TextField fx:id="loadedFilePath" editable="false" promptText="Currently Loaded File path" style="-fx-background-color: #2C2C2C; -fx-text-fill: #CCCCCC; -fx-border-color: #444444;" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="loadFileButton" prefWidth="150" styleClass="control-button" text="Load File" />
+                        <TextField fx:id="loadedFilePath" editable="false" promptText="Currently Loaded File path" styleClass="file-path-field" HBox.hgrow="ALWAYS" />
                         <ProgressIndicator fx:id="loadProgress" prefHeight="30" prefWidth="30" progress="0.0" />
-                        <Label fx:id="loadStatusLabel" style="-fx-text-fill: #CCCCCC;" text="Idle" />
+                        <Label fx:id="loadStatusLabel" text="Idle" />
+                        <!-- Theme toggle button -->
+                        <Button fx:id="themeToggleButton" styleClass="theme-toggle-btn" text="🌙 Dark Mode" />
                     </children>
                 </HBox>
                 <HBox prefHeight="49.0" prefWidth="1492.0" spacing="10">
                     <children>
-                        <ComboBox fx:id="programSelector" prefWidth="200" promptText="Program\\function selector" style="-fx-background-color: #1565C0; -fx-text-fill: #E0E0E0;" />
-                        <Button fx:id="collapseButton" style="-fx-background-color: #2E2E2E; -fx-text-fill: #E0E0E0;" text="Collapse" />
-                        <Label fx:id="currentDegreeLabel" style="-fx-background-color: #2C2C2C; -fx-text-fill: #CCCCCC; -fx-padding: 5;" text="Current / Maximum degree" />
-                        <Button fx:id="expandButton" style="-fx-background-color: #2E2E2E; -fx-text-fill: #E0E0E0;" text="Expand" />
-                        <Button fx:id="highlightButton" prefHeight="27.0" prefWidth="154.0" style="-fx-background-color: #3A3A3A; -fx-text-fill: #90CAF9;" text="Clear Highlight" />
+                        <ComboBox fx:id="programSelector" prefWidth="200" promptText="Program\\function selector" styleClass="program-selector" />
+                        <Button fx:id="collapseButton" styleClass="control-button" text="Collapse" />
+                        <Label fx:id="currentDegreeLabel" styleClass="degree-label" text="Current / Maximum degree" />
+                        <Button fx:id="expandButton" styleClass="control-button" text="Expand" />
+                        <Button fx:id="highlightButton" prefHeight="27.0" prefWidth="154.0" styleClass="highlight-button" text="Clear Highlight" />
                     </children>
                 </HBox>
             </children>
         </VBox>
     </top>
     <center>
-        <ScrollPane fitToWidth="true" prefHeight="842.0" prefWidth="996.0" style="-fx-background-color: #1E1E1E; -fx-background: #1E1E1E;">
-            <VBox prefHeight="895.0" prefWidth="993.0" spacing="10" style="-fx-background-color: #1E1E1E;">
+        <ScrollPane fitToWidth="true" prefHeight="842.0" prefWidth="996.0" styleClass="main-scroll-pane">
+            <VBox prefHeight="895.0" prefWidth="993.0" spacing="10" styleClass="center-container">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
                 <children>
-                    <Label style="-fx-font-size: 18px; -fx-text-fill: #B0BEC5;" text="Instructions table" />
+                    <Label styleClass="section-header" text="Instructions table" />
 
-                          <!-- Highlighting Control Section (Option 2) -->
-                    <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 8px; -fx-background-color: #2A2A2A; -fx-border-color: #555555; -fx-border-radius: 5px; -fx-background-radius: 5px;">
+                    <!-- Highlighting Control Section -->
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="highlight-control-box">
                         <children>
-                            <Label style="-fx-text-fill: #90CAF9; -fx-font-weight: bold;" text="🔍 Highlight Instructions Containing:" />
-                            <TextField fx:id="highlightInputField" prefWidth="200" promptText="Enter variable/label name" style="-fx-background-color: #1E1E1E; -fx-text-fill: #CCCCCC; -fx-border-color: #444444; -fx-prompt-text-fill: #888888;" />
-                            <Button fx:id="applyHighlightButton" minWidth="60" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Apply" />
-                            <Label style="-fx-text-fill: #888888; -fx-font-style: italic;" text="(highlights in real-time)" />
+                            <Label styleClass="highlight-label" text="🔍 Highlight Instructions Containing:" />
+                            <TextField fx:id="highlightInputField" prefWidth="200" promptText="Enter variable/label name" styleClass="highlight-input-field" />
+                            <Button fx:id="applyHighlightButton" minWidth="60" styleClass="apply-highlight-btn" text="Apply" />
+                            <Label styleClass="highlight-info-label" text="(highlights in real-time)" />
                         </children>
                     </HBox>
 
-                          <ScrollPane fitToWidth="true" minHeight="200" prefHeight="300" style="-fx-background-color: #1E1E1E; -fx-background: #1E1E1E;">
-                        <TableView fx:id="instructionsTable" prefHeight="299.0" prefWidth="957.0" style="-fx-background-color: #2B2B2B; -fx-border-color: #444444; -fx-text-fill: #CCCCCC;">
+                    <ScrollPane fitToWidth="true" minHeight="200" prefHeight="300" styleClass="table-scroll-pane">
+                        <TableView fx:id="instructionsTable" prefHeight="299.0" prefWidth="957.0" styleClass="instructions-table">
                             <columns>
                                 <TableColumn text="#" />
                                 <TableColumn text="B\S" />
@@ -71,93 +73,92 @@
                         </TableView>
                     </ScrollPane>
 
-                          <Label fx:id="summaryLine" maxWidth="1.7976931348623157E308" prefHeight="40" style="-fx-background-color: #2C2C2C; -fx-text-fill: #CCCCCC; -fx-padding: 10;" text="Summary line" />
+                    <Label fx:id="summaryLine" maxWidth="1.7976931348623157E308" prefHeight="40" styleClass="summary-line" text="Summary line" />
 
-                          <ScrollPane fitToWidth="true" minHeight="50.0" prefHeight="50.0" prefWidth="537.0" style="-fx-background-color: #1E1E1E; -fx-background: #1E1E1E;">
-                  <content>
-      
-                                <Label prefHeight="43.0" prefWidth="280.0" style="-fx-font-size: 18px; -fx-text-fill: #B0BEC5;" text="Selected Instruction History Chain" />
-                  </content>
+                    <ScrollPane fitToWidth="true" minHeight="50.0" prefHeight="50.0" prefWidth="537.0" styleClass="table-scroll-pane">
+                        <content>
+                            <Label prefHeight="43.0" prefWidth="280.0" styleClass="section-header" text="Selected Instruction History Chain" />
+                        </content>
                     </ScrollPane>
-                     <TableView fx:id="historicalChainTable" prefHeight="254.0" prefWidth="973.0" style="-fx-background-color: #2B2B2B; -fx-border-color: #444444; -fx-text-fill: #CCCCCC;">
-                         <columns>
-                             <TableColumn text="#" />
-                             <TableColumn text="B\S" />
-                             <TableColumn text="Cycles" />
-                             <TableColumn text="Instruction" />
-                         </columns>
-                     </TableView>
+                    <TableView fx:id="historicalChainTable" prefHeight="254.0" prefWidth="973.0" styleClass="instructions-table">
+                        <columns>
+                            <TableColumn text="#" />
+                            <TableColumn text="B\S" />
+                            <TableColumn text="Cycles" />
+                            <TableColumn text="Instruction" />
+                        </columns>
+                    </TableView>
                 </children>
             </VBox>
         </ScrollPane>
     </center>
     <right>
-        <ScrollPane fitToWidth="true" prefHeight="859.0" prefWidth="467.0" style="-fx-background-color: #1E1E1E; -fx-background: #1E1E1E;">
-            <VBox prefHeight="862.0" prefWidth="513.0" spacing="10" style="-fx-background-color: #1E1E1E;">
+        <ScrollPane fitToWidth="true" prefHeight="859.0" prefWidth="467.0" styleClass="main-scroll-pane">
+            <VBox prefHeight="862.0" prefWidth="513.0" spacing="10" styleClass="right-container">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
                 <children>
                     <VBox spacing="10">
                         <children>
-                            <Label style="-fx-font-size: 18px; -fx-text-fill: #B0BEC5;" text="Debugger\\Execution" />
-                            <VBox spacing="5" style="-fx-background-color: #2A2A2A; -fx-border-color: #444444; -fx-padding: 10;">
+                            <Label styleClass="section-header" text="Debugger\\Execution" />
+                            <VBox spacing="5" styleClass="debugger-panel">
                                 <children>
-                                    <Label style="-fx-text-fill: #CCCCCC;" text="Debugger\\Execution Commands:" />
-                                    <Button fx:id="startRegularButton" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" text="Start Regular Execution" />
-                                    <Button fx:id="startDebugButton" style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;" text="Start Debug Execution" />
-                                    <Button fx:id="stopButton" style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-font-weight: bold;" text="Stop" />
-                                    <Button fx:id="resumeButton" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;" text="Resume" />
+                                    <Label text="Debugger\\Execution Commands:" />
+                                    <Button fx:id="startRegularButton" styleClass="start-regular-btn" text="Start Regular Execution" />
+                                    <Button fx:id="startDebugButton" styleClass="start-debug-btn" text="Start Debug Execution" />
+                                    <Button fx:id="stopButton" styleClass="stop-btn" text="Stop" />
+                                    <Button fx:id="resumeButton" styleClass="resume-btn" text="Resume" />
                                     <HBox prefHeight="0.0" prefWidth="307.0" spacing="5">
                                         <children>
-                                            <Button fx:id="stepOverButton" style="-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-weight: bold;" text="Step over" HBox.hgrow="ALWAYS" />
-                                            <Button fx:id="stepBackButton" style="-fx-background-color: #795548; -fx-text-fill: white; -fx-font-weight: bold;" text="Step backward" HBox.hgrow="ALWAYS" />
+                                            <Button fx:id="stepOverButton" styleClass="step-over-btn" text="Step over" HBox.hgrow="ALWAYS" />
+                                            <Button fx:id="stepBackButton" styleClass="step-back-btn" text="Step backward" HBox.hgrow="ALWAYS" />
                                         </children>
                                     </HBox>
                                 </children>
                             </VBox>
                             <HBox prefHeight="250" spacing="10">
                                 <children>
-                                    <VBox spacing="5" style="-fx-background-color: #00796B; -fx-background-radius: 5; -fx-padding: 5;" HBox.hgrow="ALWAYS">
+                                    <VBox spacing="5" styleClass="variables-panel" HBox.hgrow="ALWAYS">
                                         <children>
-                                            <Label style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" text="Variables" />
-                                            <TableView fx:id="variablesTable" minHeight="200" prefHeight="210" style="-fx-background-color: #2A2A2A; -fx-text-fill: #CCCCCC;" VBox.vgrow="ALWAYS">
+                                            <Label styleClass="panel-header" text="Variables" />
+                                            <TableView fx:id="variablesTable" minHeight="200" prefHeight="210" styleClass="variables-table" VBox.vgrow="ALWAYS">
                                                 <placeholder>
-                                                    <Label style="-fx-text-fill: #888888;" text="No variables loaded" />
+                                                    <Label text="No variables loaded" />
                                                 </placeholder>
                                             </TableView>
                                         </children>
                                     </VBox>
-                                    <VBox spacing="5" style="-fx-background-color: #6A1B9A; -fx-background-radius: 5; -fx-padding: 5;" HBox.hgrow="ALWAYS">
+                                    <VBox spacing="5" styleClass="execution-panel" HBox.hgrow="ALWAYS">
                                         <children>
-                                            <Label style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" text="Execution Inputs" />
-                                            <TextArea fx:id="executionInputs" minHeight="200" prefHeight="213.0" prefWidth="248.0" style="-fx-background-color: #2A2A2A; -fx-text-fill: #CCCCCC;" wrapText="true" VBox.vgrow="ALWAYS" />
+                                            <Label styleClass="panel-header" text="Execution Inputs" />
+                                            <TextArea fx:id="executionInputs" minHeight="200" prefHeight="213.0" prefWidth="248.0" styleClass="execution-inputs-area" wrapText="true" VBox.vgrow="ALWAYS" />
                                         </children>
                                     </VBox>
                                 </children>
                             </HBox>
-                            <VBox spacing="5" style="-fx-background-color: #2A2A2A; -fx-background-radius: 5; -fx-padding: 5;">
+                            <VBox spacing="5" styleClass="cycles-panel">
                                 <children>
-                                    <Label style="-fx-text-fill: #B0BEC5;" text="Cycles" />
-                                    <Label fx:id="cyclesLabel" style="-fx-font-size: 16px; -fx-text-fill: #E0E0E0;" text="0" />
+                                    <Label text="Cycles" />
+                                    <Label fx:id="cyclesLabel" styleClass="cycles-value" text="0" />
                                 </children>
                             </VBox>
                         </children>
                     </VBox>
                     <VBox spacing="10" VBox.vgrow="ALWAYS">
                         <children>
-                            <Label style="-fx-font-size: 18px; -fx-text-fill: #B0BEC5;" text="Statistics Table" />
-                            <ScrollPane fitToWidth="true" minHeight="150" prefHeight="200" style="-fx-background-color: #1E1E1E; -fx-background: #1E1E1E;" VBox.vgrow="ALWAYS">
-                                <TableView fx:id="statisticsTable" prefHeight="197.0" prefWidth="477.0" style="-fx-background-color: #2A2A2A; -fx-text-fill: #CCCCCC;">
+                            <Label styleClass="section-header" text="Statistics Table" />
+                            <ScrollPane fitToWidth="true" minHeight="150" prefHeight="200" styleClass="table-scroll-pane" VBox.vgrow="ALWAYS">
+                                <TableView fx:id="statisticsTable" prefHeight="197.0" prefWidth="477.0" styleClass="statistics-table">
                                     <placeholder>
-                                        <Label style="-fx-text-fill: #888888;" text="No statistics available" />
+                                        <Label text="No statistics available" />
                                     </placeholder>
                                 </TableView>
                             </ScrollPane>
                             <HBox spacing="10">
                                 <children>
-                                    <Button fx:id="showStatsButton" style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-font-weight: bold;" text="Show" HBox.hgrow="ALWAYS" />
-                                    <Button fx:id="rerunButton" style="-fx-background-color: #3F51B5; -fx-text-fill: white; -fx-font-weight: bold;" text="Re-run" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="showStatsButton" styleClass="show-stats-btn" text="Show" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="rerunButton" styleClass="rerun-btn" text="Re-run" HBox.hgrow="ALWAYS" />
                                 </children>
                             </HBox>
                         </children>

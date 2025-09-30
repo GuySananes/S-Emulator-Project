@@ -154,7 +154,6 @@ public class TableController {
 
     /**
      * Checks if an instruction uses the specified variable/label
-     * This method analyzes the instruction description to find variable references
      */
     private boolean instructionUsesVariable(Instruction instruction, String variableName) {
         if (variableName == null || instruction == null) {
@@ -170,21 +169,21 @@ public class TableController {
         String lowerDescription = description.toLowerCase();
         String lowerVariableName = variableName.toLowerCase();
 
-        // Check for various patterns where variables might appear:
+        boolean matches = false;
 
         // 1. Direct variable name match (word boundary to avoid partial matches)
         if (lowerDescription.matches(".*\\b" + java.util.regex.Pattern.quote(lowerVariableName) + "\\b.*")) {
-            return true;
+            matches = true;
         }
 
         // 2. Variable in square brackets [variableName]
         if (lowerDescription.contains("[" + lowerVariableName + "]")) {
-            return true;
+            matches = true;
         }
 
         // 3. Variable with register notation (e.g., R1, R2, etc.)
         if (lowerVariableName.matches("r\\d+") && lowerDescription.contains(lowerVariableName)) {
-            return true;
+            matches = true;
         }
 
         // 4. Variable as memory address or operand
@@ -192,10 +191,14 @@ public class TableController {
                 lowerDescription.contains(lowerVariableName + ",") ||
                 lowerDescription.contains("," + lowerVariableName) ||
                 lowerDescription.contains(" " + lowerVariableName + " ")) {
-            return true;
+            matches = true;
         }
 
-        return false;
+        if (matches) {
+            System.out.println("DEBUG: Found match in instruction: " + description + " for variable: " + variableName);
+        }
+
+        return matches;
     }
 
     /**
@@ -219,8 +222,9 @@ public class TableController {
         clearInstructionHighlighting();
     }
 
+
     /**
-     * Sets up the row factory for instructions table that handles both highlighting and double-click
+     * Sets up the row factory for the instructions table that handles both highlighting and double-click
      */
     private void setupInstructionsRowFactory() {
         instructionsTable.setRowFactory(tv -> {
@@ -235,7 +239,7 @@ public class TableController {
                         // Apply highlighting if a variable is selected
                         if (currentHighlightedVariable != null &&
                                 instructionUsesVariable(instruction, currentHighlightedVariable)) {
-                            setStyle("-fx-background-color: #ffffcc; -fx-text-fill: black;"); // Light yellow highlight
+                            setStyle("-fx-background-color: #FFFF99; -fx-text-fill: black;"); // Brighter yellow for dark theme
                         } else {
                             setStyle(""); // Clear any previous styling
                         }
@@ -247,9 +251,8 @@ public class TableController {
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     Instruction selectedInstruction = row.getItem();
-                    if (selectedInstruction != null) {
-                        // Handle double-click directly here instead of using callback
-                        handleInstructionDoubleClick(selectedInstruction);
+                    if (instructionExpansionCallback != null && selectedInstruction != null) {
+                        instructionExpansionCallback.accept(selectedInstruction);
                     }
                 }
             });
@@ -257,7 +260,6 @@ public class TableController {
             return row;
         });
     }
-
     // New method to handle double-click on instructions
     private void handleInstructionDoubleClick(Instruction selectedInstruction) {
         try {

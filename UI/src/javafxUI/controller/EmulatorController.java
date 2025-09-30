@@ -1,4 +1,3 @@
-
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
@@ -9,6 +8,7 @@ import javafxUI.model.ui.*;
 import javafx.scene.control.*;
 import javafxUI.model.ui.*;
 import javafxUI.service.ModelConverter;
+import javafxUI.service.ThemeManager;
 import present.program.PresentProgramDTO;
 
 import java.util.ArrayList;
@@ -52,6 +52,9 @@ public class EmulatorController {
     @FXML private TextField highlightInputField;
     @FXML private Button applyHighlightButton;
 
+    // Theme toggle button
+    @FXML private Button themeToggleButton;
+
     // Model objects (shared with sub-controllers)
     private final Program currentProgram = new Program();
     private final ExecutionResult executionResult = new ExecutionResult();
@@ -65,12 +68,21 @@ public class EmulatorController {
     private TableController tableController;
     private UIBindingController bindingController;
 
+    // Theme manager
+    private ThemeManager themeManager;
+
     @FXML
     public void initialize() {
+        initializeThemeManager();
         initializeSubControllers();
         setupTables();
         setupEventHandlers();
         setupDataBinding();
+    }
+
+    private void initializeThemeManager() {
+        themeManager = ThemeManager.getInstance();
+        updateThemeButtonText();
     }
 
     private void initializeSubControllers() {
@@ -107,7 +119,7 @@ public class EmulatorController {
         // No need to set expansion callback anymore since the chain will show in the historical table
     }
 
-        // Modify this method to expand instruction into the table instead of a history chain
+    // Modify this method to expand instruction into the table instead of a history chain
     private void expandInstruction(Instruction instruction) {
         try {
             // Get expanded instructions for this specific instruction
@@ -229,6 +241,11 @@ public class EmulatorController {
         fileLoadingController.setupEventHandlers();
         executionController.setupEventHandlers();
 
+        // Theme toggle button
+        if (themeToggleButton != null) {
+            themeToggleButton.setOnAction(e -> handleThemeToggle());
+        }
+
         // Program selector (stays here as it's simple)
         programSelector.setOnAction(e -> handleProgramSelection());
 
@@ -236,10 +253,10 @@ public class EmulatorController {
         collapseButton.setOnAction(e -> executionController.handleCollapse());
         expandButton.setOnAction(e -> executionController.handleExpand());
 
-        // Modified highlight button to use the input field
-        highlightButton.setOnAction(e -> handleHighlightButtonClick());
+        // Clear highlight button functionality
+        highlightButton.setOnAction(e -> handleClearHighlightClick());
 
-        // Add Apply button handler
+        // Add Apply button handler (this was missing!)
         if (applyHighlightButton != null) {
             applyHighlightButton.setOnAction(e -> handleApplyHighlightClick());
         }
@@ -254,6 +271,39 @@ public class EmulatorController {
         }
     }
 
+    private void handleThemeToggle() {
+        themeManager.toggleTheme();
+        updateThemeButtonText();
+        updateSummary("Theme switched to " + (themeManager.isDarkMode() ? "Dark" : "Light") + " mode");
+    }
+
+    private void updateThemeButtonText() {
+        if (themeToggleButton != null) {
+            if (themeManager.isDarkMode()) {
+                themeToggleButton.setText("🌙 Dark Mode");
+            } else {
+                themeToggleButton.setText("☀️ Light Mode");
+            }
+        }
+    }
+
+    // Public method for Main.java to set the scene
+    public void setScene(javafx.scene.Scene scene) {
+        themeManager.setScene(scene);
+        // Apply initial theme
+        themeManager.setTheme(ThemeManager.Theme.DARK);
+    }
+
+    private void handleClearHighlightClick() {
+        // Clear the input field
+        if (highlightInputField != null) {
+            highlightInputField.clear();
+        }
+        // Clear the highlighting
+        tableController.clearHighlighting();
+        updateSummary("Highlighting cleared");
+    }
+
     // New method to handle apply button click
     private void handleApplyHighlightClick() {
         if (highlightInputField != null) {
@@ -261,7 +311,7 @@ public class EmulatorController {
             if (inputText.isEmpty()) {
                 // Clear highlighting if input is empty
                 tableController.clearHighlighting();
-                updateSummary("Highlighting cleared");
+                updateSummary("Highlighting cleared - input field is empty");
             } else {
                 // Highlight the variable/label
                 tableController.highlightVariable(inputText);
@@ -270,23 +320,7 @@ public class EmulatorController {
         }
     }
 
-    // New method to handle highlight button click
-    private void handleHighlightButtonClick() {
-        if (highlightInputField != null) {
-            String inputText = highlightInputField.getText().trim();
-            if (inputText.isEmpty()) {
-                // Clear highlighting if input is empty
-                tableController.clearHighlighting();
-                updateSummary("Highlighting cleared");
-            } else {
-                // Highlight the variable/label
-                tableController.highlightVariable(inputText);
-                updateSummary("Highlighting instructions containing: " + inputText);
-            }
-        }
-    }
-
-    // New method to handle real-time highlighting as user types
+    // Keep the real-time highlighting method
     private void handleHighlightInputChange(String newValue) {
         if (newValue == null || newValue.trim().isEmpty()) {
             // Clear highlighting if input is empty

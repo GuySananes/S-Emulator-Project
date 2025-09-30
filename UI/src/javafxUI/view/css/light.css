@@ -1,0 +1,332 @@
+/* ===== LIGHT THEME ===== */
+
+/* Root colors for light theme */
+.root {
+    -fx-base: #FFFFFF;
+    -fx-background: #F5F5F5;
+    -fx-control-inner-background: #FFFFFF;
+    -fx-accent: #1976D2;
+    -fx-default-button: #1976D2;
+    -fx-focus-color: #1976D2;
+    -fx-faint-focus-color: #1976D222;
+    -fx-selection-bar: #1976D2;
+    -fx-selection-bar-text: white;
+}
+
+/* Main background */
+.main-background {
+    -fx-background-color: #F5F5F5;
+}
+
+/* Top bar styling */
+.top-bar {
+    -fx-padding: 10;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Center and right containers */
+.center-container, .right-container {
+    -fx-background-color: #F5F5F5;
+}
+
+/* Main scroll panes */
+.main-scroll-pane {
+    -fx-background-color: #F5F5F5;
+    -fx-background: #F5F5F5;
+}
+
+.main-scroll-pane .viewport {
+    -fx-background-color: #F5F5F5;
+}
+
+/* Table scroll panes */
+.table-scroll-pane {
+    -fx-background-color: #F5F5F5;
+    -fx-background: #F5F5F5;
+}
+
+.table-scroll-pane .viewport {
+    -fx-background-color: #F5F5F5;
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #1976D2;
+    -fx-font-weight: bold;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+}
+
+.theme-toggle-btn:hover {
+    -fx-background-color: #E3F2FD;
+    -fx-border-color: #1976D2;
+}
+
+/* Control buttons */
+.control-button {
+    -fx-padding: 5 10 5 10;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1;
+}
+
+.control-button:hover {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #999999;
+}
+
+/* File path field */
+.file-path-field {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+    -fx-border-color: #CCCCCC;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+/* Program selector */
+.program-selector {
+    -fx-background-color: #1976D2;
+    -fx-text-fill: white;
+}
+
+/* Degree label */
+.degree-label {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+    -fx-padding: 5;
+    -fx-border-color: #CCCCCC;
+    -fx-border-width: 1;
+}
+
+/* Highlight button */
+.highlight-button {
+    -fx-background-color: #E3F2FD;
+    -fx-text-fill: #1976D2;
+}
+
+/* Highlight control box */
+.highlight-control-box {
+    -fx-padding: 8px;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.highlight-label {
+    -fx-text-fill: #1976D2;
+    -fx-font-weight: bold;
+}
+
+.highlight-input-field {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+    -fx-border-color: #CCCCCC;
+    -fx-prompt-text-fill: #999999;
+}
+
+.apply-highlight-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+}
+
+.highlight-info-label {
+    -fx-text-fill: #666666;
+    -fx-font-style: italic;
+}
+
+/* Tables */
+.instructions-table {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+    -fx-text-fill: #333333;
+}
+
+.variables-table {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+}
+
+.statistics-table {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+    -fx-text-fill: #333333;
+}
+
+/* Table styling */
+.table-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-text-fill: #333333;
+}
+
+.table-view .column-header {
+    -fx-background-color: #F5F5F5;
+    -fx-text-fill: #1976D2;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #333333;
+    -fx-background-color: #FFFFFF;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #E3F2FD;
+    -fx-text-fill: #1976D2;
+}
+
+/* Summary line */
+.summary-line {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+/* Debugger panel */
+.debugger-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+    -fx-text-fill: #333333;
+}
+
+/* Variables panel */
+.variables-panel {
+    -fx-background-color: #4DB6AC;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+/* Execution panel */
+.execution-panel {
+    -fx-background-color: #9575CD;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+.execution-inputs-area {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+}
+
+/* Panel headers */
+.panel-header {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+/* Cycles panel */
+.cycles-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #424242;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+}
+
+.cycles-value {
+    -fx-font-size: 16px;
+    -fx-text-fill: #333333;
+}
+
+/* Action buttons */
+.start-regular-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.start-debug-btn {
+    -fx-background-color: #FF9800;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.stop-btn {
+    -fx-background-color: #F44336;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.resume-btn {
+    -fx-background-color: #2196F3;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.step-over-btn {
+    -fx-background-color: #9C27B0;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.step-back-btn {
+    -fx-background-color: #795548;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.show-stats-btn {
+    -fx-background-color: #607D8B;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.rerun-btn {
+    -fx-background-color: #3F51B5;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Section headers */
+.section-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #424242;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: #333333;
+}
+
+/* Text fields */
+.text-field {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+    -fx-border-color: #CCCCCC;
+    -fx-prompt-text-fill: #999999;
+}
+
+.text-field:focused {
+    -fx-border-color: #1976D2;
+}
+
+/* Text areas */
+.text-area {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #333333;
+}

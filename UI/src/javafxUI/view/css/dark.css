@@ -1,0 +1,324 @@
+/* ===== DARK THEME ===== */
+
+/* Root colors for dark theme */
+.root {
+    -fx-base: #1E1E1E;
+    -fx-background: #1E1E1E;
+    -fx-control-inner-background: #2C2C2C;
+    -fx-accent: #90CAF9;
+    -fx-default-button: #1565C0;
+    -fx-focus-color: #90CAF9;
+    -fx-faint-focus-color: #90CAF922;
+    -fx-selection-bar: #1565C0;
+    -fx-selection-bar-text: white;
+}
+
+/* Main background */
+.main-background {
+    -fx-background-color: #1E1E1E;
+}
+
+/* Top bar styling */
+.top-bar {
+    -fx-padding: 10;
+    -fx-background-color: #1E1E1E;
+    -fx-border-color: #333333;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Center and right containers */
+.center-container, .right-container {
+    -fx-background-color: #1E1E1E;
+}
+
+/* Main scroll panes */
+.main-scroll-pane {
+    -fx-background-color: #1E1E1E;
+    -fx-background: #1E1E1E;
+}
+
+.main-scroll-pane .viewport {
+    -fx-background-color: #1E1E1E;
+}
+
+/* Table scroll panes */
+.table-scroll-pane {
+    -fx-background-color: #1E1E1E;
+    -fx-background: #1E1E1E;
+}
+
+.table-scroll-pane .viewport {
+    -fx-background-color: #1E1E1E;
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #90CAF9;
+    -fx-font-weight: bold;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+}
+
+.theme-toggle-btn:hover {
+    -fx-background-color: #4A4A4A;
+    -fx-border-color: #90CAF9;
+}
+
+/* Control buttons */
+.control-button {
+    -fx-padding: 5 10 5 10;
+    -fx-background-color: #2E2E2E;
+    -fx-text-fill: #E0E0E0;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+}
+
+.control-button:hover {
+    -fx-background-color: #3A3A3A;
+}
+
+/* File path field */
+.file-path-field {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #CCCCCC;
+    -fx-border-color: #444444;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+/* Program selector */
+.program-selector {
+    -fx-background-color: #1565C0;
+    -fx-text-fill: #E0E0E0;
+}
+
+/* Degree label */
+.degree-label {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #CCCCCC;
+    -fx-padding: 5;
+}
+
+/* Highlight button */
+.highlight-button {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #90CAF9;
+}
+
+/* Highlight control box */
+.highlight-control-box {
+    -fx-padding: 8px;
+    -fx-background-color: #2A2A2A;
+    -fx-border-color: #555555;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+.highlight-label {
+    -fx-text-fill: #90CAF9;
+    -fx-font-weight: bold;
+}
+
+.highlight-input-field {
+    -fx-background-color: #1E1E1E;
+    -fx-text-fill: #CCCCCC;
+    -fx-border-color: #444444;
+    -fx-prompt-text-fill: #888888;
+}
+
+.apply-highlight-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+}
+
+.highlight-info-label {
+    -fx-text-fill: #888888;
+    -fx-font-style: italic;
+}
+
+/* Tables */
+.instructions-table {
+    -fx-background-color: #2B2B2B;
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+    -fx-text-fill: #CCCCCC;
+}
+
+.variables-table {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #CCCCCC;
+}
+
+.statistics-table {
+    -fx-background-color: #2A2A2A;
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+    -fx-text-fill: #CCCCCC;
+}
+
+/* Table styling */
+.table-view {
+    -fx-background-color: #2B2B2B;
+    -fx-border-color: #444444;
+    -fx-text-fill: #CCCCCC;
+}
+
+.table-view .column-header {
+    -fx-background-color: #333333;
+    -fx-text-fill: #90CAF9;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #CCCCCC;
+    -fx-background-color: #2B2B2B;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #1565C0;
+}
+
+/* Summary line */
+.summary-line {
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #333333;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-font-size: 14px;
+    -fx-text-fill: #CCCCCC;
+}
+
+/* Debugger panel */
+.debugger-panel {
+    -fx-background-color: #2A2A2A;
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+    -fx-text-fill: #CCCCCC;
+}
+
+/* Variables panel */
+.variables-panel {
+    -fx-background-color: #00796B;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+/* Execution panel */
+.execution-panel {
+    -fx-background-color: #6A1B9A;
+    -fx-text-fill: white;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+.execution-inputs-area {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #CCCCCC;
+}
+
+/* Panel headers */
+.panel-header {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+/* Cycles panel */
+.cycles-panel {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #B0BEC5;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+}
+
+.cycles-value {
+    -fx-font-size: 16px;
+    -fx-text-fill: #E0E0E0;
+}
+
+/* Action buttons */
+.start-regular-btn {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.start-debug-btn {
+    -fx-background-color: #FF9800;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.stop-btn {
+    -fx-background-color: #F44336;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.resume-btn {
+    -fx-background-color: #2196F3;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.step-over-btn {
+    -fx-background-color: #9C27B0;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.step-back-btn {
+    -fx-background-color: #795548;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.show-stats-btn {
+    -fx-background-color: #607D8B;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.rerun-btn {
+    -fx-background-color: #3F51B5;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Section headers */
+.section-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #B0BEC5;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: #CCCCCC;
+}
+
+/* Text fields */
+.text-field {
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #CCCCCC;
+    -fx-border-color: #444444;
+    -fx-prompt-text-fill: #888888;
+}
+
+.text-field:focused {
+    -fx-border-color: #90CAF9;
+}
+
+/* Text areas */
+.text-area {
+    -fx-background-color: #2A2A2A;
+    -fx-text-fill: #CCCCCC;
+}
