@@ -76,6 +76,10 @@ public class ProgramExecutor {
         return new ResultCycle(result, cycles);
     }
 
+    public List<Long> getOrderedInputValues() {
+        return context.getVariablesValues(program.getOrderedInputVariables());
+    }
+
     public List<Long> getOrderedValues() {
         return context.getVariablesValues(program.getOrderedVariables());
     }

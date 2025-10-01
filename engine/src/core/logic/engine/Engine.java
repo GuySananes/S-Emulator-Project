@@ -4,8 +4,10 @@ import core.logic.program.SFunction;
 import exception.*;
 import expansion.Expansion;
 import jaxb.JAXBLoader;
+import load.LoadProgramDTO;
 import present.program.PresentFunctionDTO;
 import present.program.PresentProgramDTO;
+import run.DebugProgramDTO;
 import run.ReRunProgramDTO;
 import run.RunProgramDTO;
 import core.logic.program.SProgram;
@@ -27,12 +29,13 @@ public class Engine {
     private ContextPrograms contextPrograms = null;
     private final StatisticManager statisticManager = StatisticManager.getInstance();
 
-    public Set<String> loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
+    public LoadProgramDTO loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
         contextPrograms = new ContextPrograms(program);
         effectiveProgram = program;
-        return contextPrograms.getNames();
+        return new LoadProgramDTO(getPresentDTOOfCurrentEffectiveProgram(),
+                contextPrograms.getNames());
     }
 
     public PresentProgramDTO chooseContextProgram(String progName) throws NoProgramException, NoSuchProgramInContextException {
@@ -84,13 +87,16 @@ public class Engine {
         effectiveProgram = Expansion.expand(program, runStatistics.getRunDegree());
         PresentProgramDTO presentProgramDTO = getPresentDTOOfCurrentEffectiveProgram();
         RunProgramDTO runProgramDTO = new RunProgramDTO(effectiveProgram);
+        DebugProgramDTO debugProgramDTO = new DebugProgramDTO(effectiveProgram);
+
         try {
             runProgramDTO.setInput(runStatistics.getInput());
+            debugProgramDTO.setInput(runStatistics.getInput());
         } catch (RunInputException e) {
             throw new RuntimeException("Unexpected error while re-running program in Engine::reRunProgram: " + e.getMessage());
         }
 
-        return new ReRunProgramDTO(presentProgramDTO, runProgramDTO);
+        return new ReRunProgramDTO(presentProgramDTO, runProgramDTO, debugProgramDTO);
     }
 
     public ProgramStatisticsDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException {
@@ -104,11 +110,6 @@ public class Engine {
 
         return new ProgramStatisticsDTO(program.getName());
     }
-
-
-
-
-
 
 
 

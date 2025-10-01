@@ -99,6 +99,10 @@ public class Debug{
         }
     }
 
+    public List<Long> getOrderedInputValues() {
+        return context.getVariablesValues(program.getOrderedInputVariables());
+    }
+
     public List<Long> getOrderedValues() {
         return context.getVariablesValues(program.getOrderedVariables());
     }
