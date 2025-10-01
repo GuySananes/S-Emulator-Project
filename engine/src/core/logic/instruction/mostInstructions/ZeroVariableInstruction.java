@@ -1,7 +1,8 @@
 package core.logic.instruction.mostInstructions;
 
+import core.logic.execution.ChangedVariable;
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -24,9 +25,15 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
-        context.updateVariable(getVariable(), 0);
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
+        Variable toChange = getVariable();
+        long oldValue = context.getVariableValue(toChange);
+        long newValue = 0;
+        context.updateVariable(toChange, newValue);
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                newValue == oldValue ? null :
+                        new ChangedVariable(toChange, oldValue, newValue));
     }
 
     @Override

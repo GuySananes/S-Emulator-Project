@@ -1,7 +1,7 @@
 package core.logic.instruction.mostInstructions;
 
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -41,14 +41,18 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         long secondaryValue = context.getVariableValue(getSecondVariable());
         if (variableValue == secondaryValue) {
-            return new LabelCycle(targetLabel, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+            return new LabelCycleChangedVariable(targetLabel,
+                    Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                    null);
         }
 
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                null);
     }
 
     @Override

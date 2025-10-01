@@ -5,7 +5,6 @@ import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
-import exception.ProgramNotExecutedYetException;
 import statistic.SingleRunStatisticImpl;
 import statistic.StatisticManager;
 import java.util.List;
@@ -26,56 +25,58 @@ public class ProgramExecutor {
     }
 
     public ResultCycle run(List<Long> input) {
-        context.updateInputVariables(input);
-        currentInstructionIndex = 0;
-        int cycles = -1;
+        int cycles = 0;
+        if(!program.getInstructionList().isEmpty()) {
+            context.updateInputVariables(input);
+            currentInstructionIndex = 0;
+            List<SInstruction> instructions = program.getInstructionList();
+            SInstruction currentInstruction = instructions.get(currentInstructionIndex);
+            LabelCycleChangedVariable labelCycleChangedVariable;
+            Label nextLabel;
+            int maxIterations = 1000000;
+            int iterationCount = 0;
 
-        List<SInstruction> instructions = program.getInstructionList();
-
-        SInstruction currentInstruction = instructions.get(currentInstructionIndex);
-        LabelCycle labelCycle;
-        Label nextLabel;
-        int maxIterations = 1000000;
-        int iterationCount = 0;
-
-        do {
-            if (iterationCount++ > maxIterations) {
-                throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
-            }
-
-            labelCycle = currentInstruction.execute(context);
-            nextLabel = labelCycle.getLabel();
-            cycles += labelCycle.getCycles();
-
-            if (nextLabel == FixedLabel.EMPTY) {
-                currentInstructionIndex++;
-                currentInstruction = currentInstructionIndex < instructions.size()
-                        ? instructions.get(currentInstructionIndex)
-                        : null;
-            } else if (nextLabel != FixedLabel.EXIT) {
-                currentInstruction = program.getInstructionByLabel(nextLabel);
-                if (currentInstruction == null) {
-                    throw new RuntimeException("Invalid label reference: " + nextLabel);
+            do {
+                if (iterationCount++ > maxIterations) {
+                    throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
                 }
-                currentInstructionIndex = instructions.indexOf(currentInstruction);
-                if (currentInstructionIndex == -1) {
-                    throw new RuntimeException("Instruction not found in program: " + currentInstruction);
+
+                labelCycleChangedVariable = currentInstruction.execute(context);
+                nextLabel = labelCycleChangedVariable.getLabel();
+                cycles += labelCycleChangedVariable.getCycles();
+
+                if (nextLabel == FixedLabel.EMPTY) {
+                    currentInstructionIndex++;
+                    currentInstruction = currentInstructionIndex < instructions.size()
+                            ? instructions.get(currentInstructionIndex)
+                            : null;
+                } else if (nextLabel != FixedLabel.EXIT) {
+                    currentInstruction = program.getInstructionByLabel(nextLabel);
+                    if (currentInstruction == null) {
+                        throw new RuntimeException("Invalid label reference: " + nextLabel);
+                    }
+                    currentInstructionIndex = instructions.indexOf(currentInstruction);
+                    if (currentInstructionIndex == -1) {
+                        throw new RuntimeException("Instruction not found in program: " + currentInstruction);
+                    }
+                } else {
+                    currentInstruction = null;
                 }
-            } else {
-                currentInstruction = null;
-            }
-        } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
+            } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
+        }
 
         long result = context.getVariableValue(Variable.RESULT);
         statisticManager.incrementRunCount(originalProgram.getName());
         statisticManager.addRunStatistic(originalProgram.getName(),
-                new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
-                        originalProgram.getDegree() - program.getDegree(), input, result, cycles));
+                new SingleRunStatisticImpl
+                        (statisticManager.getRunCount(originalProgram.getName()),
+                        originalProgram.getDegree() - program.getDegree(),
+                                input, result, cycles));
 
         return new ResultCycle(result, cycles);
     }
 
     public List<Long> getOrderedValues() {
-        return context.getVariablesValue(program.getOrderedVariables());
+        return context.getVariablesValues(program.getOrderedVariables());
     }
 }

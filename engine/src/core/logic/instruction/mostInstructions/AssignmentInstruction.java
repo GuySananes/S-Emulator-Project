@@ -1,7 +1,8 @@
 package core.logic.instruction.mostInstructions;
 
+import core.logic.execution.ChangedVariable;
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.instruction.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -24,10 +25,15 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
-        long secondaryValue = context.getVariableValue(getSecondVariable());
-        context.updateVariable(getVariable(), secondaryValue);
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
+        Variable toChange = getVariable();
+        long oldValue = context.getVariableValue(toChange);
+        long newValue = context.getVariableValue(getSecondVariable());
+        context.updateVariable(toChange, newValue);
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                newValue == oldValue ? null :
+                new ChangedVariable(toChange, oldValue, newValue));
     }
 
     @Override

@@ -45,10 +45,7 @@ public class RunProgramDTO {
         return program.getOrderedVariablesDeepCopy();
     }
 
-    public List<Long> getOrderedValues() throws ProgramNotExecutedYetException {
-        if(programExecutor == null){
-            throw new ProgramNotExecutedYetException(program.getName());
-        }
+    public List<Long> getOrderedValues() {
         return programExecutor.getOrderedValues();
     }
 

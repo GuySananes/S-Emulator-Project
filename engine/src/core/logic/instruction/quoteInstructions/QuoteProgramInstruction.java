@@ -1,7 +1,8 @@
 package core.logic.instruction.quoteInstructions;
 
+import core.logic.execution.ChangedVariable;
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.execution.ResultCycle;
 import core.logic.instruction.*;
 import core.logic.instruction.mostInstructions.*;
@@ -36,10 +37,15 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
         ResultCycle result = functionArgument.evaluate(context);
-        context.updateVariable(getVariable(), result.getResult());
-        return new LabelCycle(FixedLabel.EMPTY, result.getCycles());
+        Variable toChange = getVariable();
+        long oldValue = context.getVariableValue(toChange);
+        long newValue = result.getResult();
+        context.updateVariable(toChange, newValue);
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY, result.getCycles(),
+                newValue == oldValue ? null :
+                        new ChangedVariable(toChange, oldValue, newValue));
     }
 
     @Override

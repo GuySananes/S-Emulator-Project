@@ -1,39 +1,32 @@
 package core.logic.execution;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class DebugResult {
-    protected List<Long> variablesValue;
+    protected ChangedVariable changedVariable;
     protected int nextIndex;
     protected int cycles;
 
     public DebugResult() {
-        this.variablesValue = null;
+        this.changedVariable = null;
         this.nextIndex = -1;
         this.cycles = -1;
     }
 
-    public DebugResult(List<Long> variablesValue, int nextIndex, int cycles) {
-        this.variablesValue = variablesValue;
+    public DebugResult(ChangedVariable changedVariable, int nextIndex, int cycles) {
+        this.changedVariable = changedVariable;
         this.nextIndex = nextIndex;
         this.cycles = cycles;
     }
 
-    protected void setVariablesValue(List<Long> variablesValue) {
-        this.variablesValue = variablesValue;
-    }
-
-    protected void setNextIndex(int nextIndex) {
+    public void setNextIndex(int nextIndex) {
         this.nextIndex = nextIndex;
     }
 
-    protected void setCycles(int cycles) {
+    public void setCycles(int cycles) {
         this.cycles = cycles;
     }
 
-    public List<Long> getVariablesValue() {
-        return variablesValue;
+    public void setChangedVariable(ChangedVariable changedVariable) {
+        this.changedVariable = changedVariable;
     }
 
     public int getNextIndex() {
@@ -42,5 +35,9 @@ public class DebugResult {
 
     public int getCycles() {
         return cycles;
+    }
+
+    public ChangedVariable getChangedVariable() {
+        return changedVariable;
     }
 }

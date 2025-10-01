@@ -45,7 +45,7 @@ public class ExecutionContext {
         variablesToValues.put(variable, value);
     }
 
-    public List<Long> getVariablesValue(Set<Variable> orderedVariables) {
+    public List<Long> getVariablesValues(Set<Variable> orderedVariables) {
         List<Long> result = new ArrayList<>(orderedVariables.size());
         for (Variable var : orderedVariables) {
             Long value = variablesToValues.get(var);

@@ -13,10 +13,10 @@ public class Debug{
 
     private final SProgram program;
     private final SProgram originalProgram;
-    private int currentInstructionIndex = 0;
+    private int nextInstructionIndex = 0;
     Label nextLabel = FixedLabel.EMPTY;
     SInstruction currentInstruction = null;
-    int cycles = 0;
+    int totalCycles = 0;
     private final ExecutionContext context;
     List<Long> input = null;
     List<SInstruction> instructions;
@@ -30,7 +30,7 @@ public class Debug{
         this.program = program;
         this.originalProgram = program.getOriginalProgram();
         this.context = new ExecutionContext(program);
-        this.currentInstructionIndex = 0;
+        this.nextInstructionIndex = 0;
         this.instructions = program.getInstructionList();
     }
 
@@ -41,7 +41,7 @@ public class Debug{
 
     public DebugResult nextStep() {
         if (!instructions.isEmpty()) {
-            currentInstruction = instructions.get(currentInstructionIndex);
+            currentInstruction = instructions.get(nextInstructionIndex);
         }
 
         if (nextLabel == FixedLabel.EXIT || currentInstruction == null) {
@@ -49,39 +49,43 @@ public class Debug{
             statisticManager.incrementRunCount(originalProgram.getName());
             statisticManager.addRunStatistic(originalProgram.getName(),
                     new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
-                            originalProgram.getDegree() - program.getDegree(), input, result, cycles));
-            return new DebugFinalResult(result, getOrderedValues(), cycles);
+                            originalProgram.getDegree() - program.getDegree(), input, result, totalCycles));
+            return new DebugFinalResult(result, totalCycles);
         }
 
         if (iterationCount++ > maxIterations) {
             throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
         }
 
-        LabelCycle labelCycle = currentInstruction.execute(context);
-        nextLabel = labelCycle.getLabel();
-        cycles += labelCycle.getCycles();
+        LabelCycleChangedVariable labelCycleChangedVariable =
+                currentInstruction.execute(context);
+        nextLabel = labelCycleChangedVariable.getLabel();
+        totalCycles += labelCycleChangedVariable.getCycles();
 
         if (nextLabel == FixedLabel.EMPTY) {
-            currentInstructionIndex++;
-            currentInstruction = currentInstructionIndex < instructions.size()
-                    ? instructions.get(currentInstructionIndex)
-                    : null;
+            if (++nextInstructionIndex >= instructions.size()) {
+                nextInstructionIndex = -1;
+                currentInstruction = null;
+            } else {
+                currentInstruction = instructions.get(nextInstructionIndex);
+            }
         } else if (nextLabel != FixedLabel.EXIT) {
             currentInstruction = program.getInstructionByLabel(nextLabel);
             if (currentInstruction == null) {
                 throw new RuntimeException("Invalid label reference: " + nextLabel);
             }
-            currentInstructionIndex = instructions.indexOf(currentInstruction);
-            if (currentInstructionIndex == -1) {
+            nextInstructionIndex = instructions.indexOf(currentInstruction);
+            if (nextInstructionIndex == -1) {
                 throw new RuntimeException("Instruction not found in program: " + currentInstruction);
             }
         } else {
             currentInstruction = null;
+            nextInstructionIndex = -1;
         }
 
-        nextStepResult.setVariablesValue(getOrderedValues());
-        nextStepResult.setNextIndex(currentInstructionIndex);
-        nextStepResult.setCycles(cycles);
+        nextStepResult.setChangedVariable(labelCycleChangedVariable.getChangedVariable());
+        nextStepResult.setNextIndex(nextInstructionIndex);
+        nextStepResult.setCycles(totalCycles);
 
         return nextStepResult;
     }
@@ -96,6 +100,6 @@ public class Debug{
     }
 
     public List<Long> getOrderedValues() {
-        return context.getVariablesValue(program.getOrderedVariables());
+        return context.getVariablesValues(program.getOrderedVariables());
     }
 }
