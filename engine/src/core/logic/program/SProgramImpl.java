@@ -5,6 +5,8 @@ import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.util.*;
 
@@ -21,6 +23,7 @@ public class SProgramImpl implements SProgram{
     protected int numOfBasicInstructions = 0;
     protected int numOfStaticInstructions = 0;
     protected static final int MIN_DEGREE = 0;
+    private final Map<String, SFunction> functions = new HashMap<>();
 
 
     public SProgramImpl(String name, SProgram originalProgram) {
@@ -237,5 +240,21 @@ public class SProgramImpl implements SProgram{
         return clonedProgram;
     }
 
+    @Override
+    public void addFunction(SFunction function) {
+        if (function != null) {
+            this.functions.put(function.getName(), function);
+        }
+    }
+
+    @Override
+    public SFunction getFunction(String name) {
+        return this.functions.get(name);
+    }
+
+    @Override
+    public Map<String, SFunction> getFunctions() {
+        return new HashMap<>(this.functions); // Return defensive copy
+    }
 
 }
