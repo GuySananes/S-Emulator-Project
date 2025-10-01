@@ -1,7 +1,6 @@
 package run;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -21,30 +20,28 @@ public class RunProgramDTO {
     public RunProgramDTO(SProgram program) {
         this.program = program;
         programExecutor = new ProgramExecutor(program);
-        this.input = new ArrayList<>(Collections.nCopies(program.getOrderedInputVariables().size(), 0L));
-    }
-
-    public Set<Variable> getInputVariables(){
-        return program.getOrderedInputVariablesDeepCopy();
+        this.input = new ArrayList<>();
     }
 
     public void setInput(List<Long> input) throws RunInputException {
-        for(Long value : input){
-            if(value == null){
-                throw new RunInputException("Input values cannot be null");
-            } else if(value < 0){
-                throw new RunInputException("Input values cannot be negative");
+        if(input != null){
+            for(Long value : input){
+                if(value == null){
+                    throw new RunInputException("Input values cannot be null");
+                } else if(value < 0){
+                    throw new RunInputException("Input values cannot be negative");
+                }
             }
-        }
 
-        this.input = input;
+            this.input = input;
+        }
     }
 
-    public Set<Variable> getOrderedVariables() throws ProgramNotExecutedYetException {
-        if(programExecutor == null){
-            throw new ProgramNotExecutedYetException(program.getName());
-        }
+    public Set<Variable> getOrderedInputVariables(){
+        return program.getOrderedInputVariablesDeepCopy();
+    }
 
+    public Set<Variable> getOrderedVariables() {
         return program.getOrderedVariablesDeepCopy();
     }
 

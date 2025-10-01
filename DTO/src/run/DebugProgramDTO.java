@@ -5,6 +5,7 @@ import core.logic.execution.DebugFinalResult;
 import core.logic.execution.DebugResult;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
+import exception.RunInputException;
 
 import java.util.*;
 
@@ -16,7 +17,21 @@ public class DebugProgramDTO{
     public DebugProgramDTO(SProgram program){
         this.program = program;
         this.debug = new Debug(program);
-        this.input = new ArrayList<>(Collections.nCopies(program.getOrderedInputVariables().size(), 0L));
+        this.input = new ArrayList<>();
+    }
+
+    public void setInput(List<Long> input) throws RunInputException{
+        if(input != null){
+            for(Long value : input){
+                if(value == null){
+                    throw new RunInputException("Input values cannot be null");
+                } else if(value < 0){
+                    throw new RunInputException("Input values cannot be negative");
+                }
+            }
+
+            this.input = input;
+        }
     }
 
     public Set<Variable> getOrderedInputVariables(){
@@ -27,15 +42,10 @@ public class DebugProgramDTO{
         return program.getOrderedVariablesDeepCopy();
     }
 
-    public List<Long> getInputValues(){
-        return input;
+    public List<Long> getOrderedValues(){
+        return debug.getOrderedValues();
     }
 
-    public void setInput(List<Long> input){
-        if(input != null){
-            this.input = input;
-        }
-    }
 
     public DebugResult nextStep(){
         return debug.nextStep();
