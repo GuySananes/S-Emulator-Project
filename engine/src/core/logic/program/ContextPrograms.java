@@ -34,13 +34,6 @@ public class ContextPrograms {
         return nameToProgram;
     }
 
-    public void addProgram(FunctionArgument functionArgument) {
-        if(nameToProgram == null) {
-            nameToProgram = new HashMap<>();
-        }
-        updateNamesToProgramsFromFunctionArgument(functionArgument, nameToProgram);
-    }
-
     private Set<String> calculateNames() {
         Set<String> names = new LinkedHashSet<>();
         names.add(program.getName());

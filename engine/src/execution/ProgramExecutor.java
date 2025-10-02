@@ -1,4 +1,4 @@
-package core.logic.execution;
+package execution;
 
 import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.label.FixedLabel;

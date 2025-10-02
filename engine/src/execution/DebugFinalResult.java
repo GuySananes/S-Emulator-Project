@@ -1,4 +1,4 @@
-package core.logic.execution;
+package execution;
 
 public class DebugFinalResult extends DebugResult {
 

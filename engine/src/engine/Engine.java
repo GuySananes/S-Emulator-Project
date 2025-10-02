@@ -1,4 +1,5 @@
-package core.logic.engine;
+/*
+package engine;
 
 import core.logic.program.ContextPrograms;
 import core.logic.program.SFunction;
@@ -127,3 +128,4 @@ public class Engine {
         return new PresentProgramDTO(effectiveProgram);
     }
 }
+*/

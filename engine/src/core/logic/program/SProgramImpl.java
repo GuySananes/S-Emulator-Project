@@ -14,7 +14,7 @@ public class SProgramImpl implements SProgram{
 
     protected int index = 1;
     protected final String name;
-    protected final List<SInstruction> instructionList;
+    protected final List<SInstruction> instructionList = new ArrayList<>();
     protected Set<Variable> orderedVariables = null;
     protected Set<Variable> inputVariables = null;
     protected Set<Label> orderedLabels = null;
@@ -26,11 +26,38 @@ public class SProgramImpl implements SProgram{
     protected static final int MIN_DEGREE = 0;
 
 
-    public SProgramImpl(String name, SProgram originalProgram) {
+    public SProgramImpl(String name, SProgram originalProgram, List<SInstruction> instructions) {
         this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
-        instructionList = new ArrayList<>();
+        addInstructions(instructions);
         contextPrograms = new ContextPrograms(this);
+    }
+
+    protected List<SInstruction> cloneInstructions() {
+        List<SInstruction> clonedInstructions = new ArrayList<>(instructionList.size());
+        for (SInstruction instruction : instructionList) {
+            clonedInstructions.add(instruction.clone());
+        }
+
+        return clonedInstructions;
+    }
+
+    private void addInstruction(SInstruction instruction) {
+        if(instruction.isBasic()){
+            numOfBasicInstructions++;
+        } else {
+            numOfStaticInstructions++;
+        }
+
+        instruction.setIndex(index++);
+        instructionList.add(instruction);
+    }
+
+
+    private void addInstructions(List<SInstruction> instructions) {
+        for(SInstruction instruction : instructions){
+            addInstruction(instruction);
+        }
     }
 
     protected Set<Variable> calculateOrderedVariables() {
@@ -97,25 +124,6 @@ public class SProgramImpl implements SProgram{
         }
 
         return degree;
-    }
-
-    @Override
-    public void addInstruction(SInstruction instruction) {
-        if(instruction.isBasic()){
-            numOfBasicInstructions++;
-        } else {
-            numOfStaticInstructions++;
-        }
-
-        instruction.setIndex(index++);
-        instructionList.add(instruction);
-    }
-
-    @Override
-    public void addInstructions(List<SInstruction> instructions) {
-        for(SInstruction instruction : instructions){
-            addInstruction(instruction);
-        }
     }
 
     @Override
@@ -238,13 +246,12 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SProgram clone() {
-        SProgram clonedProgram = new SProgramImpl(this.name, this.originalProgram);
-        for (SInstruction instruction : this.instructionList) {
-            clonedProgram.addInstruction(instruction.clone());
-        }
-
-        return clonedProgram;
+        return new SProgramImpl(this.name, this.originalProgram, cloneInstructions());
     }
+
+
+
+
 
 
 }

@@ -1,8 +1,8 @@
 package core.logic.instruction.quoteInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.ProgramExecutor;
-import core.logic.execution.ResultCycle;
+import execution.ExecutionContext;
+import execution.ProgramExecutor;
+import execution.ResultCycle;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 

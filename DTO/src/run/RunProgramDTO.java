@@ -2,8 +2,8 @@ package run;
 
 import java.util.List;
 
-import core.logic.execution.ProgramExecutor;
-import core.logic.execution.ResultCycle;
+import execution.ProgramExecutor;
+import execution.ResultCycle;
 import core.logic.program.SProgram;
 
 public class RunProgramDTO extends AbstractExecuteProgramDTO {

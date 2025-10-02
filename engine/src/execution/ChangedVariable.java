@@ -1,4 +1,4 @@
-package core.logic.execution;
+package execution;
 
 import core.logic.variable.Variable;
 

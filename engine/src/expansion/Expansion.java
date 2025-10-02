@@ -29,13 +29,12 @@ public class Expansion {
         String name = program.getName() + "_" + degree + "D";
 
         if(program instanceof SFunction sf) {
-            expandedProgram = new SFunction(name, sf.getUserName(), program);
+            expandedProgram = new SFunction(name, sf.getUserName(), program, instructions);
         }
         else {
-            expandedProgram = new SProgramImpl(name, program);
+            expandedProgram = new SProgramImpl(name, program, instructions);
         }
 
-        expandedProgram.addInstructions(instructions);
         return expandedProgram;
     }
 

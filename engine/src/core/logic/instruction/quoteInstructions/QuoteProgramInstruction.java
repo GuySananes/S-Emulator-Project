@@ -1,9 +1,9 @@
 package core.logic.instruction.quoteInstructions;
 
-import core.logic.execution.ChangedVariable;
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycleChangedVariable;
-import core.logic.execution.ResultCycle;
+import execution.ChangedVariable;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
+import execution.ResultCycle;
 import core.logic.instruction.*;
 import core.logic.instruction.mostInstructions.*;
 import core.logic.label.FixedLabel;
@@ -127,22 +127,6 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                     }
 
                     twoVariables.setSecondVariable(z);
-                }
-            }
-
-            if(instruction instanceof AbstractInstructionTwoLabels twoLabels) {
-                Label targetLabel = twoLabels.getTargetLabel();
-                if(targetLabel != FixedLabel.EMPTY) {
-                    Label newTargetLabel;
-                    if(!oldLToNewL.containsKey(targetLabel)) {
-                        newTargetLabel = context.generateLabel();
-                        oldLToNewL.put(targetLabel, newTargetLabel);
-                    }
-                    else {
-                        newTargetLabel = oldLToNewL.get(targetLabel);
-                    }
-
-                    twoLabels.setTargetLabel(newTargetLabel);
                 }
             }
 
