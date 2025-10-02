@@ -10,6 +10,7 @@ import java.util.Set;
 public interface SProgram {
 
     String getName();
+    ContextPrograms getContextPrograms();
     SProgram getOriginalProgram();
     void addInstruction(SInstruction instruction);
     void addInstructions(List<SInstruction> instructions);

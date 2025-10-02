@@ -1,6 +1,7 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
+import core.logic.instruction.quoteInstructions.Quotable;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;
@@ -19,6 +20,7 @@ public class SProgramImpl implements SProgram{
     protected Set<Label> orderedLabels = null;
     protected int degree = -1;
     protected SProgram originalProgram;
+    protected ContextPrograms contextPrograms;
     protected int numOfBasicInstructions = 0;
     protected int numOfStaticInstructions = 0;
     protected static final int MIN_DEGREE = 0;
@@ -28,6 +30,7 @@ public class SProgramImpl implements SProgram{
         this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
         instructionList = new ArrayList<>();
+        contextPrograms = new ContextPrograms(this);
     }
 
     protected Set<Variable> calculateOrderedVariables() {
@@ -75,6 +78,11 @@ public class SProgramImpl implements SProgram{
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public ContextPrograms getContextPrograms() {
+        return contextPrograms;
     }
 
     @Override

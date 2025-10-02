@@ -1,5 +1,6 @@
 package core.logic.engine;
 
+import core.logic.program.ContextPrograms;
 import core.logic.program.SFunction;
 import exception.*;
 import expansion.Expansion;
@@ -30,8 +31,8 @@ public class Engine {
     public LoadProgramDTO loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
-        contextPrograms = new ContextPrograms(program);
         effectiveProgram = program;
+        contextPrograms = program.getContextPrograms();
         return new LoadProgramDTO(getPresentDTOOfCurrentEffectiveProgram(),
                 contextPrograms.getNames());
     }

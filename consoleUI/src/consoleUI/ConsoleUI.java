@@ -1,4 +1,3 @@
-/*
 package consoleUI;
 
 import core.logic.engine.Engine;
@@ -155,4 +154,3 @@ public class ConsoleUI {
         return retry.toLowerCase().startsWith("y");
     }
 }
-*/
