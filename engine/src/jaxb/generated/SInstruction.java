@@ -5,7 +5,7 @@
 //
 
 
-package jaxb.engine.src.jaxb.schema.generated;
+package jaxb.generated;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;

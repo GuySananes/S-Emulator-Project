@@ -2,6 +2,8 @@ package jaxb;
 
 import core.logic.program.SProgram;
 import exception.ProgramValidationException;
+import jaxb.generated.SInstruction;
+import jaxb.generated.SInstructions;
 
 public class ConverterTest {
 
@@ -9,7 +11,7 @@ public class ConverterTest {
         System.out.println("Testing JAXB to Engine Converter...");
 
         // Test 1: Create a simple JAXB program
-        jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram = createTestJAXBProgram();
+        jaxb.generated.SProgram jaxbProgram = createTestJAXBProgram();
 
         // Test 2: Convert to engine objects
         try {
@@ -40,13 +42,13 @@ public class ConverterTest {
     private static void testInvalidLabelValidation() {
         System.out.println("\nTesting invalid label validation...");
         
-        jaxb.engine.src.jaxb.schema.generated.SProgram program = new jaxb.engine.src.jaxb.schema.generated.SProgram();
+        jaxb.generated.SProgram program = new jaxb.generated.SProgram();
         program.setName("InvalidLabelTest");
 
-        jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
+        SInstructions instructions = new SInstructions();
 
-        // Create GOTO instruction with an undefined label
-        jaxb.engine.src.jaxb.schema.generated.SInstruction gotoInstruction = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        // Create GOTO instruction with undefined label
+        SInstruction gotoInstruction = new SInstruction();
         gotoInstruction.setType("basic");
         gotoInstruction.setName("GOTO_LABEL");
         gotoInstruction.setSLabel("UNDEFINED_LABEL");
@@ -65,13 +67,13 @@ public class ConverterTest {
     private static void testExitLabelValidation() {
         System.out.println("\nTesting EXIT label validation...");
         
-        jaxb.engine.src.jaxb.schema.generated.SProgram program = new jaxb.engine.src.jaxb.schema.generated.SProgram();
+        jaxb.generated.SProgram program = new jaxb.generated.SProgram();
         program.setName("ExitLabelTest");
 
-        jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
+        SInstructions instructions = new SInstructions();
 
         // Create GOTO instruction with EXIT label (should be allowed)
-        jaxb.engine.src.jaxb.schema.generated.SInstruction gotoInstruction = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        SInstruction gotoInstruction = new SInstruction();
         gotoInstruction.setType("basic");
         gotoInstruction.setName("GOTO_LABEL");
         gotoInstruction.setSLabel("EXIT");
@@ -87,22 +89,22 @@ public class ConverterTest {
         }
     }
 
-    private static jaxb.engine.src.jaxb.schema.generated.SProgram createTestJAXBProgram() {
+    private static jaxb.generated.SProgram createTestJAXBProgram() {
         // Create a test JAXB program manually
-        jaxb.engine.src.jaxb.schema.generated.SProgram program = new jaxb.engine.src.jaxb.schema.generated.SProgram();
+        jaxb.generated.SProgram program = new jaxb.generated.SProgram();
         program.setName("TestProgram");
 
-        jaxb.engine.src.jaxb.schema.generated.SInstructions instructions = new jaxb.engine.src.jaxb.schema.generated.SInstructions();
+        SInstructions instructions = new SInstructions();
 
         // Create test instruction 1: INCREASE
-        jaxb.engine.src.jaxb.schema.generated.SInstruction instruction1 = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        SInstruction instruction1 = new SInstruction();
         instruction1.setType("basic");
         instruction1.setName("INCREASE");
         instruction1.setSVariable("X");
         instructions.getSInstruction().add(instruction1);
 
         // Create test instruction 2: JUMP_NOT_ZERO
-        jaxb.engine.src.jaxb.schema.generated.SInstruction instruction2 = new jaxb.engine.src.jaxb.schema.generated.SInstruction();
+        SInstruction instruction2 = new SInstruction();
         instruction2.setType("basic");
         instruction2.setName("JUMP_NOT_ZERO");
         instruction2.setSVariable("X");

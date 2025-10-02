@@ -6,8 +6,8 @@ import run.RunProgramDTO;
 import java.util.Set;
 
 public class LoadProgramDTO {
-    private PresentProgramDTO presentProgramDTO;
-    private Set<String> contextProgramsNames;
+    private final PresentProgramDTO presentProgramDTO;
+    private final Set<String> contextProgramsNames;
 
     public LoadProgramDTO(PresentProgramDTO presentProgramDTO, Set<String> contextProgramsNames) {
         this.presentProgramDTO = presentProgramDTO;

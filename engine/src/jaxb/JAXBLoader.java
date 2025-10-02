@@ -8,22 +8,20 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import core.logic.program.SProgram;
 import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 public class JAXBLoader {
 
-    public core.logic.program.SProgram load(String path) throws XMLUnmarshalException, ProgramValidationException {
+    public SProgram load(String path) throws XMLUnmarshalException, ProgramValidationException {
         return unmarshalXMLFile(path);
     }
 
-    private core.logic.program.SProgram unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException, ProgramValidationException {
+    private SProgram unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException, ProgramValidationException {
         // Check if the path ends with ".xml"
         if (!xmlFilePath.endsWith(".xml")) {
             throw new XMLUnmarshalException("File must have .xml extension: " + xmlFilePath);
         }
 
-        core.logic.program.SProgram engineProgram;
+        SProgram engineProgram;
         try {
             File xmlFile = new File(xmlFilePath);
             if (!xmlFile.exists()) {
@@ -35,7 +33,7 @@ public class JAXBLoader {
             // JAXB will automatically create the objects when unmarshalling
             JAXBContext context = JAXBContext.newInstance(SProgram.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram = (jaxb.engine.src.jaxb.schema.generated.SProgram) unmarshaller
+            jaxb.generated.SProgram jaxbProgram = (jaxb.generated.SProgram) unmarshaller
                     .unmarshal(xmlFile);
 
             //System.out.println("JAXB Program: " + jaxbProgram.getName());

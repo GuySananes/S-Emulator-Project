@@ -5,7 +5,7 @@
 //
 
 
-package jaxb.engine.src.jaxb.schema.generated;
+package jaxb.generated;
 
 import javax.xml.namespace.QName;
 import jakarta.xml.bind.JAXBElement;

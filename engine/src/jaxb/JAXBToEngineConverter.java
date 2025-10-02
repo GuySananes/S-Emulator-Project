@@ -1,7 +1,6 @@
 package jaxb;
 
 import core.logic.instruction.mostInstructions.*;
-import jaxb.engine.src.jaxb.schema.generated.*;
 import core.logic.program.SProgram;
 import core.logic.program.SProgramImpl;
 import core.logic.instruction.mostInstructions.SInstruction;
@@ -11,8 +10,12 @@ import core.logic.variable.VariableType;
 import core.logic.label.Label;
 import core.logic.label.LabelImpl;
 import exception.ProgramValidationException;
+import jaxb.generated.SInstructionArgument;
+import jaxb.generated.SInstructionArguments;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class JAXBToEngineConverter {
 
@@ -23,9 +26,9 @@ public class JAXBToEngineConverter {
      * @param jaxbInstructions List of JAXB instructions
      * @return Set of defined label names
      */
-    private static java.util.Set<String> collectDefinedLabels(List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions) {
-        java.util.Set<String> definedLabels = new java.util.HashSet<>();
-        for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction : jaxbInstructions) {
+    private static Set<String> collectDefinedLabels(List<jaxb.generated.SInstruction> jaxbInstructions) {
+        Set<String> definedLabels = new HashSet<>();
+        for (jaxb.generated.SInstruction instruction : jaxbInstructions) {
             // Any instruction with S-Label defines that label
             if (instruction.getSLabel() != null && !instruction.getSLabel().isEmpty()) {
                 definedLabels.add(instruction.getSLabel());
@@ -42,8 +45,8 @@ public class JAXBToEngineConverter {
      * @throws ProgramValidationException if a referenced label is not found or missing
      */
     private static void validateInstructionLabelReferences(
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
-            java.util.Set<String> definedLabels) throws ProgramValidationException {
+            jaxb.generated.SInstruction jaxbInstruction,
+            Set<String> definedLabels) throws ProgramValidationException {
 
         String instructionName = jaxbInstruction.getName();
         String referencedLabel = getReferencedLabel(jaxbInstruction);
@@ -77,10 +80,10 @@ public class JAXBToEngineConverter {
      * @param jaxbInstruction The JAXB instruction
      * @return The referenced label name, or null if none found
      */
-    private static String getReferencedLabel(jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction) {
+    private static String getReferencedLabel(jaxb.generated.SInstruction jaxbInstruction) {
         // Check instruction arguments for label references (jump targets)
         if (jaxbInstruction.getSInstructionArguments() != null) {
-            for (jaxb.engine.src.jaxb.schema.generated.SInstructionArgument arg : 
+            for (SInstructionArgument arg :
                  jaxbInstruction.getSInstructionArguments().getSInstructionArgument()) {
 
                 if ("gotoLabel".equals(arg.getName()) || "JNZLabel".equals(arg.getName()) || 
@@ -124,7 +127,7 @@ public class JAXBToEngineConverter {
         return labelName.equals("EXIT");
     }
 
-    public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
+    public static SProgram convertJAXBToEngine(jaxb.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
             throw new ProgramValidationException("JAXB program cannot be null");
         }
@@ -134,13 +137,13 @@ public class JAXBToEngineConverter {
 
         // Convert instructions
         if (jaxbProgram.getSInstructions() != null) {
-            List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbProgram.getSInstructions()
+            List<jaxb.generated.SInstruction> jaxbInstructions = jaxbProgram.getSInstructions()
                     .getSInstruction();
 
             // Collect all defined labels first for validation
             java.util.Set<String> definedLabels = collectDefinedLabels(jaxbInstructions);
 
-            for (jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction : jaxbInstructions) {
+            for (jaxb.generated.SInstruction jaxbInstruction : jaxbInstructions) {
                 // Validate each instruction's label references
                 validateInstructionLabelReferences(jaxbInstruction, definedLabels);
 
@@ -153,7 +156,7 @@ public class JAXBToEngineConverter {
         return engineProgram;
     }
 
-    private static SInstruction convertInstruction(jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction) {
+    private static SInstruction convertInstruction(jaxb.generated.SInstruction jaxbInstruction) {
         if (jaxbInstruction == null) {
             return null;
         }
@@ -249,7 +252,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createAssignmentInstruction(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                            jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "assignedVariable");
             if (secondaryVarName != null) {
@@ -260,7 +263,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createConstantAssignmentInstruction(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                                    jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
             if (constantValue != null) {
@@ -271,7 +274,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpEqualConstant(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                        jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEConstantLabel");
             String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
@@ -285,7 +288,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpEqualVariable(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                        jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "variableName");
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEVariableLabel");
@@ -300,7 +303,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createGotoLabel(
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+            jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "gotoLabel");
             if (targetLabelName != null) {
@@ -312,7 +315,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpNotZero(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                  jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JNZLabel");
             if (targetLabelName != null) {
@@ -325,7 +328,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpZero(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                               jaxb.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JZLabel");
             if (targetLabelName != null) {

@@ -7,14 +7,12 @@ import jaxb.JAXBLoader;
 import load.LoadProgramDTO;
 import present.program.PresentFunctionDTO;
 import present.program.PresentProgramDTO;
-import run.DebugProgramDTO;
-import run.ReRunProgramDTO;
-import run.RunProgramDTO;
+import run.ExecuteProgramDTO;
+import run.ReExecuteProgramDTO;
 import core.logic.program.SProgram;
 import statistic.ProgramStatisticsDTO;
 import statistic.SingleRunStatistic;
 import statistic.StatisticManager;
-import java.util.*;
 
 public class Engine {
 
@@ -63,15 +61,15 @@ public class Engine {
         return getPresentDTOOfCurrentEffectiveProgram();
     }
 
-    public RunProgramDTO runProgram() throws NoProgramException {
+    public ExecuteProgramDTO executeProgram() throws NoProgramException {
         if(program == null) {
             throw new NoProgramException();
         }
 
-        return new RunProgramDTO(effectiveProgram);
+        return new ExecuteProgramDTO(effectiveProgram);
     }
 
-    public ReRunProgramDTO reRunProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException, NoSuchRunException {
+    public ReExecuteProgramDTO reExecuteProgram(int runNumber) throws NoProgramException, ProgramNotExecutedYetException, NoSuchRunException {
 
         if (program == null) {
             throw new NoProgramException();
@@ -86,17 +84,16 @@ public class Engine {
         SingleRunStatistic runStatistics = statisticManager.getProgramStatistics(program.getName()).get(runNumber - 1);
         effectiveProgram = Expansion.expand(program, runStatistics.getRunDegree());
         PresentProgramDTO presentProgramDTO = getPresentDTOOfCurrentEffectiveProgram();
-        RunProgramDTO runProgramDTO = new RunProgramDTO(effectiveProgram);
-        DebugProgramDTO debugProgramDTO = new DebugProgramDTO(effectiveProgram);
+        ExecuteProgramDTO executeProgramDTO = new ExecuteProgramDTO(effectiveProgram);
 
         try {
-            runProgramDTO.setInput(runStatistics.getInput());
-            debugProgramDTO.setInput(runStatistics.getInput());
+            executeProgramDTO.getRunProgramDTO().setInput(runStatistics.getInput());
+            executeProgramDTO.getDebugProgramDTO().setInput(runStatistics.getInput());
         } catch (RunInputException e) {
             throw new RuntimeException("Unexpected error while re-running program in Engine::reRunProgram: " + e.getMessage());
         }
 
-        return new ReRunProgramDTO(presentProgramDTO, runProgramDTO, debugProgramDTO);
+        return new ReExecuteProgramDTO(presentProgramDTO, executeProgramDTO);
     }
 
     public ProgramStatisticsDTO presentProgramStats() throws NoProgramException, ProgramNotExecutedYetException {

@@ -1,6 +1,5 @@
 package run;
 
-import core.logic.execution.ProgramExecutor;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
 import exception.RunInputException;
@@ -9,12 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public abstract class AbstractRunProgramDTO {
+public abstract class AbstractExecuteProgramDTO {
 
     protected final SProgram program;
     protected List<Long> input;
 
-    public AbstractRunProgramDTO(SProgram program) {
+    public AbstractExecuteProgramDTO(SProgram program) {
         this.program = program;
         this.input = new ArrayList<>();
     }

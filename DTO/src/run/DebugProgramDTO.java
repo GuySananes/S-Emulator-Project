@@ -4,12 +4,10 @@ import core.logic.execution.Debug;
 import core.logic.execution.DebugFinalResult;
 import core.logic.execution.DebugResult;
 import core.logic.program.SProgram;
-import core.logic.variable.Variable;
-import exception.RunInputException;
 
 import java.util.*;
 
-public class DebugProgramDTO extends AbstractRunProgramDTO{
+public class DebugProgramDTO extends AbstractExecuteProgramDTO {
     private final Debug debug;
 
     public DebugProgramDTO(SProgram program){

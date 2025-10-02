@@ -1,7 +1,6 @@
 package statistic;
 
 import exception.ProgramNotExecutedYetException;
-import jaxb.engine.src.jaxb.schema.generated.SProgram;
 
 import java.util.ArrayList;
 import java.util.List;
