@@ -1,14 +1,13 @@
 package core.logic.instruction.quoteInstructions;
 
+import core.logic.variable.Variable;
 import execution.ExecutionContext;
 import execution.ProgramExecutor;
 import execution.ResultCycle;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class FunctionArgument implements Argument {
     private final SProgram program;
@@ -59,6 +58,19 @@ public class FunctionArgument implements Argument {
 
     public int getDegree() {
         return program.getDegree();
+    }
+
+    public Set<Variable> getVariablesInArgumentList() {
+        Set<Variable> variables = new HashSet<>();
+        for (Argument argument : arguments) {
+            if(argument instanceof FunctionArgument fa) {
+                variables.addAll(fa.getVariablesInArgumentList());
+            } else {//argument is Variable
+                variables.add((Variable) argument);
+            }
+        }
+
+        return variables;
     }
 
     @Override

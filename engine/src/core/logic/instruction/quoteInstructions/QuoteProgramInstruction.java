@@ -37,6 +37,13 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     }
 
     @Override
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = super.getVariables();
+        variables.addAll(functionArgument.getVariablesInArgumentList());
+        return variables;
+    }
+
+    @Override
     public LabelCycleChangedVariable execute(ExecutionContext context) {
         ResultCycle result = functionArgument.evaluate(context);
         Variable toChange = getVariable();
@@ -51,12 +58,9 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     @Override
     public String getCommandRepresentation() {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(getVariable().getRepresentation());
-        sb.append(" <- ");
-        sb.append(functionArgument.getRepresentation());
-
-        return sb.toString();
+        return getVariable().getRepresentation() +
+                " <- " +
+                functionArgument.getRepresentation();
     }
 
     @Override
@@ -170,7 +174,13 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
         }
 
         Utils.registerInstructions(toChange, parentChain, expansion);
-        toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT));
+        if(oldLToNewL.containsKey(FixedLabel.EXIT)) {
+            Label newExit = oldLToNewL.get(FixedLabel.EXIT);
+            toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT), newExit);
+        } else {
+            toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT));
+        }
+
         Utils.registerInstruction(toAdd, parentChain, expansion);
 
         return expansion;
