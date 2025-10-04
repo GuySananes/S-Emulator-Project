@@ -1,12 +1,11 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
+import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
-import java.util.Map;
-import java.util.HashMap;
 
 import java.util.*;
 
@@ -14,22 +13,50 @@ public class SProgramImpl implements SProgram{
 
     protected int index = 1;
     protected final String name;
-    protected final List<SInstruction> instructionList;
+    protected final List<SInstruction> instructionList = new ArrayList<>();
     protected Set<Variable> orderedVariables = null;
     protected Set<Variable> inputVariables = null;
     protected Set<Label> orderedLabels = null;
     protected int degree = -1;
     protected SProgram originalProgram;
+    protected ContextPrograms contextPrograms;
     protected int numOfBasicInstructions = 0;
     protected int numOfStaticInstructions = 0;
     protected static final int MIN_DEGREE = 0;
-    //private final Map<String, SFunction> functions = new HashMap<>();
 
 
-    public SProgramImpl(String name, SProgram originalProgram) {
+    public SProgramImpl(String name, SProgram originalProgram, List<SInstruction> instructions) {
         this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
-        instructionList = new ArrayList<>();
+        addInstructions(instructions);
+        contextPrograms = new ContextPrograms(this);
+    }
+
+    protected List<SInstruction> cloneInstructions() {
+        List<SInstruction> clonedInstructions = new ArrayList<>(instructionList.size());
+        for (SInstruction instruction : instructionList) {
+            clonedInstructions.add(instruction.clone());
+        }
+
+        return clonedInstructions;
+    }
+
+    private void addInstruction(SInstruction instruction) {
+        if(instruction.isBasic()){
+            numOfBasicInstructions++;
+        } else {
+            numOfStaticInstructions++;
+        }
+
+        instruction.setIndex(index++);
+        instructionList.add(instruction);
+    }
+
+
+    private void addInstructions(List<SInstruction> instructions) {
+        for(SInstruction instruction : instructions){
+            addInstruction(instruction);
+        }
     }
 
     protected Set<Variable> calculateOrderedVariables() {
@@ -80,6 +107,11 @@ public class SProgramImpl implements SProgram{
     }
 
     @Override
+    public ContextPrograms getContextPrograms() {
+        return contextPrograms;
+    }
+
+    @Override
     public SProgram getOriginalProgram() {
         return originalProgram;
     }
@@ -91,25 +123,6 @@ public class SProgramImpl implements SProgram{
         }
 
         return degree;
-    }
-
-    @Override
-    public void addInstruction(SInstruction instruction) {
-        if(instruction.isBasic()){
-            numOfBasicInstructions++;
-        } else {
-            numOfStaticInstructions++;
-        }
-
-        instruction.setIndex(index++);
-        instructionList.add(instruction);
-    }
-
-    @Override
-    public void addInstructions(List<SInstruction> instructions) {
-        for(SInstruction instruction : instructions){
-            addInstruction(instruction);
-        }
     }
 
     @Override
@@ -189,7 +202,7 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SInstruction getInstructionByLabel(Label label) {
-        if ("EXIT".equals(label.getRepresentation())) {
+        if (label == FixedLabel.EXIT) {
             return null;
         }
 
@@ -232,12 +245,12 @@ public class SProgramImpl implements SProgram{
 
     @Override
     public SProgram clone() {
-        SProgram clonedProgram = new SProgramImpl(this.name, this.originalProgram);
-        for (SInstruction instruction : this.instructionList) {
-            clonedProgram.addInstruction(instruction.clone());
-        }
-
-        return clonedProgram;
+        return new SProgramImpl(this.name, this.originalProgram, cloneInstructions());
     }
+
+
+
+
+
 
 }

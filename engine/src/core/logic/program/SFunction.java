@@ -1,13 +1,14 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
+import java.util.List;
 import java.util.Objects;
 
 public class SFunction extends SProgramImpl{
     private final String userName;
 
-    public SFunction(String name, String userName, SProgram originalProgram) {
-        super(name, originalProgram);
+    public SFunction(String name, String userName, SProgram originalProgram, List<SInstruction> instructions) {
+        super(name, originalProgram, instructions);
         this.userName = userName;
     }
 
@@ -17,12 +18,7 @@ public class SFunction extends SProgramImpl{
 
     @Override
     public SProgram clone() {
-        SProgram clone = new SFunction(this.name, this.userName, this.originalProgram);
-        for (SInstruction instruction : this.instructionList) {
-            clone.addInstruction(instruction.clone());
-        }
-
-        return clone;
+        return new SFunction(this.name, this.userName, this.originalProgram, cloneInstructions());
     }
 
     @Override
