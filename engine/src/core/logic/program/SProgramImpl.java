@@ -1,7 +1,6 @@
 package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
-import core.logic.instruction.quoteInstructions.Quotable;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.label.LabelComparator;

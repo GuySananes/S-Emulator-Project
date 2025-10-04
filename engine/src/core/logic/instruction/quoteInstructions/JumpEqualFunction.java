@@ -1,8 +1,8 @@
 package core.logic.instruction.quoteInstructions;
 
-import execution.ExecutionContext;
-import execution.LabelCycleChangedVariable;
-import execution.ResultCycle;
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycleChangedVariable;
+import core.logic.execution.ResultCycle;
 import core.logic.instruction.InstructionData;
 import core.logic.instruction.mostInstructions.AbstractInstructionTwoLabels;
 import core.logic.instruction.mostInstructions.JumpEqualVariable;

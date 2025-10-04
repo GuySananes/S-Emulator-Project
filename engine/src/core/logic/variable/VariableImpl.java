@@ -1,7 +1,7 @@
 package core.logic.variable;
 
-import execution.ExecutionContext;
-import execution.ResultCycle;
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.ResultCycle;
 
 import java.util.Objects;
 
