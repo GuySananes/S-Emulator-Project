@@ -134,13 +134,11 @@ public class JAXBToEngineConverter {
     }
 
 
+
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
             throw new ProgramValidationException("JAXB program cannot be null");
         }
-
-        // Create the real engine program
-        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName(), null);
 
         // First, build a map of JAXB functions for later reference when creating Quote/JumpEqualFunction instructions
         Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap = new HashMap<>();
@@ -151,6 +149,7 @@ public class JAXBToEngineConverter {
         }
 
         // Convert instructions (with access to the JAXB function map)
+        List<SInstruction> instructionList = new ArrayList<>();
         if (jaxbProgram.getSInstructions() != null) {
             List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbProgram.getSInstructions()
                     .getSInstruction();
@@ -164,10 +163,13 @@ public class JAXBToEngineConverter {
 
                 SInstruction engineInstruction = convertInstruction(jaxbInstruction, jaxbFunctionMap);
                 if (engineInstruction != null) {
-                    engineProgram.addInstruction(engineInstruction);
+                    instructionList.add(engineInstruction);
                 }
             }
         }
+
+        // Create the real engine program with all instructions
+        SProgram engineProgram = new SProgramImpl(jaxbProgram.getName(), null, instructionList);
 
         return engineProgram;
     }
@@ -273,7 +275,6 @@ public class JAXBToEngineConverter {
         throw new IllegalArgumentException("JUMP_EQUAL_FUNCTION instruction requires a functionName argument");
     }
 
-
     // Updated helper method to create FunctionArgument from JAXB function data
     private static FunctionArgument createFunctionArgument(String functionName,
                                                            String functionArgumentsStr,
@@ -288,7 +289,7 @@ public class JAXBToEngineConverter {
         } else {
             // If not found in map, create a minimal SFunction as fallback
             // This handles external functions or forward references
-            engineFunction = new SFunction(functionName, functionName, null);
+            engineFunction = new SFunction(functionName, functionName, null, new ArrayList<>());
         }
 
         // Parse function arguments
@@ -396,19 +397,18 @@ public class JAXBToEngineConverter {
         return result;
     }
 
+
     // Convert JAXB SFunction to Engine SFunction
     private static SFunction convertFunction(jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction) throws ProgramValidationException {
         if (jaxbFunction == null) {
             return null;
         }
 
-        // Create engine function using your existing SFunction constructor (3 parameters)
-        SFunction engineFunction = new SFunction(jaxbFunction.getName(), jaxbFunction.getUserString(), null);
-
         // Convert function instructions
         // Use empty JAXB function map since functions shouldn't reference other functions internally at load time
         Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> emptyJaxbFunctionMap = new HashMap<>();
 
+        List<SInstruction> instructionList = new ArrayList<>();
         if (jaxbFunction.getSInstructions() != null) {
             List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbFunction.getSInstructions().getSInstruction();
 
@@ -421,10 +421,13 @@ public class JAXBToEngineConverter {
 
                 SInstruction engineInstruction = convertInstruction(jaxbInstruction, emptyJaxbFunctionMap);
                 if (engineInstruction != null) {
-                    engineFunction.addInstruction(engineInstruction);
+                    instructionList.add(engineInstruction);
                 }
             }
         }
+
+        // Create engine function using the 4-parameter constructor (name, userName, originalProgram, instructions)
+        SFunction engineFunction = new SFunction(jaxbFunction.getName(), jaxbFunction.getUserString(), null, instructionList);
 
         return engineFunction;
     }

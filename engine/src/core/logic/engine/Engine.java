@@ -1,4 +1,4 @@
-package engine;
+package core.logic.engine;
 
 import core.logic.program.ContextPrograms;
 import core.logic.program.SFunction;
