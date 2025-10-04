@@ -400,11 +400,11 @@ public class Main {
 
         System.out.println("=== EXECUTION P ===");
         ProgramExecutor executorP = new ProgramExecutor(P);
-        System.out.println(executorP.run(List.of(5L, 3L)).getResult());
+        System.out.println(executorP.run(List.of(5L, 5L)).getResult());
 
         System.out.println("=== EXECUTION EXPANDED P ===");
         ProgramExecutor executorExpandedP = new ProgramExecutor(expandedP);
-        System.out.println(executorExpandedP.run(List.of(5L, 3L)).getResult());
+        System.out.println(executorExpandedP.run(List.of(5L, 5L)).getResult());
     }
 }
 

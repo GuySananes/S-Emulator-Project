@@ -162,13 +162,13 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                 Variable z = xyToz.get(XsOfToExpand.get(i));
                 if(arguments.get(i) instanceof Variable var) {
                     toAdd = new AssignmentInstruction(z, var);
-                    Utils.registerInstruction(toAdd, parentChain, expansion);
                 }
 
                 else {
                     toAdd = new QuoteProgramInstruction(z, (FunctionArgument) arguments.get(i));
-                    Utils.registerInstruction(toAdd, parentChain, expansion);
                 }
+
+                Utils.registerInstruction(toAdd, parentChain, expansion);
         }
 
         Utils.registerInstructions(toChange, parentChain, expansion);
