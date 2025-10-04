@@ -1,6 +1,7 @@
 package jaxb;
 
 import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstructions.Argument;
 import core.logic.instruction.quoteInstructions.FunctionArgument;
 import core.logic.instruction.quoteInstructions.JumpEqualFunction;
 import core.logic.instruction.quoteInstructions.QuoteProgramInstruction;
@@ -16,7 +17,10 @@ import exception.ProgramValidationException;
 import jaxb.engine.src.jaxb.schema.generated.SInstructionArgument;
 import jaxb.engine.src.jaxb.schema.generated.SInstructionArguments;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JAXBToEngineConverter {
 
@@ -90,12 +94,11 @@ public class JAXBToEngineConverter {
                 if ("gotoLabel".equals(arg.getName()) || "JNZLabel".equals(arg.getName()) ||
                         "JZLabel".equals(arg.getName()) || "jumpLabel".equals(arg.getName()) ||
                         "JEConstantLabel".equals(arg.getName()) || "JEVariableLabel".equals(arg.getName()) ||
-                        "functionName".equals(arg.getName())) {  // Add this line for function references
+                        "JEFunctionLabel".equals(arg.getName())) {  // Remove functionName, only JEFunctionLabel is the actual jump target
                     return arg.getValue();
                 }
             }
         }
-
         return null;
     }
 
@@ -130,6 +133,7 @@ public class JAXBToEngineConverter {
         return labelName.equals("EXIT");
     }
 
+
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
             throw new ProgramValidationException("JAXB program cannot be null");
@@ -138,7 +142,15 @@ public class JAXBToEngineConverter {
         // Create the real engine program
         SProgram engineProgram = new SProgramImpl(jaxbProgram.getName(), null);
 
-        // Convert instructions
+        // First, build a map of JAXB functions for later reference when creating Quote/JumpEqualFunction instructions
+        Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap = new HashMap<>();
+        if (jaxbProgram.getSFunctions() != null) {
+            for (jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction : jaxbProgram.getSFunctions().getSFunction()) {
+                jaxbFunctionMap.put(jaxbFunction.getName(), jaxbFunction);
+            }
+        }
+
+        // Convert instructions (with access to the JAXB function map)
         if (jaxbProgram.getSInstructions() != null) {
             List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbProgram.getSInstructions()
                     .getSInstruction();
@@ -150,19 +162,9 @@ public class JAXBToEngineConverter {
                 // Validate each instruction's label references
                 validateInstructionLabelReferences(jaxbInstruction, definedLabels);
 
-                SInstruction engineInstruction = convertInstruction(jaxbInstruction);
+                SInstruction engineInstruction = convertInstruction(jaxbInstruction, jaxbFunctionMap);
                 if (engineInstruction != null) {
                     engineProgram.addInstruction(engineInstruction);
-                }
-            }
-        }
-
-        // Convert functions (NEW CODE)
-        if (jaxbProgram.getSFunctions() != null) {
-            for (jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction : jaxbProgram.getSFunctions().getSFunction()) {
-                SFunction engineFunction = convertFunction(jaxbFunction);
-                if (engineFunction != null) {
-                    engineProgram.addFunction(engineFunction); // This requires addFunction method in SProgram
                 }
             }
         }
@@ -170,37 +172,8 @@ public class JAXBToEngineConverter {
         return engineProgram;
     }
 
-    // Add this new method to convert Generated SFunction to Engine SFunction
-    private static SFunction convertFunction(jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction) throws ProgramValidationException {
-        if (jaxbFunction == null) {
-            return null;
-        }
-
-        // Create engine function using your existing SFunction constructor (3 parameters)
-        SFunction engineFunction = new SFunction(jaxbFunction.getName(), jaxbFunction.getUserString(), null);
-
-        // Convert function instructions (same logic as main program)
-        if (jaxbFunction.getSInstructions() != null) {
-            List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbFunction.getSInstructions().getSInstruction();
-
-            // Collect all defined labels first for validation
-            java.util.Set<String> definedLabels = collectDefinedLabels(jaxbInstructions);
-
-            for (jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction : jaxbInstructions) {
-                // Validate each instruction's label references
-                validateInstructionLabelReferences(jaxbInstruction, definedLabels);
-
-                SInstruction engineInstruction = convertInstruction(jaxbInstruction);
-                if (engineInstruction != null) {
-                    engineFunction.addInstruction(engineInstruction);
-                }
-            }
-        }
-
-        return engineFunction;
-    }
-
-    private static SInstruction convertInstruction(jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction) {
+    private static SInstruction convertInstruction(jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
+                                                   Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
         if (jaxbInstruction == null) {
             return null;
         }
@@ -251,11 +224,11 @@ public class JAXBToEngineConverter {
             case "JUMP_EQUAL_VARIABLE":
                 return createJumpEqualVariable(variable, jaxbInstruction, label);
 
-            case "JUMP_EQUAL_FUNCTION":  // ADD this new case
-                return createJumpEqualFunction(variable, jaxbInstruction, label);
+            case "JUMP_EQUAL_FUNCTION":
+                return createJumpEqualFunction(variable, jaxbInstruction, label, jaxbFunctionMap);
 
-            case "QUOTE":  // ADD this new case
-                return createQuoteInstruction(variable, jaxbInstruction, label);
+            case "QUOTE":
+                return createQuoteInstruction(variable, jaxbInstruction, label, jaxbFunctionMap);
 
             case "NEUTRAL":
                 return label != null ? new NoOpInstruction(variable, label) : new NoOpInstruction(variable);
@@ -268,16 +241,17 @@ public class JAXBToEngineConverter {
 
 
     private static SInstruction createJumpEqualFunction(Variable variable,
-                                                        jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                        jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
+                                                        Label label,
+                                                        Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String functionName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "functionName");
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEFunctionLabel");
+            String functionArgumentsStr = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "functionArguments");
 
             if (functionName != null) {
-                // Create a FunctionArgument object from the function name string
-                // You'll need to check how FunctionArgument is constructed in your system
-                // This is a simplified version - you may need to adapt based on your FunctionArgument constructor
-                FunctionArgument functionArgument = createFunctionArgument(functionName);
+                // Create the FunctionArgument - THIS IS WHERE THE FUNCTION IS CREATED
+                FunctionArgument functionArgument = createFunctionArgument(functionName, functionArgumentsStr, jaxbFunctionMap);
 
                 // Determine target label
                 Label targetLabel;
@@ -299,26 +273,166 @@ public class JAXBToEngineConverter {
         throw new IllegalArgumentException("JUMP_EQUAL_FUNCTION instruction requires a functionName argument");
     }
 
-    // Helper method to create FunctionArgument from function name
-    private static FunctionArgument createFunctionArgument(String functionName) {
-        // This depends on how FunctionArgument is constructed in your system
-        // You'll need to check the FunctionArgument constructor and adapt this
-        // For now, this is a placeholder - you'll need to implement based on your FunctionArgument class
 
-        // Option 1: If FunctionArgument has a simple constructor that takes a function name
-        // return new FunctionArgument(functionName);
+    // Updated helper method to create FunctionArgument from JAXB function data
+    private static FunctionArgument createFunctionArgument(String functionName,
+                                                           String functionArgumentsStr,
+                                                           Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+        // Look up the JAXB function from the map
+        jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction = jaxbFunctionMap.get(functionName);
 
-        // Option 2: If it needs more complex setup, you might need to:
-        // - Create a program reference from the function name
-        // - Set up proper arguments list
-        // - etc.
+        SFunction engineFunction;
+        if (jaxbFunction != null) {
+            // Convert the JAXB function to engine SFunction HERE
+            engineFunction = convertFunction(jaxbFunction);
+        } else {
+            // If not found in map, create a minimal SFunction as fallback
+            // This handles external functions or forward references
+            engineFunction = new SFunction(functionName, functionName, null);
+        }
 
-        // You'll need to examine your FunctionArgument class to see what constructor it has
-        throw new UnsupportedOperationException("Need to implement createFunctionArgument based on your FunctionArgument class constructor");
+        // Parse function arguments
+        List<Argument> arguments = new ArrayList<>();
+        if (functionArgumentsStr != null && !functionArgumentsStr.trim().isEmpty()) {
+            arguments = parseArguments(functionArgumentsStr, jaxbFunctionMap);
+        }
+
+        // Create and return the FunctionArgument with the converted engine function
+        return new FunctionArgument(engineFunction, arguments);
+    }
+
+    /**
+     * Parses function arguments string into a list of Argument objects.
+     * Format examples:
+     * - "(Const7),(Successor,x1),x3" - mixed function and variable arguments
+     * - "x1,x2" - only variables
+     * - "(Func1),(Func2,x1)" - only functions
+     *
+     * @param argumentsStr The arguments string to parse
+     * @param jaxbFunctionMap Map of available JAXB functions
+     * @return List of parsed Argument objects (Variables or FunctionArguments)
+     */
+    private static List<Argument> parseArguments(String argumentsStr,
+                                                 Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+        List<Argument> arguments = new ArrayList<>();
+
+        // Split by commas, but respect parentheses
+        List<String> tokens = splitByCommaRespectingParentheses(argumentsStr);
+
+        for (String token : tokens) {
+            token = token.trim();
+
+            if (token.startsWith("(") && token.endsWith(")")) {
+                // It's a function argument: (FunctionName) or (FunctionName,arg1,arg2,...)
+                String innerContent = token.substring(1, token.length() - 1);
+
+                // Split the inner content by comma to get function name and its arguments
+                int firstComma = innerContent.indexOf(',');
+
+                String funcName;
+                String funcArgs;
+
+                if (firstComma == -1) {
+                    // No arguments: (FunctionName)
+                    funcName = innerContent.trim();
+                    funcArgs = null;
+                } else {
+                    // Has arguments: (FunctionName,arg1,arg2,...)
+                    funcName = innerContent.substring(0, firstComma).trim();
+                    funcArgs = innerContent.substring(firstComma + 1).trim();
+                }
+
+                // Recursively create the FunctionArgument
+                FunctionArgument funcArg = createFunctionArgument(funcName, funcArgs, jaxbFunctionMap);
+                arguments.add(funcArg);
+
+            } else {
+                // It's a variable: x1, x2, y, z1, etc.
+                Variable variable = createVariable(token);
+                arguments.add(variable);
+            }
+        }
+
+        return arguments;
+    }
+
+    /**
+     * Splits a string by commas while respecting parentheses.
+     * Example: "(Const7),(Successor,x1),x3" -> ["(Const7)", "(Successor,x1)", "x3"]
+     *
+     * @param str The string to split
+     * @return List of tokens split by commas at depth 0
+     */
+    private static List<String> splitByCommaRespectingParentheses(String str) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int depth = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+
+            if (c == '(') {
+                depth++;
+                current.append(c);
+            } else if (c == ')') {
+                depth--;
+                current.append(c);
+            } else if (c == ',' && depth == 0) {
+                // Found a comma at depth 0 - this is a separator
+                if (current.length() > 0) {
+                    result.add(current.toString().trim());
+                    current = new StringBuilder();
+                }
+            } else {
+                current.append(c);
+            }
+        }
+
+        // Add the last token
+        if (current.length() > 0) {
+            result.add(current.toString().trim());
+        }
+
+        return result;
+    }
+
+    // Convert JAXB SFunction to Engine SFunction
+    private static SFunction convertFunction(jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction) throws ProgramValidationException {
+        if (jaxbFunction == null) {
+            return null;
+        }
+
+        // Create engine function using your existing SFunction constructor (3 parameters)
+        SFunction engineFunction = new SFunction(jaxbFunction.getName(), jaxbFunction.getUserString(), null);
+
+        // Convert function instructions
+        // Use empty JAXB function map since functions shouldn't reference other functions internally at load time
+        Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> emptyJaxbFunctionMap = new HashMap<>();
+
+        if (jaxbFunction.getSInstructions() != null) {
+            List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions = jaxbFunction.getSInstructions().getSInstruction();
+
+            // Collect all defined labels first for validation
+            java.util.Set<String> definedLabels = collectDefinedLabels(jaxbInstructions);
+
+            for (jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction : jaxbInstructions) {
+                // Validate each instruction's label references
+                validateInstructionLabelReferences(jaxbInstruction, definedLabels);
+
+                SInstruction engineInstruction = convertInstruction(jaxbInstruction, emptyJaxbFunctionMap);
+                if (engineInstruction != null) {
+                    engineFunction.addInstruction(engineInstruction);
+                }
+            }
+        }
+
+        return engineFunction;
     }
 
     private static SInstruction createQuoteInstruction(Variable variable,
-                                                       jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                       jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction,
+                                                       Label label,
+                                                       Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             // Look for program or function arguments
             String programName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "programName");
@@ -326,11 +440,12 @@ public class JAXBToEngineConverter {
 
             // Use whichever is available
             String quotedName = programName != null ? programName : functionName;
+            String functionArgumentsStr = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "functionArguments");
 
 
             if (quotedName != null) {
-                // Create FunctionArgument from the quoted name
-                FunctionArgument functionArgument = createFunctionArgument(quotedName);
+                // Create FunctionArgument - THIS IS WHERE THE FUNCTION IS CREATED
+                FunctionArgument functionArgument = createFunctionArgument(quotedName, functionArgumentsStr, jaxbFunctionMap);
 
                 // Create appropriate quote instruction
                 if (label != null) {
