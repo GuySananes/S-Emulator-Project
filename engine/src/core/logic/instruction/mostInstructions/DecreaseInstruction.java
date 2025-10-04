@@ -1,7 +1,8 @@
 package core.logic.instruction.mostInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import execution.ChangedVariable;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -18,13 +19,16 @@ public class DecreaseInstruction extends AbstractInstruction {
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
+        Variable toChange = getVariable();
+        long oldValue = context.getVariableValue(toChange);
+        long newValue = Math.max(0, oldValue - 1);
+        context.updateVariable(toChange, newValue);
 
-        long variableValue = context.getVariableValue(getVariable());
-        variableValue = Math.max(0, variableValue - 1);
-        context.updateVariable(getVariable(), variableValue);
-
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                getInstructionData().getCycles(),
+                newValue == oldValue ? null :
+                        new ChangedVariable(toChange, oldValue, newValue));
     }
 
     @Override

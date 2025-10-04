@@ -1,7 +1,7 @@
 package core.logic.instruction.mostInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -25,8 +25,10 @@ public class GotoLabel extends AbstractInstructionTwoLabels implements Expandabl
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
-        return new LabelCycle(getTargetLabel(), Integer.parseInt(getInstructionData().getCycleRepresentation()));
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
+        return new LabelCycleChangedVariable(getTargetLabel(),
+                getInstructionData().getCycles(),
+                null);
 
     }
 

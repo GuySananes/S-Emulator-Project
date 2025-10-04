@@ -1,7 +1,7 @@
 package core.logic.instruction.mostInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.Label;
 import core.logic.variable.Variable;
@@ -17,7 +17,7 @@ import java.util.Set;
 public interface SInstruction {
 
     String getName();
-    LabelCycle execute(ExecutionContext context);
+    LabelCycleChangedVariable execute(ExecutionContext context);
     String getCycleRepresentation();
     Label getLabel();
     Label getLabelDeepCopy();

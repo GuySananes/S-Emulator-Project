@@ -1,8 +1,8 @@
 package core.logic.instruction.quoteInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
-import core.logic.execution.ResultCycle;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
+import execution.ResultCycle;
 import core.logic.instruction.InstructionData;
 import core.logic.instruction.mostInstructions.AbstractInstructionTwoLabels;
 import core.logic.instruction.mostInstructions.JumpEqualVariable;
@@ -36,15 +36,19 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         ResultCycle resultCycle = functionArgument.evaluate(context);
 
         if (variableValue == resultCycle.getResult()) {
-            return new LabelCycle(getTargetLabel(), resultCycle.getCycles());
+            return new LabelCycleChangedVariable(getTargetLabel(),
+                    resultCycle.getCycles() + getInstructionData().getCycles(),
+                    null);
         }
 
-        return new LabelCycle(FixedLabel.EMPTY, resultCycle.getCycles());
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                resultCycle.getCycles(),
+                null);
     }
 
     @Override

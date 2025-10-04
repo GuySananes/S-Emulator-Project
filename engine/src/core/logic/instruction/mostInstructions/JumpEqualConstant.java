@@ -1,7 +1,7 @@
 package core.logic.instruction.mostInstructions;
 
-import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import execution.ExecutionContext;
+import execution.LabelCycleChangedVariable;
 import core.logic.instruction.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -36,13 +36,17 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         if (variableValue == constantValue) {
-            return new LabelCycle(getTargetLabel(), Integer.parseInt(getInstructionData().getCycleRepresentation()));
+            return new LabelCycleChangedVariable(getTargetLabel(),
+                    getInstructionData().getCycles(),
+                    null);
         }
 
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                null);
     }
 
     @Override

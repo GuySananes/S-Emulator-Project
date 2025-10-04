@@ -6,7 +6,7 @@
 //
 
 
-package jaxb.engine.src.jaxb.schema.generated;
+package jaxb.generated;
 
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.annotation.XmlElementDecl;
