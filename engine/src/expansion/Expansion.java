@@ -45,7 +45,7 @@ public class Expansion {
                 expandedList.addAll(expandable.expand(context));
             }
             else {
-                expandedList.add(instruction);
+                expandedList.add(instruction.clone());
             }
         }
 
