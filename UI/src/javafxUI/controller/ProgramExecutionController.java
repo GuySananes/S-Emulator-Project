@@ -1,4 +1,3 @@
-
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
@@ -17,7 +16,10 @@ import run.RunProgramDTO;
 import statistic.ProgramStatisticsDTO;
 import statistic.SingleRunStatisticDTO;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -48,8 +50,10 @@ public class ProgramExecutionController {
 
     private final ProgramExecutionService executionService = new ProgramExecutionService();
 
-    // Add this field to store the last execution inputs
     private List<Long> lastExecutionInputs = new ArrayList<>();
+    // Add these fields to track execution state for rerun
+    private int lastExecutionDegree = 0;
+    private boolean wasLastExecutionExpanded = false;
 
     private int currentDisplayDegree = 0;
     private int currentExpansionDegree = 0;
@@ -150,8 +154,10 @@ public class ProgramExecutionController {
 
     private void executeProgram(RunProgramDTO runDTO, List<Long> inputValues) {
         try {
-            // Store the input values for statistics
+            // Store the input values for statistics AND for potential rerun
             this.lastExecutionInputs = new ArrayList<>(inputValues);
+            this.lastExecutionDegree = currentExpansionDegree;
+            this.wasLastExecutionExpanded = isProgramExpanded;
 
             // If program is expanded, set the expansion degree
             if (isProgramExpanded && currentExpansionDegree > 0) {
@@ -202,28 +208,6 @@ public class ProgramExecutionController {
 
     // *** ADD THIS NEW METHOD ***
 
-    private void recordExecutionStatistics(RunProgramDTO runDTO, core.logic.execution.ResultCycle result) {
-        try {
-            statistic.StatisticManager statisticManager = statistic.StatisticManager.getInstance();
-            String programName = currentProgram.getName();
-
-            // Create the statistic record
-            statistic.SingleRunStatisticImpl statistic = new statistic.SingleRunStatisticImpl(
-                    statisticManager.getRunCount(programName) + 1, // run number
-                    isProgramExpanded ? currentExpansionDegree : 0, // degree used
-                    lastExecutionInputs, // input values used
-                    result.getResult(), // result
-                    result.getCycles() // cycles
-            );
-
-            // Add to manager and increment count
-            statisticManager.addRunStatistic(programName, statistic);
-            statisticManager.incrementRunCount(programName);
-
-        } catch (Exception e) {
-            System.err.println("Failed to record execution statistics: " + e.getMessage());
-        }
-    }
 
     private void updateVariablesWithResults(RunProgramDTO runDTO) {
         try {
@@ -286,13 +270,82 @@ public class ProgramExecutionController {
     }
 
     public void handleRerun() {
-        if (currentProgram.isLoaded()) {
-            handleStartRegular();
-            updateSummary.accept("Rerunning last execution");
-        } else {
+        if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        // Check if there was a previous execution
+        if (lastExecutionInputs == null || lastExecutionInputs.isEmpty()) {
+            showErrorDialog.accept("No Previous Run",
+                    "No previous execution found. Please run the program first.");
+            return;
+        }
+
+        try {
+            Engine engine = Engine.getInstance();
+            RunProgramDTO runDTO = engine.runProgram();
+
+            // Restore the program state to the degree used in the last execution
+            if (lastExecutionDegree > 0) {
+                // Expand/shrink to the last execution degree
+                PresentProgramDTO programPresent = engine.expandOrShrinkProgram(lastExecutionDegree);
+                instructions.clear();
+                instructions.addAll(ModelConverter.convertInstructions(programPresent));
+
+                currentDisplayDegree = lastExecutionDegree;
+                currentExpansionDegree = lastExecutionDegree;
+                isProgramExpanded = true;
+                currentProgram.setCurrentDegree(lastExecutionDegree);
+            } else if (currentDisplayDegree != 0) {
+                // Restore to original program (degree 0)
+                PresentProgramDTO programPresent = engine.expandOrShrinkProgram(0);
+                instructions.clear();
+                instructions.addAll(ModelConverter.convertInstructions(programPresent));
+
+                currentDisplayDegree = 0;
+                currentExpansionDegree = 0;
+                isProgramExpanded = false;
+                currentProgram.setCurrentDegree(0);
+            }
+
+            // Show input dialog with pre-filled values from last execution
+            Optional<List<Long>> inputValues = getInputValuesForRerun(runDTO, lastExecutionInputs);
+
+            if (inputValues.isEmpty()) {
+                updateSummary.accept("Rerun cancelled by user");
+                return;
+            }
+
+            // Store the new inputs for potential future reruns
+            lastExecutionInputs = new ArrayList<>(inputValues.get());
+            lastExecutionDegree = currentExpansionDegree;
+            wasLastExecutionExpanded = isProgramExpanded;
+
+            // Execute with the selected inputs
+            runDTO.setInputs(inputValues.get());
+            executeProgram(runDTO, inputValues.get());
+
+            updateSummary.accept("Rerun completed with " +
+                    (lastExecutionDegree > 0 ? "degree " + lastExecutionDegree : "original program"));
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Rerun Error", "Failed to rerun program: " + e.getMessage());
+            updateSummary.accept("Rerun failed: " + e.getMessage());
         }
     }
+
+    private Optional<List<Long>> getInputValuesForRerun(RunProgramDTO runDTO, List<Long> prefilledValues) {
+        Set<core.logic.variable.Variable> requiredInputs = runDTO.getInputs();
+
+        // Create input dialog with pre-filled values from previous run
+        InputDialog inputDialog = new InputDialog(requiredInputs, prefilledValues);
+        inputDialog.initOwner(startRegularButton.getScene().getWindow());
+        inputDialog.initModality(Modality.WINDOW_MODAL);
+
+        return inputDialog.showAndWait();
+    }
+
 
 
     public void handleExpand() {

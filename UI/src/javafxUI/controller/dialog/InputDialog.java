@@ -17,9 +17,16 @@ public class InputDialog extends Dialog<List<Long>> {
     private final VBox inputContainer;
     private final ObservableList<InputRow> inputRows;
     private final Set<core.logic.variable.Variable> requiredInputs;
+    private final List<Long> prefilledValues; // Add this field
 
     public InputDialog(Set<core.logic.variable.Variable> requiredInputs) {
+        this(requiredInputs, null); // Delegate to new constructor
+    }
+
+    // Add new constructor with prefilled values
+    public InputDialog(Set<core.logic.variable.Variable> requiredInputs, List<Long> prefilledValues) {
         this.requiredInputs = requiredInputs;
+        this.prefilledValues = prefilledValues;
         this.inputRows = FXCollections.observableArrayList();
         this.inputContainer = new VBox(10);
 
@@ -84,17 +91,31 @@ public class InputDialog extends Dialog<List<Long>> {
     }
 
     private void createInitialInputs() {
-        // Add initial input rows based on required inputs
-        int initialCount = (requiredInputs != null && !requiredInputs.isEmpty()) ?
-                requiredInputs.size() : 1;
+        // Add initial input rows based on required inputs or prefilled values
+        int initialCount;
+        if (prefilledValues != null && !prefilledValues.isEmpty()) {
+            initialCount = prefilledValues.size();
+        } else if (requiredInputs != null && !requiredInputs.isEmpty()) {
+            initialCount = requiredInputs.size();
+        } else {
+            initialCount = 1;
+        }
 
         for (int i = 0; i < initialCount; i++) {
-            addInputRow();
+            String prefilledValue = null;
+            if (prefilledValues != null && i < prefilledValues.size()) {
+                prefilledValue = String.valueOf(prefilledValues.get(i));
+            }
+            addInputRow(prefilledValue);
         }
     }
 
     private void addInputRow() {
-        InputRow row = new InputRow(inputRows.size() + 1);
+        addInputRow(null); // Delegate to new method
+    }
+
+    private void addInputRow(String prefilledValue) {
+        InputRow row = new InputRow(inputRows.size() + 1, prefilledValue);
         inputRows.add(row);
         inputContainer.getChildren().add(row.getRowNode());
     }
@@ -164,12 +185,21 @@ public class InputDialog extends Dialog<List<Long>> {
         private final Button removeButton;
 
         public InputRow(int number) {
+            this(number, null); // Delegate to new constructor
+        }
+
+        public InputRow(int number, String prefilledValue) {
             numberLabel = new Label("Input " + number + ":");
             numberLabel.setMinWidth(80);
 
             valueField = new TextField();
             valueField.setPromptText("Enter numeric value");
             valueField.setPrefWidth(200);
+
+            // Pre-fill the value if provided
+            if (prefilledValue != null) {
+                valueField.setText(prefilledValue);
+            }
 
             removeButton = new Button("−");
             removeButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold;");
