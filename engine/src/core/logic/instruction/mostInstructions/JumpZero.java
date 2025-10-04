@@ -28,7 +28,7 @@ public class JumpZero extends AbstractInstructionTwoLabels implements Expandable
         long variableValue = context.getVariableValue(getVariable());
         if (variableValue == 0) {
             return new LabelCycleChangedVariable(getTargetLabel(),
-                    Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                    getInstructionData().getCycles(),
                     null);
         }
 

@@ -20,7 +20,7 @@ public class NoOpInstruction extends AbstractInstruction {
     @Override
     public LabelCycleChangedVariable execute(ExecutionContext context) {
         return new LabelCycleChangedVariable(FixedLabel.EMPTY,
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 null);
     }
 

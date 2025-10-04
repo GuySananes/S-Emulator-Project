@@ -88,17 +88,19 @@ public class Main {
         );
 
         FunctionArgument funcArg = new FunctionArgument(Q, List.of(innerPlusArg, py));
-        pInstructions.add(new QuoteProgramInstruction(pz1, pL1, funcArg));
+        pInstructions.add(new IncreaseInstruction(Variable.RESULT, pL1));  // y ← y + 1
+        pInstructions.add(new QuoteProgramInstruction(pz1, funcArg)); // z1 ← (Q, (Plus, x1, y), y)
 
         pInstructions.add(new IncreaseInstruction(pz1));    // z1 ← z1 + 1
         pInstructions.add(new DecreaseInstruction(px2));    // x2 ← x2 - 1
+        //pInstructions.add(new AssignmentInstruction(Variable.RESULT, pz1)); // y ← z1
         pInstructions.add(new JumpNotZeroInstruction(px2, pL1)); // IF x2 ≠ 0 GOTO L1
 
         SProgram P = new SProgramImpl("P", null, pInstructions);
 
 
         // ========= תוכנית P מורחבת =========
-        SProgram expandedP = Expansion.expand(P, 1);
+        SProgram expandedP = Expansion.expand(P, 2);
 
         // ========= הדפסות =========
         System.out.println("=== Program Plus ===");

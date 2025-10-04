@@ -25,7 +25,7 @@ public class JumpNotZeroInstruction extends AbstractInstructionTwoLabels {
 
         if (variableValue != 0) {
             return new LabelCycleChangedVariable(getTargetLabel(),
-                    Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                    getInstructionData().getCycles(),
                     null);
         }
 

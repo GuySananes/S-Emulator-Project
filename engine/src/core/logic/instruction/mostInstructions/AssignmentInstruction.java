@@ -31,7 +31,7 @@ public class AssignmentInstruction extends AbstractInstructionTwoVariables imple
         long newValue = context.getVariableValue(getSecondVariable());
         context.updateVariable(toChange, newValue);
         return new LabelCycleChangedVariable(FixedLabel.EMPTY,
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 newValue == oldValue ? null :
                 new ChangedVariable(toChange, oldValue, newValue));
     }

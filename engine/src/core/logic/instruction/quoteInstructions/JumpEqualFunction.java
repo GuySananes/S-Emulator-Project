@@ -42,7 +42,7 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
 
         if (variableValue == resultCycle.getResult()) {
             return new LabelCycleChangedVariable(getTargetLabel(),
-                    resultCycle.getCycles(),
+                    resultCycle.getCycles() + getInstructionData().getCycles(),
                     null);
         }
 

@@ -4,6 +4,7 @@ import core.logic.instruction.*;
 import core.logic.instruction.mostInstructions.*;
 import core.logic.instruction.quoteInstructions.Argument;
 import core.logic.instruction.quoteInstructions.FunctionArgument;
+import core.logic.instruction.quoteInstructions.JumpEqualFunction;
 import core.logic.instruction.quoteInstructions.QuoteProgramInstruction;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
@@ -11,6 +12,9 @@ import core.logic.variable.Variable;
 import present.quote.ArgumentDTO;
 import present.quote.FunctionArgumentDTO;
 import present.mostInstructions.*;
+import present.quote.PresentJumpEqualFunctionDTO;
+import present.quote.PresentQuoteProgramInstructionDTO;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +77,15 @@ public class PresentDTOCreator {
                 return new PresentQuoteProgramInstructionDTO(
                         presentInstructionDTO,
                         createFunctionArgumentDTO(quoteProgramInstruction.getFunctionArgument()));
+            }
+
+            case Jump_Equal_Function -> {
+                JumpEqualFunction jumpEqualFunction =
+                        (JumpEqualFunction) instruction;
+                return new PresentJumpEqualFunctionDTO(
+                        presentInstructionDTO,
+                        jumpEqualFunction.getTargetLabelDeepCopy(),
+                        createFunctionArgumentDTO(jumpEqualFunction.getFunctionArgument()));
             }
 
 

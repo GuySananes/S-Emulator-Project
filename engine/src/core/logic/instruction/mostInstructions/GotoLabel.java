@@ -27,7 +27,7 @@ public class GotoLabel extends AbstractInstructionTwoLabels implements Expandabl
     @Override
     public LabelCycleChangedVariable execute(ExecutionContext context) {
         return new LabelCycleChangedVariable(getTargetLabel(),
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 null);
 
     }

@@ -40,7 +40,7 @@ public class JumpEqualConstant extends AbstractInstructionTwoLabels implements E
         long variableValue = context.getVariableValue(getVariable());
         if (variableValue == constantValue) {
             return new LabelCycleChangedVariable(getTargetLabel(),
-                    Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                    getInstructionData().getCycles(),
                     null);
         }
 

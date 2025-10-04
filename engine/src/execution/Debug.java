@@ -17,6 +17,7 @@ public class Debug{
     Label nextLabel = FixedLabel.EMPTY;
     SInstruction currentInstruction = null;
     int totalCycles = 0;
+    LabelCycleChangedVariable labelCycleChangedVariable;
     private final ExecutionContext context;
     List<Long> input = null;
     List<SInstruction> instructions;
@@ -57,8 +58,7 @@ public class Debug{
             throw new RuntimeException("Program execution exceeded maximum iterations (possible infinite loop)");
         }
 
-        LabelCycleChangedVariable labelCycleChangedVariable =
-                currentInstruction.execute(context);
+        labelCycleChangedVariable = currentInstruction.execute(context);
         nextLabel = labelCycleChangedVariable.getLabel();
         totalCycles += labelCycleChangedVariable.getCycles();
 

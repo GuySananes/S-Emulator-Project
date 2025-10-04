@@ -46,7 +46,7 @@ public class JumpEqualVariable extends AbstractInstructionTwoVariables implement
         long secondaryValue = context.getVariableValue(getSecondVariable());
         if (variableValue == secondaryValue) {
             return new LabelCycleChangedVariable(targetLabel,
-                    Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                    getInstructionData().getCycles(),
                     null);
         }
 

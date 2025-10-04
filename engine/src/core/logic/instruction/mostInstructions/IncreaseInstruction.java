@@ -25,7 +25,7 @@ public class IncreaseInstruction extends AbstractInstruction {
         long newValue = oldValue + 1;
         context.updateVariable(toChange, newValue);
         return new LabelCycleChangedVariable(FixedLabel.EMPTY,
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 new ChangedVariable(toChange, oldValue, newValue));
     }
 

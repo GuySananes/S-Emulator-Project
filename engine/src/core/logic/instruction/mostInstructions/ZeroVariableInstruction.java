@@ -31,7 +31,7 @@ public class ZeroVariableInstruction extends AbstractInstruction implements Expa
         long newValue = 0;
         context.updateVariable(toChange, newValue);
         return new LabelCycleChangedVariable(FixedLabel.EMPTY,
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 newValue == oldValue ? null :
                         new ChangedVariable(toChange, oldValue, newValue));
     }

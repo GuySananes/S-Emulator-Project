@@ -50,7 +50,7 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
         long newValue = constantValue;
         context.updateVariable(getVariable(), constantValue);
         return new LabelCycleChangedVariable(FixedLabel.EMPTY,
-                Integer.parseInt(getInstructionData().getCycleRepresentation()),
+                getInstructionData().getCycles(),
                 newValue == oldValue ? null :
                         new ChangedVariable(toChange, oldValue, newValue));
 
