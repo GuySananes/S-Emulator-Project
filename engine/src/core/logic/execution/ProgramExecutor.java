@@ -50,7 +50,7 @@ public class ProgramExecutor {
                     currentInstruction = currentInstructionIndex < instructions.size()
                             ? instructions.get(currentInstructionIndex)
                             : null;
-                } else if (nextLabel != FixedLabel.EXIT) {
+                } else if (!"EXIT".equals(nextLabel.getRepresentation())) {
                     currentInstruction = program.getInstructionByLabel(nextLabel);
                     if (currentInstruction == null) {
                         throw new RuntimeException("Invalid label reference: " + nextLabel);
@@ -62,7 +62,7 @@ public class ProgramExecutor {
                 } else {
                     currentInstruction = null;
                 }
-            } while (nextLabel != FixedLabel.EXIT && currentInstruction != null);
+            } while (!"EXIT".equals(nextLabel.getRepresentation()) && currentInstruction != null);
         }
 
         long result = context.getVariableValue(Variable.RESULT);
