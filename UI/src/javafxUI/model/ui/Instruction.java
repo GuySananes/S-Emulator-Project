@@ -14,6 +14,9 @@ public class Instruction {
     private final StringProperty description = new SimpleStringProperty();
     // New field for historical chain
     private final ObservableList<Instruction> historicalChain = FXCollections.observableArrayList();
+    // Add to Instruction class:
+    private boolean highlighted = false;
+
 
     // Constructors
     public Instruction() {}
@@ -61,4 +64,14 @@ public class Instruction {
     public boolean hasHistoricalChain() {
         return !historicalChain.isEmpty();
     }
+
+
+    public void setHighlighted(boolean highlighted) {
+        this.highlighted = highlighted;
+    }
+
+    public boolean isHighlighted() {
+        return highlighted;
+    }
+
 }

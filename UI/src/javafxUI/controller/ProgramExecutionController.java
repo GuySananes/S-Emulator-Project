@@ -2,22 +2,25 @@
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
+import core.logic.execution.ChangedVariable;
+import core.logic.execution.DebugFinalResult;
+import core.logic.execution.DebugResult;
 import exception.NoProgramException;
 import exception.ProgramNotExecutedYetException;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceDialog;
 import javafx.stage.Modality;
 import javafxUI.controller.dialog.InputDialog;
 import javafxUI.model.ui.*;
 import javafxUI.service.ModelConverter;
 import present.program.PresentProgramDTO;
+import run.DebugProgramDTO;
 import run.ExecuteProgramDTO;
 import run.ReExecuteProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticsDTO;
 import statistic.SingleRunStatisticDTO;
-import javafx.scene.control.ChoiceDialog;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +51,11 @@ public class ProgramExecutionController {
     private final BiConsumer<String, String> showErrorDialog;
 
     private final ObservableList<Statistic> statistics;
+
+    private DebugProgramDTO currentDebugSession;
+    private boolean isDebugging = false;
+    private int currentDebugIndex = -1;
+    private List<DebugResult> debugHistory = new ArrayList<>();
 
     private List<Long> lastExecutionInputs = new ArrayList<>();
     private int lastExecutionDegree = 0;
@@ -210,27 +218,293 @@ public class ProgramExecutionController {
         updateSummary.accept("Execution failed: " + exception.getMessage());
     }
 
+
     public void handleStartDebug() {
-        updateSummary.accept("Debug mode not fully implemented yet");
+        if (!currentProgram.isLoaded()) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        try {
+            // Get the ExecuteProgramDTO and extract the DebugProgramDTO
+            ExecuteProgramDTO executeDTO = engine.executeProgram();
+            currentDebugSession = executeDTO.getDebugProgramDTO();
+
+            // Get input values from user
+            Optional<List<Long>> inputValues = getDebugInputValues(currentDebugSession);
+
+            if (inputValues.isEmpty()) {
+                updateSummary.accept("Debug session cancelled by user");
+                return;
+            }
+
+            // Store inputs for potential step back operations
+            lastExecutionInputs = new ArrayList<>(inputValues.get());
+
+            // Set the input values
+            currentDebugSession.setInput(inputValues.get());
+
+            // Reset debug state
+            isDebugging = true;
+            currentDebugIndex = 0;
+            debugHistory.clear();
+
+            // Update UI for debug mode
+            executionResult.setRunning(true);
+            executionResult.setStatus("Debugging");
+            executionResult.setCompleted(false);
+
+            // Highlight first instruction
+            highlightInstruction(currentDebugIndex);
+
+            updateSummary.accept("Debug session started - press Step to execute instructions");
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Debug Error", "Failed to start debugging: " + e.getMessage());
+            updateSummary.accept("Failed to start debugging: " + e.getMessage());
+        }
     }
 
+    private Optional<List<Long>> getDebugInputValues(DebugProgramDTO debugDTO) {
+        Set<core.logic.variable.Variable> requiredInputs = debugDTO.getOrderedInputVariables();
+
+        InputDialog inputDialog = new InputDialog(requiredInputs);
+        inputDialog.initOwner(startRegularButton.getScene().getWindow());
+        inputDialog.initModality(Modality.WINDOW_MODAL);
+
+        return inputDialog.showAndWait();
+    }
+
+
     public void handleStop() {
+        if (!isDebugging) {
+            return;
+        }
+
+        // Reset debug state
+        isDebugging = false;
+        currentDebugSession = null;
+        currentDebugIndex = -1;
+
+        // Update UI
         executionResult.setRunning(false);
         executionResult.setStatus("Stopped");
-        updateSummary.accept("Execution stopped");
+
+        // Clear any instruction highlights
+        clearInstructionHighlights();
+
+        updateSummary.accept("Debug session stopped");
     }
 
     public void handleResume() {
-        updateSummary.accept("Execution resumed");
+        if (!isDebugging || currentDebugSession == null) {
+            showErrorDialog.accept("Not Debugging", "No active debug session to resume.");
+            return;
+        }
+
+        try {
+            // Run until end
+            DebugFinalResult result = currentDebugSession.runUntilEnd();
+
+            // Update UI
+            executionResult.setRunning(false);
+            executionResult.setCompleted(true);
+            executionResult.setStatus("Completed");
+            executionResult.setCycles(result.getCycles());
+
+            // Update variables with final values - use the new method
+            updateVariablesWithDebugResults(currentDebugSession);
+
+            // Add to execution history
+            executionResult.addToHistory("Result: " + result.getResult());
+            executionResult.addToHistory("Debug execution completed in " + result.getCycles() + " cycles");
+
+            // Reset debug state
+            isDebugging = false;
+
+            updateSummary.accept("Debug execution completed - Result: " + result.getResult() +
+                    ", Cycles: " + result.getCycles());
+
+        } catch (Exception e) {
+            handleExecutionFailure(e);
+        }
     }
 
+
     public void handleStepOver() {
-        updateSummary.accept("Stepped over instruction");
+        if (!isDebugging || currentDebugSession == null) {
+            showErrorDialog.accept("Not Debugging", "No active debug session to step through.");
+            return;
+        }
+
+        try {
+            // Execute the next instruction
+            DebugResult result = currentDebugSession.nextStep();
+
+            // Store the result for potential step back
+            debugHistory.add(result);
+
+            // Update the current index
+            currentDebugIndex = result.getNextIndex();
+
+            // Update cycles in UI
+            executionResult.setCycles(result.getCycles());
+
+            // Highlight the next instruction
+            highlightInstruction(currentDebugIndex);
+
+            // If there's a changed variable, update it in the UI
+            ChangedVariable changed = result.getChangedVariable();
+            if (changed != null) {
+                updateChangedVariable(changed);
+                updateSummary.accept("Stepped to instruction " + currentDebugIndex +
+                        " - Variable " + changed.getVariable().getRepresentation() +
+                        " changed from " + changed.getOldValue() + " to " + changed.getNewValue());
+            } else {
+                updateSummary.accept("Stepped to instruction " + currentDebugIndex);
+            }
+
+            // Check if we've reached the end
+            if (currentDebugIndex == -1) {
+                executionResult.setCompleted(true);
+                executionResult.setRunning(false);
+                executionResult.setStatus("Completed");
+                updateSummary.accept("Debug execution completed");
+                isDebugging = false;
+            }
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Debug Error", "Error during step execution: " + e.getMessage());
+            updateSummary.accept("Step execution failed: " + e.getMessage());
+        }
     }
 
     public void handleStepBack() {
-        updateSummary.accept("Stepped back instruction");
+        if (!isDebugging || debugHistory.isEmpty()) {
+            showErrorDialog.accept("Cannot Step Back", "No previous steps to return to.");
+            return;
+        }
+
+        try {
+            // Remove the last step from history
+            debugHistory.remove(debugHistory.size() - 1);
+
+            // We need to restart the debug session and replay up to the previous point
+            if (!debugHistory.isEmpty()) {
+                // Get the last result to determine where we should be
+                DebugResult lastResult = debugHistory.get(debugHistory.size() - 1);
+
+                // Restart debug session
+                ExecuteProgramDTO executeDTO = engine.executeProgram();
+                currentDebugSession = executeDTO.getDebugProgramDTO();
+
+                // Use the same inputs as before
+                currentDebugSession.setInput(lastExecutionInputs);
+
+                // Replay all steps up to the last one
+                for (int i = 0; i < debugHistory.size(); i++) {
+                    currentDebugSession.nextStep();
+                }
+
+                // Update current index
+                currentDebugIndex = lastResult.getNextIndex();
+
+                // Update the variables display to reflect the current state
+                updateVariablesWithDebugResults(currentDebugSession);
+
+                // Highlight the current instruction
+                highlightInstruction(currentDebugIndex);
+
+                // If there was a changed variable in the last step, update the UI to show it
+                ChangedVariable changed = lastResult.getChangedVariable();
+                if (changed != null) {
+                    updateSummary.accept("Stepped back to instruction " + currentDebugIndex +
+                            " - Variable " + changed.getVariable().getRepresentation() +
+                            " reverted from " + changed.getNewValue() + " to " + changed.getOldValue());
+                } else {
+                    updateSummary.accept("Stepped back to instruction " + currentDebugIndex);
+                }
+
+            } else {
+                // If no more history, restart from beginning
+                handleStartDebug();
+            }
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Step Back Error", "Failed to step back: " + e.getMessage());
+            updateSummary.accept("Failed to step back: " + e.getMessage());
+        }
     }
+
+
+    // Helper methods
+    private void highlightInstruction(int index) {
+        // Clear any existing highlights
+        clearInstructionHighlights();
+
+        // Highlight the current instruction if valid
+        if (index >= 0 && index < instructions.size()) {
+            Instruction current = instructions.get(index);
+            // Mark the instruction as highlighted (similar to TableController approach)
+            current.setHighlighted(true); // Assuming this method exists in Instruction
+
+            // Update the UI to reflect this change
+            executionResult.addToHistory("Highlighting instruction: " + current.getNumber());
+        }
+    }
+
+    private void clearInstructionHighlights() {
+        for (Instruction instruction : instructions) {
+            // Clear highlight state on all instructions
+            instruction.setHighlighted(false); // Assuming this method exists
+        }
+    }
+
+    private void updateChangedVariable(ChangedVariable changed) {
+        String variableName = changed.getVariable().getRepresentation();
+
+        for (Variable var : variables) {
+            // First, clear any previous highlighting
+            var.setHighlighted(false);
+
+            if (var.getName().equals(variableName)) {
+                var.setValue((int) changed.getNewValue());
+                // Mark this variable as highlighted
+                var.setHighlighted(true); // Assuming this method exists
+
+                // Add to execution history for visibility
+                executionResult.addToHistory("Variable " + variableName +
+                        " changed: " + changed.getOldValue() + " → " + changed.getNewValue());
+                break;
+            }
+        }
+    }
+
+    // Add a new method specifically for DebugProgramDTO
+    private void updateVariablesWithDebugResults(DebugProgramDTO debugDTO) {
+        variables.clear();
+
+        Set<core.logic.variable.Variable> programVariables = debugDTO.getOrderedVariables();
+        List<Long> variableValues = debugDTO.getOrderedValues();
+
+        if (programVariables != null && variableValues != null) {
+            List<core.logic.variable.Variable> orderedVars = new ArrayList<>(programVariables);
+
+            for (int i = 0; i < Math.min(orderedVars.size(), variableValues.size()); i++) {
+                core.logic.variable.Variable engineVar = orderedVars.get(i);
+                Long value = variableValues.get(i);
+
+                variables.add(new Variable(
+                        engineVar.getRepresentation(),
+                        value.intValue(),
+                        engineVar.getType().name()
+                ));
+            }
+        }
+
+        executionResult.addToHistory("Variables updated with debug results");
+    }
+
 
 
     public void handleRerun() {

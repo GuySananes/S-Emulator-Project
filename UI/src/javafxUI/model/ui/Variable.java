@@ -7,6 +7,10 @@ public class Variable {
     private final IntegerProperty value = new SimpleIntegerProperty();
     private final StringProperty type = new SimpleStringProperty();
 
+
+    // Add to Variable class:
+    private boolean highlighted = false;
+
     // Constructors
     public Variable() {}
 
@@ -30,5 +34,14 @@ public class Variable {
 
     public String getType() { return type.get(); }
     public void setType(String type) { this.type.set(type); }
+
+    public void setHighlighted(boolean highlighted) {
+        this.highlighted = highlighted;
+    }
+
+    public boolean isHighlighted() {
+        return highlighted;
+    }
+
 }
 
