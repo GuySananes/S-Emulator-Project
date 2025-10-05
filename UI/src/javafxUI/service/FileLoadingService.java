@@ -2,9 +2,9 @@ package javafxUI.service;
 
 import core.logic.engine.Engine;
 import present.program.PresentProgramDTO;
+import load.LoadProgramDTO;
 import exception.XMLUnmarshalException;
 import exception.ProgramValidationException;
-import exception.NoProgramException;
 import javafx.concurrent.Task;
 import java.io.File;
 import java.util.Objects;
@@ -12,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Service responsible for loading S-Programs from XML files via the Engine singleton.
- * Mirrors the consoleUI flow: validate path -> engine.loadProgram(path) -> obtain present DTO.
  */
 public class FileLoadingService {
 
@@ -27,24 +26,19 @@ public class FileLoadingService {
     }
 
     /**
-     * Loads a program (single attempt) using the Engine just like the console UI.
+     * Loads a program using the Engine.
      * @param xmlFile XML file containing a program definition
      * @return PresentProgramDTO ready for UI consumption
      */
     public PresentProgramDTO loadProgramFromFile(File xmlFile)
             throws XMLUnmarshalException, ProgramValidationException {
         validateFile(xmlFile);
-        engine.loadProgram(xmlFile.getAbsolutePath());
-        try {
-            return engine.presentProgram();
-        } catch (NoProgramException e) {
-            // This should not happen immediately after a successful load; wrap as runtime.
-            throw new IllegalStateException("Program unexpectedly unavailable after load", e);
-        }
+        LoadProgramDTO loadResult = engine.loadProgram(xmlFile.getAbsolutePath());
+        return loadResult.getPresentProgramDTO();
     }
 
     /**
-     * Asynchronous load (single attempt) using a background thread.
+     * Asynchronous load using a background thread.
      */
     public CompletableFuture<PresentProgramDTO> loadProgramAsync(File xmlFile) {
         return CompletableFuture.supplyAsync(() -> {
@@ -59,7 +53,7 @@ public class FileLoadingService {
     }
 
     /**
-     * JavaFX Task variant (single attempt) suitable for binding progress & message.
+     * JavaFX Task variant suitable for binding progress & message.
      */
     public Task<PresentProgramDTO> createLoadingTask(File xmlFile) {
         return new Task<>() {
@@ -76,17 +70,12 @@ public class FileLoadingService {
     }
 
     /**
-     * Retry loop similar to console UI: keeps invoking engine.loadProgram until success or caller stops.
-     * @param pathSupplier supplies a new path each retry (e.g., from a dialog). Must not return null for retry attempts.
-     * @param retryDecider given the exception, return true to retry, false to propagate.
-     * @return PresentProgramDTO on success
+     * Retry loop: keeps invoking engine.loadProgram until success or caller stops.
      */
     public PresentProgramDTO loadProgramWithRetry(java.util.function.Supplier<String> pathSupplier,
                                                   java.util.function.Function<Exception, Boolean> retryDecider)
             throws XMLUnmarshalException, ProgramValidationException {
-        int attempt = 0;
         while (true) {
-            attempt++;
             String path = pathSupplier.get();
             if (path == null) {
                 throw new XMLUnmarshalException("No path provided");

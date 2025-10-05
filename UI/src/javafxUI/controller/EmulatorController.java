@@ -8,7 +8,6 @@ import javafx.scene.control.*;
 import javafxUI.model.ui.*;
 import javafxUI.service.ModelConverter;
 import javafxUI.service.ThemeManager;
-import present.mostInstructions.PresentInstructionDTO;
 import present.program.PresentProgramDTO;
 
 import java.util.ArrayList;
@@ -52,6 +51,8 @@ public class EmulatorController {
     @FXML private TextField highlightInputField;
     @FXML private Button applyHighlightButton;
 
+    private Engine engine;
+
     // Theme toggle button
     @FXML private Button themeToggleButton;
 
@@ -73,6 +74,7 @@ public class EmulatorController {
 
     @FXML
     public void initialize() {
+        this.engine = Engine.getInstance();
         initializeThemeManager();
         initializeSubControllers();
         setupTables();
@@ -373,10 +375,9 @@ public class EmulatorController {
         System.out.println("=== DEBUG: buildHistoricalChain for instruction #" + targetInstruction.getNumber() + " ===");
 
         try {
-            Engine engine = Engine.getInstance();
-            System.out.println("Engine instance obtained: " + (engine != null));
-
+            // Get current program presentation from engine
             PresentProgramDTO currentProgram = engine.presentProgram();
+
             System.out.println("Current program obtained: " + (currentProgram != null));
 
             if (currentProgram == null) {
@@ -388,7 +389,7 @@ public class EmulatorController {
                     (currentProgram.getInstructionList() != null ? currentProgram.getInstructionList().size() : "null"));
 
             // Find the corresponding PresentInstructionDTO for this instruction
-            PresentInstructionDTO targetDTO = findInstructionDTO(currentProgram, targetInstruction);
+            present.mostInstructions.PresentInstructionDTO targetDTO = findInstructionDTO(currentProgram, targetInstruction);
             System.out.println("Found matching DTO: " + (targetDTO != null));
 
             if (targetDTO != null) {
@@ -396,7 +397,6 @@ public class EmulatorController {
                 System.out.println("DTO parents count: " +
                         (targetDTO.getParents() != null ? targetDTO.getParents().size() : "null"));
 
-                // Build the chain from parents using recursive traversal
                 buildChainFromParents(targetDTO, historicalChain);
                 System.out.println("Historical chain built with " + historicalChain.size() + " parents");
             } else {
@@ -413,25 +413,21 @@ public class EmulatorController {
         return historicalChain;
     }
 
-    /**
-     * Recursively builds the chain from DTO parents
-     */
-    private void buildChainFromParents(PresentInstructionDTO instructionDTO, List<Instruction> chain) {
+    private void buildChainFromParents(present.mostInstructions.PresentInstructionDTO instructionDTO, List<Instruction> chain) {
         System.out.println("=== DEBUG: buildChainFromParents ===");
         System.out.println("Processing DTO: " + instructionDTO.getRepresentation());
 
-        List<PresentInstructionDTO> parents = instructionDTO.getParents();
+        List<present.mostInstructions.PresentInstructionDTO> parents = instructionDTO.getParents();
         System.out.println("Parents: " + (parents != null ? parents.size() : "null"));
 
         if (parents != null && !parents.isEmpty()) {
             System.out.println("Processing " + parents.size() + " parent(s):");
 
-            // Process parents first (to get them at the beginning of the chain)
             for (int i = 0; i < parents.size(); i++) {
-                PresentInstructionDTO parent = parents.get(i);
+                present.mostInstructions.PresentInstructionDTO parent = parents.get(i);
                 System.out.println("Parent[" + i + "]: " + parent.getRepresentation());
 
-                buildChainFromParents(parent, chain); // Recursive call for grandparents
+                buildChainFromParents(parent, chain);
 
                 Instruction convertedParent = convertDTOToInstruction(parent);
                 chain.add(convertedParent);
@@ -445,10 +441,7 @@ public class EmulatorController {
     }
 
 
-    /**
-     * Finds the PresentInstructionDTO that corresponds to the UI Instruction
-     */
-    private PresentInstructionDTO findInstructionDTO(PresentProgramDTO programDTO, Instruction targetInstruction) {
+    private present.mostInstructions.PresentInstructionDTO findInstructionDTO(PresentProgramDTO programDTO, Instruction targetInstruction) {
         System.out.println("=== DEBUG: findInstructionDTO ===");
         System.out.println("Looking for instruction #" + targetInstruction.getNumber() + ": " + targetInstruction.getDescription());
 
@@ -457,7 +450,7 @@ public class EmulatorController {
             return null;
         }
 
-        List<PresentInstructionDTO> instructionList = programDTO.getInstructionList();
+        List<present.mostInstructions.PresentInstructionDTO> instructionList = programDTO.getInstructionList();
         if (instructionList == null) {
             System.err.println("Instruction list is null");
             return null;
@@ -465,9 +458,8 @@ public class EmulatorController {
 
         System.out.println("Searching through " + instructionList.size() + " DTOs:");
 
-        // Find by matching instruction number/index and description
         for (int i = 0; i < instructionList.size(); i++) {
-            PresentInstructionDTO dto = instructionList.get(i);
+            present.mostInstructions.PresentInstructionDTO dto = instructionList.get(i);
             if (dto != null) {
                 System.out.println("DTO[" + i + "]: index=" + dto.getIndex() +
                         ", representation=" + dto.getRepresentation());
@@ -483,25 +475,18 @@ public class EmulatorController {
         return null;
     }
 
-    /**
-     * Checks if a DTO matches the target instruction
-     */
-    private boolean matchesInstruction(PresentInstructionDTO dto, Instruction targetInstruction) {
-        // Debug print
+    private boolean matchesInstruction(present.mostInstructions.PresentInstructionDTO dto, Instruction targetInstruction) {
         System.out.println("  Comparing DTO(index=" + dto.getIndex() + ") with Instruction(number=" + targetInstruction.getNumber() + ")");
 
-        // Match by index (instruction number) - this is the primary match
         if (dto.getIndex() == targetInstruction.getNumber()) {
             System.out.println("  → Index match!");
             return true;
         }
 
-        // Also try to match by representation similarity as secondary
         String dtoDesc = dto.getRepresentation();
         String targetDesc = targetInstruction.getDescription();
 
         if (dtoDesc != null && targetDesc != null) {
-            // Remove expansion markers and compare core content
             String cleanDtoDesc = dtoDesc.replaceAll("^>+\\s*", "").trim();
             String cleanTargetDesc = targetDesc.replaceAll("^>+\\s*", "").trim();
 
@@ -514,27 +499,18 @@ public class EmulatorController {
         return false;
     }
 
-
-    /**
-     * Converts a PresentInstructionDTO to a UI Instruction object
-     */
-    private Instruction convertDTOToInstruction(PresentInstructionDTO dto) {
+    private Instruction convertDTOToInstruction(present.mostInstructions.PresentInstructionDTO dto) {
         String representation = dto.getRepresentation();
         if (representation == null) {
             representation = "Unknown instruction";
         }
 
-        // Clean up the representation - remove the prefix like "#1 (S) [  ]"
         String cleanDescription = representation;
         if (representation.matches("^#\\d+\\s+\\([BS]\\)\\s+.*")) {
-            // Extract just the instruction part after the type marker
             cleanDescription = representation.replaceFirst("^#\\d+\\s+\\([BS]\\)\\s+", "");
         }
 
-        // Extract type from the DTO
         String type = deriveTypeFromDTO(dto);
-
-        // Get cycles from the DTO
         int cycles = extractCyclesFromDTO(dto);
 
         return new Instruction(
@@ -622,48 +598,37 @@ public class EmulatorController {
     /**
      * Derives instruction type from DTO
      */
-    private String deriveTypeFromDTO(PresentInstructionDTO dto) {
-        // First try to get the type from InstructionData if available
+    private String deriveTypeFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
         if (dto.getInstructionData() != null) {
-            return dto.getInstructionData().getInstructionType(); // This returns "B" or "S"
+            return dto.getInstructionData().getInstructionType();
         }
 
-        // Fallback to parsing the representation
         String representation = dto.getRepresentation();
         if (representation == null) {
-            return "B"; // Default to Basic
+            return "B";
         }
 
-        // Simple fallback logic based on representation
         String cleanRep = representation.replaceAll("^>+\\s*", "").trim();
 
-        // Basic instructions are typically single operations
         if (cleanRep.matches(".*\\+\\+.*") || cleanRep.matches(".*--.*") ||
                 cleanRep.startsWith("JNZ") || cleanRep.startsWith("INC") ||
                 cleanRep.startsWith("DEC") || cleanRep.startsWith("NOOP")) {
             return "B";
         }
 
-        // Everything else is likely S (Super)
         return "S";
     }
 
-    /**
-     * Extracts cycles information from DTO
-     */
-    private int extractCyclesFromDTO(PresentInstructionDTO dto) {
-        // Try to get cycles from InstructionData first
+    private int extractCyclesFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
         if (dto.getInstructionData() != null) {
             String cycleRep = dto.getInstructionData().getCycleRepresentation();
             if (cycleRep != null) {
                 try {
-                    // Handle simple numeric cycles
                     if (cycleRep.matches("\\d+")) {
                         return Integer.parseInt(cycleRep);
                     }
-                    // For complex expressions like "execution + 5", return a default
                     if (cycleRep.contains("execution")) {
-                        return 5; // Default for complex cycles
+                        return 5;
                     }
                 } catch (NumberFormatException e) {
                     // Fall through to default
@@ -671,7 +636,6 @@ public class EmulatorController {
             }
         }
 
-        // Default cycles
         return 1;
     }
 }

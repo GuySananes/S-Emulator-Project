@@ -109,6 +109,13 @@ public class Engine {
         return new ProgramStatisticsDTO(program.getName());
     }
 
+    public PresentProgramDTO presentProgram() throws NoProgramException {
+        if(program == null) {
+            throw new NoProgramException();
+        }
+        return getPresentDTOOfCurrentEffectiveProgram();
+    }
+
 
 
 

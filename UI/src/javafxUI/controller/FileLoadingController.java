@@ -1,6 +1,5 @@
 package javafxUI.controller;
 
-import core.logic.engine.Engine;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Button;
@@ -15,7 +14,6 @@ import javafxUI.model.ui.Variable;
 import javafxUI.service.FileLoadingService;
 import javafxUI.service.ModelConverter;
 import present.program.PresentProgramDTO;
-import run.RunProgramDTO;
 
 import java.io.File;
 import java.util.List;
@@ -132,6 +130,7 @@ public class FileLoadingController {
         if (loadStatusLabel != null) loadStatusLabel.textProperty().unbind();
     }
 
+
     private void updateUIWithLoadedDto(File file, PresentProgramDTO dto) {
         Program uiProgram = ModelConverter.convertProgram(dto);
 
@@ -140,49 +139,16 @@ public class FileLoadingController {
         currentProgram.setLoaded(true);
         currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-        // Get degree information using DTOs only
-        try {
-            Engine engine = Engine.getInstance(); // Changed from EngineImpl.getInstance()
-
-            // Primary strategy: Use RunProgramDTO for degrees
-            RunProgramDTO runDTO = engine.runProgram();
-            currentProgram.setMaxDegree(runDTO.getMaxDegree());
-            currentProgram.setMinDegree(runDTO.getMinDegree());
-            currentProgram.setCurrentDegree(0); // Always start at degree 0
-
-        } catch (Exception e) {
-            // Fallback: Create ExpandDTO directly from the program data in the DTO
-            try {
-                // Since we have the program data from the DTO, we can create an ExpandDTO directly
-                // The ExpandDTO constructor requires an SProgram, but we need to extract it from the loaded program
-                // We'll use the current program state from the engine after loading
-                Engine engine = Engine.getInstance();
-                RunProgramDTO runDTO = engine.runProgram(); // This should work since program is loaded
-
-                // Create ExpandDTO using the program from RunProgramDTO if available
-                // Alternative approach: use the degree information from PresentProgramDTO
-                currentProgram.setMaxDegree(dto.getOriginMaxDegree());
-                currentProgram.setMinDegree(0); // Default minimum degree
-                currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
-            } catch (Exception fallbackException) {
-                // Final fallback to defaults using data from PresentProgramDTO if available
-                try {
-                    currentProgram.setMaxDegree(dto.getOriginMaxDegree());
-                    currentProgram.setMinDegree(0);
-                    currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
-                } catch (Exception finalException) {
-                    currentProgram.setMaxDegree(0);
-                    currentProgram.setMinDegree(0);
-                    currentProgram.setCurrentDegree(0);
-                    updateSummary.accept("Warning: Could not determine program expansion degrees");
-                }
-            }
-        }
+        // Get degree information from PresentProgramDTO
+        currentProgram.setMaxDegree(dto.getOriginMaxDegree());
+        currentProgram.setMinDegree(0); // Always starts at 0
+        currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
 
         updateUICollections(dto);
         updateSummary.accept("File loaded successfully: " + file.getName() +
                 " (Max degree: " + currentProgram.getMaxDegree() + ")");
     }
+
 
     private void updateUICollections(PresentProgramDTO dto) {
         instructions.clear();
