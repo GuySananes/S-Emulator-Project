@@ -12,9 +12,12 @@ import javafxUI.model.ui.*;
 import javafxUI.service.ModelConverter;
 import present.program.PresentProgramDTO;
 import run.ExecuteProgramDTO;
+import run.ReExecuteProgramDTO;
 import run.RunProgramDTO;
 import statistic.ProgramStatisticsDTO;
 import statistic.SingleRunStatisticDTO;
+import javafx.scene.control.ChoiceDialog;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -229,54 +232,100 @@ public class ProgramExecutionController {
         updateSummary.accept("Stepped back instruction");
     }
 
+
     public void handleRerun() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
             return;
         }
 
-        if (lastExecutionInputs == null || lastExecutionInputs.isEmpty()) {
-            showErrorDialog.accept("No Previous Run",
-                    "No previous execution found. Please run the program first.");
-            return;
-        }
-
         try {
-            // Restore to last execution degree if needed
-            if (lastExecutionDegree != currentDisplayDegree) {
-                PresentProgramDTO programPresent = engine.expandOrShrinkProgram(lastExecutionDegree);
-                instructions.clear();
-                instructions.addAll(ModelConverter.convertInstructions(programPresent));
-                currentDisplayDegree = lastExecutionDegree;
-                currentProgram.setCurrentDegree(lastExecutionDegree);
+            // Get program statistics to determine available run numbers
+            ProgramStatisticsDTO statsDTO = engine.presentProgramStats();
+            List<SingleRunStatisticDTO> programStats = statsDTO.getProgramStatisticCopy();
+
+            if (programStats.isEmpty()) {
+                showErrorDialog.accept("No Previous Runs", "No previous executions found. Please run the program first.");
+                return;
             }
 
-            ExecuteProgramDTO executeDTO = engine.executeProgram();
-            RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
+            // Show run selection dialog
+            Optional<Integer> selectedRunNumber = showRunSelectionDialog(programStats);
 
-            Optional<List<Long>> inputValues = getInputValuesForRerun(runDTO, lastExecutionInputs);
-
-            if (inputValues.isEmpty()) {
+            if (selectedRunNumber.isEmpty()) {
                 updateSummary.accept("Rerun cancelled by user");
                 return;
             }
 
-            lastExecutionInputs = new ArrayList<>(inputValues.get());
-            lastExecutionDegree = currentDisplayDegree;
+            int runNumber = selectedRunNumber.get();
 
-            runDTO.setInput(inputValues.get());
-            executeProgram(runDTO, inputValues.get());
+            // Use reExecuteProgram to get the ReExecuteProgramDTO
+            ReExecuteProgramDTO reExecuteDTO = engine.reExecuteProgram(runNumber);
 
-            updateSummary.accept("Rerun completed with " +
-                    (lastExecutionDegree > 0 ? "degree " + lastExecutionDegree : "original program"));
+            // Get the DTOs using the getters
+            PresentProgramDTO presentDTO = reExecuteDTO.getPresentProgramDTO();
+            ExecuteProgramDTO executeDTO = reExecuteDTO.getExecuteProgramDTO();
 
+            // Update the UI with the program presentation
+            instructions.clear();
+            instructions.addAll(ModelConverter.convertInstructions(presentDTO));
+
+            variables.clear();
+            variables.addAll(ModelConverter.convertVariables(presentDTO));
+
+            // Get the RunProgramDTO which already has the inputs pre-configured from reExecuteProgram
+            RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
+
+            // The reExecuteProgram method already configured the correct inputs,
+            // but we want to give the user a chance to modify them.
+            // Since we can't easily extract the pre-configured inputs, we'll execute as-is.
+
+            // Execute the program with the pre-configured inputs
+            core.logic.execution.ResultCycle result = runDTO.runProgram();
+
+            // Update UI after execution
+            updateUIAfterExecution(runDTO, result);
+
+            updateSummary.accept("Rerun of execution #" + runNumber + " completed successfully - " +
+                    "Result: " + result.getResult() + ", Cycles: " + result.getCycles());
+
+        } catch (NoProgramException e) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+        } catch (ProgramNotExecutedYetException e) {
+            showErrorDialog.accept("No Previous Executions", "No previous executions found. Please run the program first.");
         } catch (Exception e) {
             showErrorDialog.accept("Rerun Error", "Failed to rerun program: " + e.getMessage());
             updateSummary.accept("Rerun failed: " + e.getMessage());
         }
     }
 
-    private Optional<List<Long>> getInputValuesForRerun(RunProgramDTO runDTO, List<Long> prefilledValues) {
+    private Optional<Integer> showRunSelectionDialog(List<SingleRunStatisticDTO> programStats) {
+        List<String> runOptions = new ArrayList<>();
+        for (SingleRunStatisticDTO stat : programStats) {
+            runOptions.add("Run #" + stat.getRunNumber() +
+                    " (Degree: " + stat.getRunDegree() +
+                    ", Cycles: " + stat.getCycles() +
+                    ", Result: " + stat.getResult() + ")");
+        }
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(runOptions.get(0), runOptions);
+        dialog.setTitle("Select Run to Re-execute");
+        dialog.setHeaderText("Choose which run to re-execute:");
+        dialog.setContentText("Available runs:");
+
+        // Set the owner and modality like other dialogs
+        dialog.initOwner(startRegularButton.getScene().getWindow());
+        dialog.initModality(Modality.WINDOW_MODAL);
+
+        Optional<String> result = dialog.showAndWait();
+
+        return result.map(selectedOption -> {
+            int runIndex = runOptions.indexOf(selectedOption);
+            return programStats.get(runIndex).getRunNumber();
+        });
+    }
+
+    private Optional<List<Long>> showInputDialogWithDefaults(RunProgramDTO runDTO, List<Long> prefilledValues) {
         Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
 
         InputDialog inputDialog = new InputDialog(requiredInputs, prefilledValues);
