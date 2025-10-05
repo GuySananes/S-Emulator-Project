@@ -134,6 +134,145 @@ public class JAXBToEngineConverter {
     }
 
 
+    /**
+     * Validates that all function references in the main program are defined.
+     * Checks both direct function calls and nested function arguments.
+     *
+     * @param jaxbInstructions List of JAXB instructions from main program
+     * @param jaxbFunctionMap Map of all defined functions in the file
+     * @throws ProgramValidationException if a referenced function is not defined
+     */
+    private static void validateMainProgramFunctionReferences(
+            List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions,
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+
+        for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction : jaxbInstructions) {
+            validateInstructionFunctionReferences(instruction, jaxbFunctionMap, "main program");
+        }
+    }
+
+    /**
+     * Validates that all function references within a function are defined.
+     *
+     * @param jaxbFunction The function to validate
+     * @param jaxbFunctionMap Map of all defined functions in the file
+     * @throws ProgramValidationException if a referenced function is not defined
+     */
+    private static void validateFunctionReferences(
+            jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction,
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+
+        if (jaxbFunction.getSInstructions() != null) {
+            for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction :
+                    jaxbFunction.getSInstructions().getSInstruction()) {
+                validateInstructionFunctionReferences(instruction, jaxbFunctionMap,
+                        "function '" + jaxbFunction.getName() + "'");
+            }
+        }
+    }
+
+    /**
+     * Validates function references within a single instruction.
+     *
+     * @param instruction The instruction to validate
+     * @param jaxbFunctionMap Map of all defined functions
+     * @param context Description of where the instruction appears (for error messages)
+     * @throws ProgramValidationException if a referenced function is not defined
+     */
+    private static void validateInstructionFunctionReferences(
+            jaxb.engine.src.jaxb.schema.generated.SInstruction instruction,
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            String context) throws ProgramValidationException {
+
+        if (instruction.getSInstructionArguments() == null) {
+            return;
+        }
+
+        String instructionName = instruction.getName();
+
+        // Check JUMP_EQUAL_FUNCTION and QUOTE instructions
+        if ("JUMP_EQUAL_FUNCTION".equals(instructionName) || "QUOTE".equals(instructionName)) {
+            String functionName = getArgumentValue(instruction.getSInstructionArguments(), "functionName");
+            String programName = getArgumentValue(instruction.getSInstructionArguments(), "programName");
+            String referencedFunction = functionName != null ? functionName : programName;
+
+            if (referencedFunction != null) {
+                // Validate the main function reference (case-sensitive)
+                if (!jaxbFunctionMap.containsKey(referencedFunction)) {
+                    throw new ProgramValidationException(
+                            "In " + context + ", instruction " + instructionName +
+                                    " references undefined function: '" + referencedFunction +
+                                    "' (function names are case-sensitive). Available functions: " +
+                                    jaxbFunctionMap.keySet()
+                    );
+                }
+
+                // Validate nested function arguments
+                String functionArgumentsStr = getArgumentValue(instruction.getSInstructionArguments(), "functionArguments");
+                if (functionArgumentsStr != null && !functionArgumentsStr.trim().isEmpty()) {
+                    validateFunctionArgumentsString(functionArgumentsStr, jaxbFunctionMap, context, referencedFunction);
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates all function references within a function arguments string.
+     * Recursively checks nested function arguments.
+     *
+     * @param argumentsStr The arguments string to validate
+     * @param jaxbFunctionMap Map of all defined functions
+     * @param context Description of where the arguments appear (for error messages)
+     * @param parentFunction Name of the parent function being called
+     * @throws ProgramValidationException if a referenced function is not defined
+     */
+    private static void validateFunctionArgumentsString(
+            String argumentsStr,
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            String context,
+            String parentFunction) throws ProgramValidationException {
+
+        List<String> tokens = splitByCommaRespectingParentheses(argumentsStr);
+
+        for (String token : tokens) {
+            token = token.trim();
+
+            if (token.startsWith("(") && token.endsWith(")")) {
+                // It's a function argument
+                String innerContent = token.substring(1, token.length() - 1);
+                int firstComma = innerContent.indexOf(',');
+
+                String funcName;
+                String funcArgs;
+
+                if (firstComma == -1) {
+                    funcName = innerContent.trim();
+                    funcArgs = null;
+                } else {
+                    funcName = innerContent.substring(0, firstComma).trim();
+                    funcArgs = innerContent.substring(firstComma + 1).trim();
+                }
+
+                // Validate this function exists (case-sensitive)
+                if (!jaxbFunctionMap.containsKey(funcName)) {
+                    throw new ProgramValidationException(
+                            "In " + context + ", function '" + parentFunction +
+                                    "' has an argument that references undefined function: '" + funcName +
+                                    "' (function names are case-sensitive). Available functions: " +
+                                    jaxbFunctionMap.keySet()
+                    );
+                }
+
+                // Recursively validate nested arguments
+                if (funcArgs != null && !funcArgs.trim().isEmpty()) {
+                    validateFunctionArgumentsString(funcArgs, jaxbFunctionMap, context, funcName);
+                }
+            }
+            // Variables don't need validation for function existence
+        }
+    }
+
+
 
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
@@ -145,6 +284,13 @@ public class JAXBToEngineConverter {
         if (jaxbProgram.getSFunctions() != null) {
             for (jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction : jaxbProgram.getSFunctions().getSFunction()) {
                 jaxbFunctionMap.put(jaxbFunction.getName(), jaxbFunction);
+            }
+        }
+
+        // Validate function references in all functions
+        if (jaxbProgram.getSFunctions() != null) {
+            for (jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction : jaxbProgram.getSFunctions().getSFunction()) {
+                validateFunctionReferences(jaxbFunction, jaxbFunctionMap);
             }
         }
 
@@ -287,12 +433,14 @@ public class JAXBToEngineConverter {
             // Convert the JAXB function to engine SFunction HERE
             engineFunction = convertFunction(jaxbFunction);
         } else {
-            // If not found in map, create a minimal SFunction as fallback
-            // This handles external functions or forward references
-            engineFunction = new SFunction(functionName, functionName, null, new ArrayList<>());
+            // REPLACE THE FALLBACK WITH STRICT VALIDATION
+            throw new ProgramValidationException(
+                    "Function '" + functionName + "' is not defined in this file. " +
+                            "Available functions: " + jaxbFunctionMap.keySet()
+            );
         }
 
-        // Parse function arguments
+        // Parse function arguments - this also validates nested function references
         List<Argument> arguments = new ArrayList<>();
         if (functionArgumentsStr != null && !functionArgumentsStr.trim().isEmpty()) {
             arguments = parseArguments(functionArgumentsStr, jaxbFunctionMap);

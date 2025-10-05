@@ -306,7 +306,20 @@ public class ProgramExecutionController {
             }
 
             int newDegree = currentDisplayDegree + 1;
-            PresentProgramDTO expandedProgram = engine.expandOrShrinkProgram(newDegree);
+
+            // Wrap the expansion in a try-catch to handle label lookup issues
+            PresentProgramDTO expandedProgram;
+            try {
+                expandedProgram = engine.expandOrShrinkProgram(newDegree);
+            } catch (java.util.NoSuchElementException e) {
+                if (e.getMessage() != null && e.getMessage().contains("label")) {
+                    showErrorDialog.accept("Expansion Error",
+                            "Cannot expand program due to label reference issue: " + e.getMessage());
+                    updateSummary.accept("Expansion failed: Label reference error");
+                    return;
+                }
+                throw e; // Re-throw if it's not a label issue
+            }
 
             instructions.clear();
             instructions.addAll(ModelConverter.convertInstructions(expandedProgram));
@@ -339,7 +352,20 @@ public class ProgramExecutionController {
             }
 
             int newDegree = currentDisplayDegree - 1;
-            PresentProgramDTO collapsedProgram = engine.expandOrShrinkProgram(newDegree);
+
+            // Wrap the collapse in a try-catch to handle label lookup issues
+            PresentProgramDTO collapsedProgram;
+            try {
+                collapsedProgram = engine.expandOrShrinkProgram(newDegree);
+            } catch (java.util.NoSuchElementException e) {
+                if (e.getMessage() != null && e.getMessage().contains("label")) {
+                    showErrorDialog.accept("Collapse Error",
+                            "Cannot collapse program due to label reference issue: " + e.getMessage());
+                    updateSummary.accept("Collapse failed: Label reference error");
+                    return;
+                }
+                throw e; // Re-throw if it's not a label issue
+            }
 
             instructions.clear();
             instructions.addAll(ModelConverter.convertInstructions(collapsedProgram));
