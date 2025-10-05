@@ -296,12 +296,12 @@ public class ProgramExecutionController {
             int maxDegree = currentProgram.getMaxDegree();
 
             if (maxDegree == 0) {
-                showErrorDialog.accept("Cannot Expand", "The program cannot be expanded.");
+                showErrorDialog.accept("Cannot Expand", "The currently selected program cannot be expanded.");
                 return;
             }
 
             if (currentDisplayDegree >= maxDegree) {
-                updateSummary.accept("Already at maximum expansion degree (" + maxDegree + ")");
+                updateSummary.accept("Already at maximum expansion degree (" + maxDegree + ") for " + currentProgram.getName());
                 return;
             }
 
@@ -311,10 +311,14 @@ public class ProgramExecutionController {
             instructions.clear();
             instructions.addAll(ModelConverter.convertInstructions(expandedProgram));
 
+            // Update variables too in case they changed
+            variables.clear();
+            variables.addAll(ModelConverter.convertVariables(expandedProgram));
+
             currentDisplayDegree = newDegree;
             currentProgram.setCurrentDegree(newDegree);
 
-            updateSummary.accept("Expanded to degree " + newDegree);
+            updateSummary.accept("Expanded '" + currentProgram.getName() + "' to degree " + newDegree);
 
         } catch (Exception e) {
             showErrorDialog.accept("Expansion Error", "Failed to expand program: " + e.getMessage());
@@ -330,7 +334,7 @@ public class ProgramExecutionController {
 
         try {
             if (currentDisplayDegree <= 0) {
-                updateSummary.accept("Already at minimum degree (0)");
+                updateSummary.accept("Already at minimum degree (0) for " + currentProgram.getName());
                 return;
             }
 
@@ -340,19 +344,28 @@ public class ProgramExecutionController {
             instructions.clear();
             instructions.addAll(ModelConverter.convertInstructions(collapsedProgram));
 
+            // Update variables too in case they changed
+            variables.clear();
+            variables.addAll(ModelConverter.convertVariables(collapsedProgram));
+
             currentDisplayDegree = newDegree;
             currentProgram.setCurrentDegree(newDegree);
 
             if (newDegree == 0) {
-                updateSummary.accept("Showing original program (degree 0)");
+                updateSummary.accept("Showing original '" + currentProgram.getName() + "' (degree 0)");
             } else {
-                updateSummary.accept("Collapsed to degree " + newDegree);
+                updateSummary.accept("Collapsed '" + currentProgram.getName() + "' to degree " + newDegree);
             }
 
         } catch (Exception e) {
             showErrorDialog.accept("Collapse Error", "Failed to collapse program: " + e.getMessage());
             updateSummary.accept("Collapse failed: " + e.getMessage());
         }
+    }
+
+    // Add method to reset display degree when switching programs
+    public void resetDisplayDegree() {
+        this.currentDisplayDegree = 0;
     }
 
     public void handleHighlight() {
@@ -396,15 +409,14 @@ public class ProgramExecutionController {
 
         long totalCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).sum();
         double avgCycles = (double) totalCycles / programStats.size();
-        long maxCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).max().orElse(0);
-        long minCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).min().orElse(0);
+        //long maxCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).max().orElse(0);
+        long cycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).min().orElse(0);
 
         statisticsList.add(new Statistic("=== SUMMARY ===", 0, 0, ""));
         statisticsList.add(new Statistic("Total Runs", programStats.size(), 0, ""));
         statisticsList.add(new Statistic("Total Cycles", (int) totalCycles, 0, ""));
         statisticsList.add(new Statistic("Average Cycles", (int) Math.round(avgCycles), 0, String.format("%.1f per run", avgCycles)));
-        statisticsList.add(new Statistic("Min Cycles", (int) minCycles, 0, "Best performance"));
-        statisticsList.add(new Statistic("Max Cycles", (int) maxCycles, 0, "Worst performance"));
+        statisticsList.add(new Statistic("last run number of Cycles", (int) cycles, 0, "Best performance"));
     }
 
     private String formatExecutionDetails(SingleRunStatisticDTO runStat) {

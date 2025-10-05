@@ -33,8 +33,43 @@ public class UIBindingController {
     }
 
     public void setupAllBindings() {
-        setupProgramBindings();
-        setupExecutionBindings();
+        // Bind file path
+        if (loadedFilePath != null) {
+            loadedFilePath.textProperty().bind(currentProgram.filePathProperty());
+        }
+
+        // Bind cycles
+        if (cyclesLabel != null) {
+            cyclesLabel.textProperty().bind(
+                    javafx.beans.binding.Bindings.concat("Cycles: ", executionResult.cyclesProperty())
+            );
+        }
+
+        // Bind history chain - convert ObservableList to String
+        if (historyChain != null) {
+            executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
+                StringBuilder historyText = new StringBuilder();
+                for (String historyItem : executionResult.getExecutionHistory()) {
+                    historyText.append(historyItem).append("\n");
+                }
+                historyChain.setText(historyText.toString());
+            });
+        }
+
+        // Bind current degree with program name
+        if (currentDegreeLabel != null) {
+            currentDegreeLabel.textProperty().bind(
+                    javafx.beans.binding.Bindings.concat(
+                            "Current Degree: ",
+                            currentProgram.currentDegreeProperty(),
+                            " / ",
+                            currentProgram.maxDegreeProperty(),
+                            " (Program: ",
+                            currentProgram.nameProperty(),
+                            ")"
+                    )
+            );
+        }
     }
 
     private void setupProgramBindings() {

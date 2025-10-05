@@ -92,6 +92,7 @@ public class EmulatorController {
         fileLoadingController = new FileLoadingController(
                 currentProgram, instructions, variables,
                 loadFileButton, loadedFilePath, loadProgress, loadStatusLabel,
+                programSelector,  // Add this parameter
                 this::updateSummary, this::showErrorDialog
         );
 
@@ -315,10 +316,59 @@ public class EmulatorController {
 
     private void handleProgramSelection() {
         String selectedProgram = programSelector.getValue();
-        if (selectedProgram != null) {
-            currentProgram.setName(selectedProgram);
-            updateSummary("Switched to program: " + selectedProgram);
+        if (selectedProgram != null && currentProgram.isLoaded()) {
+            try {
+                // Call engine to switch context program
+                PresentProgramDTO newProgram = engine.chooseContextProgram(selectedProgram);
+
+                // Update the name FIRST (before updateUIWithSelectedProgram)
+                // so the binding can reflect the correct program name
+                currentProgram.setName(selectedProgram);
+
+                // Update UI with the new program
+                updateUIWithSelectedProgram(newProgram);
+
+                updateSummary("Switched to program: " + selectedProgram);
+            } catch (Exception e) {
+                showErrorDialog("Program Selection Error",
+                        "Failed to switch to program '" + selectedProgram + "': " + e.getMessage());
+                updateSummary("Error switching program: " + e.getMessage());
+            }
         }
+    }
+
+    private void updateUIWithSelectedProgram(PresentProgramDTO dto) {
+        // Clear existing data
+        instructions.clear();
+        variables.clear();
+        statistics.clear();
+
+        // Update with new program data
+        instructions.addAll(ModelConverter.convertInstructions(dto));
+        variables.addAll(ModelConverter.convertVariables(dto));
+
+        // Update program metadata
+        Program uiProgram = ModelConverter.convertProgram(dto);
+        currentProgram.setTotalCycles(uiProgram.getTotalCycles());
+        currentProgram.setMaxDegree(dto.getOriginMaxDegree());
+        currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
+
+        // Reset execution state
+        executionResult.reset();
+        executionResult.setStatus("Ready");
+        executionResult.setCompleted(false);
+        executionResult.setRunning(false);
+        executionResult.setCycles(0);
+        executionResult.clearHistory();
+
+        // Reset the execution controller's display degree
+        executionController.resetDisplayDegree();
+
+        // Clear the historical chain table
+        if (tableController != null) {
+            tableController.updateHistoricalChainTable(new ArrayList<>());
+        }
+
     }
 
     // Utility methods used by sub-controllers

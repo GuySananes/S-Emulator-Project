@@ -27,7 +27,7 @@ public class Main extends Application {
         EmulatorController controller = fxmlLoader.getController();
 
         // Scene setup
-        Scene scene = new Scene(root, 1200, 800);
+        Scene scene = new Scene(root, 1200, 1020);
 
         // Initialize theme manager with the scene
         ThemeManager themeManager = ThemeManager.getInstance();
