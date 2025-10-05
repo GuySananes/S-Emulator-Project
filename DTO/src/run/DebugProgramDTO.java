@@ -1,8 +1,8 @@
 package run;
 
-import execution.Debug;
-import execution.DebugFinalResult;
-import execution.DebugResult;
+import core.logic.execution.Debug;
+import core.logic.execution.DebugFinalResult;
+import core.logic.execution.DebugResult;
 import core.logic.program.SProgram;
 
 import java.util.*;

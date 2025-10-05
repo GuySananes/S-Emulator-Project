@@ -328,7 +328,7 @@ import core.logic.variable.*;
 import core.logic.label.*;
 import core.logic.instruction.mostInstructions.*;
 import core.logic.instruction.quoteInstructions.*;
-import execution.ProgramExecutor;
+import core.logic.execution.ProgramExecutor;
 import expansion.Expansion;
 
 import java.util.*;

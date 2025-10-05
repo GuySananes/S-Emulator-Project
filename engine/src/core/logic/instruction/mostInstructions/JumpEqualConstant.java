@@ -1,7 +1,7 @@
 package core.logic.instruction.mostInstructions;
 
-import execution.ExecutionContext;
-import execution.LabelCycleChangedVariable;
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.instruction.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;

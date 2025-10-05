@@ -1,11 +1,10 @@
-/*
 package engine;
 
 import core.logic.program.ContextPrograms;
 import core.logic.program.SFunction;
 import exception.*;
 import expansion.Expansion;
-import jaxb.JAXBLoader;
+/*import jaxb.JAXBLoader;*/
 import load.LoadProgramDTO;
 import present.program.PresentFunctionDTO;
 import present.program.PresentProgramDTO;
@@ -29,7 +28,7 @@ public class Engine {
     private ContextPrograms contextPrograms = null;
     private final StatisticManager statisticManager = StatisticManager.getInstance();
 
-    public LoadProgramDTO loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
+      public LoadProgramDTO loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
         JAXBLoader loader = new JAXBLoader();
         program = loader.load(fullPath);
         effectiveProgram = program;
@@ -128,4 +127,3 @@ public class Engine {
         return new PresentProgramDTO(effectiveProgram);
     }
 }
-*/

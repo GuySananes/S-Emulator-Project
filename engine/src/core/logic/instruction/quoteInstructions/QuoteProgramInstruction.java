@@ -1,17 +1,15 @@
 package core.logic.instruction.quoteInstructions;
 
-import execution.ChangedVariable;
-import execution.ExecutionContext;
-import execution.LabelCycleChangedVariable;
-import execution.ResultCycle;
+import core.logic.execution.ChangedVariable;
+import core.logic.execution.ExecutionContext;
+import core.logic.execution.LabelCycleChangedVariable;
+import core.logic.execution.ResultCycle;
 import core.logic.instruction.*;
 import core.logic.instruction.mostInstructions.*;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
-import core.logic.variable.VariableImpl;
-import core.logic.variable.VariableType;
 import expansion.Expandable;
 import expansion.ExpansionContext;
 import expansion.Utils;

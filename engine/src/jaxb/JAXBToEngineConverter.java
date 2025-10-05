@@ -20,14 +20,13 @@ import java.util.Set;
 
 public class JAXBToEngineConverter {
 
-    */
-/**
+*
      * Collects all defined labels from the list of JAXB instructions.
      * Any instruction with an S-Label defines that label as a jump target.
-     * 
+     *
      * @param jaxbInstructions List of JAXB instructions
      * @return Set of defined label names
-     *//*
+
 
     private static Set<String> collectDefinedLabels(List<jaxb.generated.SInstruction> jaxbInstructions) {
         Set<String> definedLabels = new HashSet<>();
@@ -40,14 +39,13 @@ public class JAXBToEngineConverter {
         return definedLabels;
     }
 
-    */
-/**
+*
      * Validates that a single JAXB instruction's label references are valid.
      * 
      * @param jaxbInstruction The JAXB instruction to validate
      * @param definedLabels Set of all defined labels in the program
      * @throws ProgramValidationException if a referenced label is not found or missing
-     *//*
+
 
     private static void validateInstructionLabelReferences(
             jaxb.generated.SInstruction jaxbInstruction,
@@ -78,14 +76,13 @@ public class JAXBToEngineConverter {
         }
     }
 
-    */
-/**
+*
      * Extracts the referenced label from a JAXB instruction's arguments.
      * This finds the label that the instruction wants to jump to, not the label that defines this instruction.
      * 
      * @param jaxbInstruction The JAXB instruction
      * @return The referenced label name, or null if none found
-     *//*
+
 
     private static String getReferencedLabel(jaxb.generated.SInstruction jaxbInstruction) {
         // Check instruction arguments for label references (jump targets)
@@ -104,13 +101,12 @@ public class JAXBToEngineConverter {
         return null;
     }
 
-    */
-/**
+*
      * Checks if the given instruction type requires a valid label reference.
      *
      * @param instructionName The name of the instruction
      * @return true if the instruction references a label that must exist
-     *//*
+
 
     private static boolean isLabelReferencingInstruction(String instructionName) {
         switch (instructionName) {
@@ -125,14 +121,13 @@ public class JAXBToEngineConverter {
         }
     }
 
-    */
-/**
+*
      * Checks if the given label is a system-defined label that doesn't need
      * to be defined in the program.
      *
      * @param labelName The name of the label to check
      * @return true if it's a system label
-     *//*
+
 
     private static boolean isSystemLabel(String labelName) {
         return labelName.equals("EXIT");

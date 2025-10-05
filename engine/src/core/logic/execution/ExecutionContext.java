@@ -1,4 +1,4 @@
-package execution;
+package core.logic.execution;
 
 import core.logic.program.SProgram;
 import core.logic.variable.Variable;
