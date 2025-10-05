@@ -42,6 +42,11 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
     }
 
     @Override
+    public void setVariablesInFunctionArgument(Map<Variable, Variable> xyzToz, ExpansionContext context) {
+        functionArgument.setArgumentsThatAreVariable(xyzToz, context);
+    }
+
+    @Override
     public LabelCycleChangedVariable execute(ExecutionContext context) {
         ResultCycle result = functionArgument.evaluate(context);
         Variable toChange = getVariable();
@@ -64,7 +69,7 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
 
     @Override
     public SInstruction clone() {
-        return new QuoteProgramInstruction(getVariable(), getLabel(), functionArgument);
+        return new QuoteProgramInstruction(getVariable(), getLabel(), functionArgument.clone());
     }
 
     @Override
@@ -72,17 +77,17 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
         SProgram toExpand = functionArgument.getProgram();
         SProgram toExpandClone = toExpand.clone();
         List<SInstruction> toChange = toExpandClone.getInstructionList();
-        Map<Variable, Variable> xyToz = new HashMap<>();
+        Map<Variable, Variable> xyzToz = new HashMap<>();
         Map<Label, Label> oldLToNewL = new HashMap<>();
         for (SInstruction instruction : toChange) {
             Variable var = instruction.getVariable();
             if(var != null) {
                 Variable z;
-                if (!xyToz.containsKey(var)) {
+                if (!xyzToz.containsKey(var)) {
                     z = context.generateZ();
-                    xyToz.put(var, z);
+                    xyzToz.put(var, z);
                 } else {
-                    z = xyToz.get(var);
+                    z = xyzToz.get(var);
                 }
 
                 instruction.setVariable(z);
@@ -122,11 +127,11 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                 Variable secondaryVar = twoVariables.getSecondVariable();
                 if(secondaryVar != null) {
                     Variable z;
-                    if (!xyToz.containsKey(secondaryVar)) {
+                    if (!xyzToz.containsKey(secondaryVar)) {
                         z = context.generateZ();
-                        xyToz.put(secondaryVar, z);
+                        xyzToz.put(secondaryVar, z);
                     } else {
-                        z = xyToz.get(secondaryVar);
+                        z = xyzToz.get(secondaryVar);
                     }
 
                     twoVariables.setSecondVariable(z);
@@ -148,16 +153,26 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
                     jeqv.setTargetLabel(newTargetLabel);
                 }
             }
+
+            if(instruction instanceof Quotable qpi) {
+                qpi.setVariablesInFunctionArgument(xyzToz, context);
+            }
         }
 
         List<SInstruction> expansion = new ArrayList<>(toChange.size() + 2);
         List<SInstruction> parentChain = createParentChain();
         SInstruction toAdd = new NoOpInstruction(Variable.RESULT, getLabel());
         Utils.registerInstruction(toAdd, parentChain, expansion);
+
+        for (Variable zi : xyzToz.values()) {
+            SInstruction zeroInit = new ZeroVariableInstruction(zi);
+            Utils.registerInstruction(zeroInit, parentChain, expansion);
+        }
+
         List<Argument> arguments = functionArgument.getArguments();
         List<Variable> XsOfToExpand = new ArrayList<>(toExpand.getOrderedInputVariables());
         for (int i = 0; i < arguments.size() && i < XsOfToExpand.size(); i++) {
-                Variable z = xyToz.get(XsOfToExpand.get(i));
+                Variable z = xyzToz.get(XsOfToExpand.get(i));
                 if(arguments.get(i) instanceof Variable var) {
                     toAdd = new AssignmentInstruction(z, var);
                 }
@@ -171,10 +186,10 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
 
         Utils.registerInstructions(toChange, parentChain, expansion);
         if(oldLToNewL.containsKey(FixedLabel.EXIT)) {;
-            toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT),
+            toAdd = new AssignmentInstruction(getVariable(), xyzToz.get(Variable.RESULT),
                     oldLToNewL.get(FixedLabel.EXIT));
         } else {
-            toAdd = new AssignmentInstruction(getVariable(), xyToz.get(Variable.RESULT));
+            toAdd = new AssignmentInstruction(getVariable(), xyzToz.get(Variable.RESULT));
         }
 
         Utils.registerInstruction(toAdd, parentChain, expansion);

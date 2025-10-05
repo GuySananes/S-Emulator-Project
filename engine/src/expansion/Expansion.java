@@ -13,11 +13,6 @@ import java.util.List;
 public class Expansion {
 
     public static SProgram expand(SProgram program, int degree) {
-        if (degree < program.getMinDegree() || degree > program.getDegree()) {
-            throw new IllegalArgumentException("Degree must be between " + program.getMinDegree() + " and "
-                    + program.getDegree() + " when expanding program");
-        }
-
         List<SInstruction> instructions = program.getInstructionList();
         ExpansionContext expansionContext = new ExpansionContext(program);
 
