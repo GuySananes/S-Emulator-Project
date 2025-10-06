@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) {
         // יצירת משתנים
         Variable x1 = new VariableImpl(VariableType.INPUT, 1);
-        Variable y = new VariableImpl(VariableType.RESULT, 0);
+        Variable y = Variable.RESULT;
 
         // תוויות
         Label L1 = new LabelImpl(1);
@@ -31,7 +31,7 @@ public class Main {
 
         // דיבאג
         Debug debug = new Debug(program);
-        debug.setInput(List.of(1L)); // נכניס 5 ל־x0
+        debug.setInput(List.of(2L)); // נכניס 5 ל־x0
 
         // הרצה שלב-שלב
         while (true) {

@@ -67,8 +67,17 @@ public class Debug{
 
         if (nextLabel == FixedLabel.EMPTY) {
             if (++nextInstructionIndex >= instructions.size()) {
-                nextInstructionIndex = -1;
-                currentInstruction = null;
+                long result = context.getVariableValue(Variable.RESULT);
+                statisticManager.incrementRunCount(originalProgram.getName());
+                statisticManager.addRunStatistic(
+                        originalProgram.getName(),
+                        new SingleRunStatisticImpl(
+                                statisticManager.getRunCount(originalProgram.getName()),
+                                originalProgram.getDegree() - program.getDegree(),
+                                input, result, totalCycles
+                        )
+                );
+                return new DebugFinalResult(result, totalCycles);
             } else {
                 currentInstruction = instructions.get(nextInstructionIndex);
             }
