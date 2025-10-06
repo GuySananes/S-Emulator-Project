@@ -21,13 +21,14 @@ public enum InstructionData {
 
 
     private final String name;
-    private int cycles;
+    private final int cycles;
     private final String cycleRepresentation;
     private final String instructionType;
     private final int degree;
 
     InstructionData(String name, int cycles, String cycleRepresentation, String instructionType, int degree) {
         this.name = name;
+        this.cycles = cycles;
         this.cycleRepresentation = cycleRepresentation;
         this.instructionType = instructionType;
         this.degree = degree;

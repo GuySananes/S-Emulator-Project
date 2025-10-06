@@ -1,5 +1,81 @@
 package consoleUI;
 
+import core.logic.execution.*;
+import core.logic.program.*;
+import core.logic.variable.*;
+import core.logic.label.*;
+import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstructions.*;
+import java.util.*;
+
+
+public class Main {
+    public static void main(String[] args) {
+        // יצירת משתנים
+        Variable x1 = new VariableImpl(VariableType.INPUT, 1);
+        Variable y = new VariableImpl(VariableType.RESULT, 0);
+
+        // תוויות
+        Label L1 = new LabelImpl(1);
+
+        // בניית ההוראות
+        List<SInstruction> instructions = List.of(
+                new DecreaseInstruction(x1, L1),                         // x0--
+                new IncreaseInstruction(y),// y++
+                new NoOpInstruction(y),
+                new JumpNotZeroInstruction(x1, L1) // if x0 == 0 -> EXIT else -> loop
+        );
+
+        // יצירת תוכנית
+        SProgram program = new SProgramImpl("DebugTest", null, instructions);
+
+        // דיבאג
+        Debug debug = new Debug(program);
+        debug.setInput(List.of(1L)); // נכניס 5 ל־x0
+
+        // הרצה שלב-שלב
+        while (true) {
+            DebugResult result = debug.nextStep();
+
+            // הדפסת המשתנה שהשתנה
+            if (result.getChangedVariable() != null) {
+                ChangedVariable cv = result.getChangedVariable();
+                System.out.println("Step: "
+                        + "Variable " + cv.getVariable().getRepresentation()
+                        + " changed from " + cv.getOldValue()
+                        + " to " + cv.getNewValue());
+            }
+
+            // הדפסת מחזור
+            System.out.println("Total Cycles so far: " + result.getCycles());
+            System.out.println("Next instruction index: " + result.getNextIndex());
+            System.out.println("---");
+
+            // אם הסתיים
+            if (result instanceof DebugFinalResult finalResult) {
+                System.out.println("Program finished. Final result: " + finalResult.getResult());
+                System.out.println("Total Cycles: " + finalResult.getCycles());
+                break;
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//גם ב-Q יש ציטוט תוכנית... עובד
+/*package consoleUI;
+
 import core.logic.program.*;
 import core.logic.variable.*;
 import core.logic.label.*;
@@ -134,7 +210,7 @@ public class Main {
         ResultCycle resExp3P = execExp3P.run(List.of(2L, 3L));
         System.out.println("Result=" + resExp3P.getResult() + ", Cycles=" + resExp3P.getCycles());
     }
-}
+}*/
 
 
 

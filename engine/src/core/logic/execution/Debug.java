@@ -21,7 +21,6 @@ public class Debug{
     private final ExecutionContext context;
     List<Long> input = null;
     List<SInstruction> instructions;
-    DebugResult nextStepResult = new DebugResult();
     int maxIterations = 1000000;
     int iterationCount = 0;
 
@@ -41,16 +40,20 @@ public class Debug{
     }
 
     public DebugResult nextStep() {
-        if (!instructions.isEmpty()) {
+        if (nextInstructionIndex >= 0 && nextInstructionIndex < instructions.size()) {
             currentInstruction = instructions.get(nextInstructionIndex);
+        } else {
+            currentInstruction = null;
         }
 
         if (nextLabel == FixedLabel.EXIT || currentInstruction == null) {
             long result = context.getVariableValue(Variable.RESULT);
             statisticManager.incrementRunCount(originalProgram.getName());
-            statisticManager.addRunStatistic(originalProgram.getName(),
+            statisticManager.addRunStatistic(
+                    originalProgram.getName(),
                     new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
-                            originalProgram.getDegree() - program.getDegree(), input, result, totalCycles));
+                            originalProgram.getDegree() - program.getDegree(),
+                            input, result, totalCycles));
             return new DebugFinalResult(result, totalCycles);
         }
 
@@ -79,18 +82,25 @@ public class Debug{
                 throw new RuntimeException("Instruction not found in program: " + currentInstruction);
             }
         } else {
-            currentInstruction = null;
-            nextInstructionIndex = -1;
+            long result = context.getVariableValue(Variable.RESULT);
+            statisticManager.incrementRunCount(originalProgram.getName());
+            statisticManager.addRunStatistic(
+                    originalProgram.getName(),
+                    new SingleRunStatisticImpl(
+                            statisticManager.getRunCount(originalProgram.getName()),
+                            originalProgram.getDegree() - program.getDegree(),
+                            input, result, totalCycles
+                    )
+            );
+            return new DebugFinalResult(result, totalCycles);
         }
 
-        nextStepResult.setChangedVariable(labelCycleChangedVariable.getChangedVariable());
-        nextStepResult.setNextIndex(nextInstructionIndex);
-        nextStepResult.setCycles(totalCycles);
-
-        return nextStepResult;
+        return new DebugResult(labelCycleChangedVariable.getChangedVariable(),
+                nextInstructionIndex, totalCycles);
     }
 
     public DebugFinalResult resume() {
+        DebugResult nextStepResult;
         while(true) {
             nextStepResult = nextStep();
             if (nextStepResult instanceof DebugFinalResult) {
