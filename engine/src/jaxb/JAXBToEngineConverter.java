@@ -274,6 +274,7 @@ public class JAXBToEngineConverter {
 
 
 
+
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
         if (jaxbProgram == null) {
             throw new ProgramValidationException("JAXB program cannot be null");
@@ -430,8 +431,8 @@ public class JAXBToEngineConverter {
 
         SFunction engineFunction;
         if (jaxbFunction != null) {
-            // Convert the JAXB function to engine SFunction HERE
-            engineFunction = convertFunction(jaxbFunction);
+            // Convert the JAXB function to engine SFunction HERE - pass the function map
+            engineFunction = convertFunction(jaxbFunction, jaxbFunctionMap);
         } else {
             // REPLACE THE FALLBACK WITH STRICT VALIDATION
             throw new ProgramValidationException(
@@ -547,14 +548,11 @@ public class JAXBToEngineConverter {
 
 
     // Convert JAXB SFunction to Engine SFunction
-    private static SFunction convertFunction(jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction) throws ProgramValidationException {
+    private static SFunction convertFunction(jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction,
+                                             Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
         if (jaxbFunction == null) {
             return null;
         }
-
-        // Convert function instructions
-        // Use empty JAXB function map since functions shouldn't reference other functions internally at load time
-        Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> emptyJaxbFunctionMap = new HashMap<>();
 
         List<SInstruction> instructionList = new ArrayList<>();
         if (jaxbFunction.getSInstructions() != null) {
@@ -567,7 +565,7 @@ public class JAXBToEngineConverter {
                 // Validate each instruction's label references
                 validateInstructionLabelReferences(jaxbInstruction, definedLabels);
 
-                SInstruction engineInstruction = convertInstruction(jaxbInstruction, emptyJaxbFunctionMap);
+                SInstruction engineInstruction = convertInstruction(jaxbInstruction, jaxbFunctionMap);
                 if (engineInstruction != null) {
                     instructionList.add(engineInstruction);
                 }

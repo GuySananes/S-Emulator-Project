@@ -331,10 +331,30 @@
     -fx-text-fill: #333333;
 }
 
-/* Highlighted table rows - Light theme */
+/* ==================== INSTRUCTION HIGHLIGHTING ==================== */
+
+/* Current instruction highlight during debugging - Light theme */
+.table-row-cell.current-instruction-row {
+    -fx-background-color: #FF9800 !important; /* Orange for current instruction */
+    -fx-text-fill: #FFFFFF !important;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell.current-instruction-row .table-cell {
+    -fx-background-color: #FF9800 !important;
+    -fx-text-fill: #FFFFFF !important;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell.current-instruction-row:hover {
+    -fx-background-color: #FFB74D !important; /* Lighter orange on hover */
+    -fx-text-fill: #FFFFFF !important;
+}
+
+/* Variable usage highlight - Light theme */
 .table-row-cell.highlighted-row {
-    -fx-background-color: #FFF176 !important; /* Lighter yellow for light theme */
-    -fx-text-fill: #000000 !important; /* Black text for contrast */
+    -fx-background-color: #FFF176 !important; /* Lighter yellow for variable highlighting */
+    -fx-text-fill: #000000 !important;
 }
 
 .table-row-cell.highlighted-row .table-cell {
@@ -342,7 +362,6 @@
     -fx-text-fill: #000000 !important;
 }
 
-/* Highlighted row on hover - Light theme */
 .table-row-cell.highlighted-row:hover {
     -fx-background-color: #FFEB3B !important; /* Slightly darker yellow on hover */
     -fx-text-fill: #000000 !important;

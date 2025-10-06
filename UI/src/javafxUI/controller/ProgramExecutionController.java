@@ -1,12 +1,9 @@
-
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
 import core.logic.execution.ChangedVariable;
 import core.logic.execution.DebugFinalResult;
 import core.logic.execution.DebugResult;
-import exception.NoProgramException;
-import exception.ProgramNotExecutedYetException;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceDialog;
@@ -38,6 +35,7 @@ public class ProgramExecutionController {
     private final ExecutionResult executionResult;
     private final ObservableList<Instruction> instructions;
     private final ObservableList<Variable> variables;
+    private final ObservableList<Statistic> statistics;
 
     private final Button startRegularButton;
     private final Button startDebugButton;
@@ -50,19 +48,15 @@ public class ProgramExecutionController {
     private final Consumer<String> updateSummary;
     private final BiConsumer<String, String> showErrorDialog;
 
-    private final ObservableList<Statistic> statistics;
-
     private DebugProgramDTO currentDebugSession;
     private boolean isDebugging = false;
     private int currentDebugIndex = -1;
     private List<DebugResult> debugHistory = new ArrayList<>();
-
     private List<Long> lastExecutionInputs = new ArrayList<>();
-    private int lastExecutionDegree = 0;
-
     private int currentDisplayDegree = 0;
 
     private Engine engine;
+    private TableController tableController;
 
     public ProgramExecutionController(Program currentProgram,
                                       ExecutionResult executionResult,
@@ -80,7 +74,6 @@ public class ProgramExecutionController {
         this.instructions = instructions;
         this.variables = variables;
         this.statistics = statistics;
-
         this.startRegularButton = startRegularButton;
         this.startDebugButton = startDebugButton;
         this.stopButton = stopButton;
@@ -88,11 +81,13 @@ public class ProgramExecutionController {
         this.stepOverButton = stepOverButton;
         this.stepBackButton = stepBackButton;
         this.rerunButton = rerunButton;
-
         this.updateSummary = updateSummary;
         this.showErrorDialog = showErrorDialog;
-
         this.engine = Engine.getInstance();
+    }
+
+    public void setTableController(TableController tableController) {
+        this.tableController = tableController;
     }
 
     public void setupEventHandlers() {
@@ -105,6 +100,8 @@ public class ProgramExecutionController {
         rerunButton.setOnAction(e -> handleRerun());
     }
 
+    // ==================== REGULAR EXECUTION ====================
+
     public void handleStartRegular() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
@@ -116,7 +113,6 @@ public class ProgramExecutionController {
             RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
 
             Optional<List<Long>> inputValues = getInputValues(runDTO);
-
             if (inputValues.isEmpty()) {
                 updateSummary.accept("Execution cancelled by user");
                 return;
@@ -131,29 +127,16 @@ public class ProgramExecutionController {
         }
     }
 
-    private Optional<List<Long>> getInputValues(RunProgramDTO runDTO) {
-        Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
-
-        InputDialog inputDialog = new InputDialog(requiredInputs);
-        inputDialog.initOwner(startRegularButton.getScene().getWindow());
-        inputDialog.initModality(Modality.WINDOW_MODAL);
-
-        return inputDialog.showAndWait();
-    }
-
     private void executeProgram(RunProgramDTO runDTO, List<Long> inputValues) {
         try {
             this.lastExecutionInputs = new ArrayList<>(inputValues);
-            this.lastExecutionDegree = currentDisplayDegree;
 
             runDTO.setInput(inputValues);
             core.logic.execution.ResultCycle result = runDTO.runProgram();
 
-            // FIXED: Pass the same runDTO that was executed to get the correct variable values
             updateUIAfterExecution(runDTO, result);
             updateSummary.accept("Program executed successfully - Result: " + result.getResult() +
-                    ", Cycles: " + result.getCycles() +
-                    (currentDisplayDegree > 0 ? " (degree " + currentDisplayDegree + ")" : ""));
+                    ", Cycles: " + result.getCycles());
 
         } catch (Exception e) {
             handleExecutionFailure(e);
@@ -161,34 +144,22 @@ public class ProgramExecutionController {
     }
 
     private void updateUIAfterExecution(RunProgramDTO runDTO, core.logic.execution.ResultCycle result) {
-        try {
-            executionResult.setCompleted(true);
-            executionResult.setRunning(false);
-            executionResult.setStatus("Completed");
-            executionResult.setCycles((int) result.getCycles());
+        executionResult.setCompleted(true);
+        executionResult.setRunning(false);
+        executionResult.setStatus("Completed");
+        executionResult.setCycles((int) result.getCycles());
 
-            // FIXED: Use the runDTO that was actually executed to get variable values
-            updateVariablesWithResults(runDTO);
+        updateVariablesWithResults(runDTO);
 
-            updateSummary.accept("Execution completed - Result: " + result.getResult() + ", Cycles: " + result.getCycles());
-            executionResult.addToHistory("Result: " + result.getResult());
-            executionResult.addToHistory("Execution Cycles: " + result.getCycles());
-
-        } catch (Exception e) {
-            showErrorDialog.accept("Execution Error", "Error updating UI: " + e.getMessage());
-        }
+        executionResult.addToHistory("Result: " + result.getResult());
+        executionResult.addToHistory("Execution Cycles: " + result.getCycles());
     }
 
     private void updateVariablesWithResults(RunProgramDTO runDTO) {
         variables.clear();
 
-        // FIXED: Get variables and values from the SAME runDTO that was executed
         Set<core.logic.variable.Variable> programVariables = runDTO.getOrderedVariables();
         List<Long> variableValues = runDTO.getOrderedValues();
-
-        System.out.println("=== DEBUG: updateVariablesWithResults ===");
-        System.out.println("Number of variables: " + (programVariables != null ? programVariables.size() : "null"));
-        System.out.println("Number of values: " + (variableValues != null ? variableValues.size() : "null"));
 
         if (programVariables != null && variableValues != null) {
             List<core.logic.variable.Variable> orderedVars = new ArrayList<>(programVariables);
@@ -197,8 +168,6 @@ public class ProgramExecutionController {
                 core.logic.variable.Variable engineVar = orderedVars.get(i);
                 Long value = variableValues.get(i);
 
-                System.out.println("Variable[" + i + "]: " + engineVar.getRepresentation() + " = " + value);
-
                 variables.add(new Variable(
                         engineVar.getRepresentation(),
                         value.intValue(),
@@ -206,18 +175,9 @@ public class ProgramExecutionController {
                 ));
             }
         }
-
-        System.out.println("=== END updateVariablesWithResults ===");
-        executionResult.addToHistory("Variables updated with execution results");
     }
 
-    private void handleExecutionFailure(Throwable exception) {
-        showErrorDialog.accept("Execution Error", "Execution failed: " + exception.getMessage());
-        executionResult.setRunning(false);
-        executionResult.setStatus("Failed");
-        updateSummary.accept("Execution failed: " + exception.getMessage());
-    }
-
+    // ==================== DEBUG EXECUTION ====================
 
     public void handleStartDebug() {
         if (!currentProgram.isLoaded()) {
@@ -226,43 +186,269 @@ public class ProgramExecutionController {
         }
 
         try {
-            // Get the ExecuteProgramDTO and extract the DebugProgramDTO
             ExecuteProgramDTO executeDTO = engine.executeProgram();
             currentDebugSession = executeDTO.getDebugProgramDTO();
 
-            // Get input values from user
             Optional<List<Long>> inputValues = getDebugInputValues(currentDebugSession);
-
             if (inputValues.isEmpty()) {
                 updateSummary.accept("Debug session cancelled by user");
                 return;
             }
 
-            // Store inputs for potential step back operations
             lastExecutionInputs = new ArrayList<>(inputValues.get());
 
-            // Set the input values
+            // IMPORTANT: Set input BEFORE calling updateVariablesWithDebugResults
             currentDebugSession.setInput(inputValues.get());
 
-            // Reset debug state
             isDebugging = true;
             currentDebugIndex = 0;
             debugHistory.clear();
 
-            // Update UI for debug mode
             executionResult.setRunning(true);
             executionResult.setStatus("Debugging");
             executionResult.setCompleted(false);
 
-            // Highlight first instruction
-            highlightInstruction(currentDebugIndex);
+            // NOW update variables - after setInput has been called
+            System.out.println("=== Calling updateVariablesWithDebugResults at start ===");
+            updateVariablesWithDebugResults(currentDebugSession);
 
-            updateSummary.accept("Debug session started - press Step to execute instructions");
+            highlightInstruction(currentDebugIndex);
+            updateSummary.accept("Debug session started at instruction 0");
 
         } catch (Exception e) {
-            showErrorDialog.accept("Debug Error", "Failed to start debugging: " + e.getMessage());
-            updateSummary.accept("Failed to start debugging: " + e.getMessage());
+            e.printStackTrace();  // Add stack trace
+            showErrorDialog.accept("Debug Error", "Failed to start debug: " + e.getMessage());
+            updateSummary.accept("Failed to start debug session");
         }
+    }
+
+    public void handleStop() {
+        isDebugging = false;
+        debugHistory.clear();
+        currentDebugSession = null;
+        clearInstructionHighlights();
+
+        executionResult.setRunning(false);
+        executionResult.setStatus("Stopped");
+        updateSummary.accept("Debug session stopped");
+    }
+
+    public void handleResume() {
+        if (!isDebugging || currentDebugSession == null) {
+            showErrorDialog.accept("Resume Error", "No active debug session to resume.");
+            return;
+        }
+
+        try {
+            DebugFinalResult result = currentDebugSession.runUntilEnd();
+
+            currentDebugIndex = -1;
+            clearInstructionHighlights();
+
+            executionResult.setRunning(false);
+            executionResult.setCompleted(true);
+            executionResult.setStatus("Completed");
+            executionResult.setCycles(result.getCycles());
+
+            updateVariablesWithDebugResults(currentDebugSession);
+
+            executionResult.addToHistory("Result: " + result.getResult());
+            executionResult.addToHistory("Debug execution completed in " + result.getCycles() + " cycles");
+
+            updateSummary.accept("Program completed with result: " + result.getResult() +
+                    " (Total cycles: " + result.getCycles() + ")");
+
+            isDebugging = false;
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Resume Error", "Failed to resume: " + e.getMessage());
+            updateSummary.accept("Failed to resume execution");
+        }
+    }
+
+    public void handleStepOver() {
+        if (!isDebugging || currentDebugSession == null) {
+            showErrorDialog.accept("Step Error", "No active debug session to step.");
+            return;
+        }
+
+        try {
+            DebugResult result = currentDebugSession.nextStep();
+
+            if (result instanceof DebugFinalResult) {
+                DebugFinalResult finalResult = (DebugFinalResult) result;
+                currentDebugIndex = -1;
+                clearInstructionHighlights();
+
+                executionResult.setCompleted(true);
+                executionResult.setRunning(false);
+                executionResult.setStatus("Completed");
+                executionResult.setCycles(finalResult.getCycles());
+
+                updateVariablesWithDebugResults(currentDebugSession);
+
+                updateSummary.accept("Program completed with result: " + finalResult.getResult() +
+                        " (Total cycles: " + finalResult.getCycles() + ")");
+
+                isDebugging = false;
+                return;
+            }
+
+            debugHistory.add(result);
+            currentDebugIndex = result.getNextIndex();
+            executionResult.setCycles(result.getCycles());
+
+            // IMPORTANT: Update ALL variables after each step to show current state
+            updateVariablesWithDebugResults(currentDebugSession);
+
+            highlightInstruction(currentDebugIndex);
+
+            // Still highlight the changed variable if there is one
+            if (result.getChangedVariable() != null) {
+                ChangedVariable changed = result.getChangedVariable();
+                if (tableController != null) {
+                    tableController.highlightVariable(changed.getVariable().getRepresentation());
+                }
+            }
+
+            updateSummary.accept("Stepped to instruction " + currentDebugIndex +
+                    " (Cycles: " + result.getCycles() + ")");
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Step Error", "Failed to step: " + e.getMessage());
+            updateSummary.accept("Failed to step over instruction");
+        }
+    }
+
+    public void handleStepBack() {
+        if (!isDebugging || debugHistory.isEmpty()) {
+            showErrorDialog.accept("Cannot Step Back", "No previous steps to return to.");
+            return;
+        }
+
+        try {
+            debugHistory.remove(debugHistory.size() - 1);
+
+            if (!debugHistory.isEmpty()) {
+                ExecuteProgramDTO executeDTO = engine.executeProgram();
+                currentDebugSession = executeDTO.getDebugProgramDTO();
+                currentDebugSession.setInput(lastExecutionInputs);
+
+                for (int i = 0; i < debugHistory.size(); i++) {
+                    currentDebugSession.nextStep();
+                }
+
+                DebugResult lastResult = debugHistory.get(debugHistory.size() - 1);
+                currentDebugIndex = lastResult.getNextIndex();
+
+                // IMPORTANT: Update variables to reflect the state after stepping back
+                updateVariablesWithDebugResults(currentDebugSession);
+
+                highlightInstruction(currentDebugIndex);
+
+                updateSummary.accept("Stepped back to instruction " + currentDebugIndex);
+            } else {
+                // Back to the beginning - reset to initial state
+                ExecuteProgramDTO executeDTO = engine.executeProgram();
+                currentDebugSession = executeDTO.getDebugProgramDTO();
+                currentDebugSession.setInput(lastExecutionInputs);
+
+                currentDebugIndex = 0;
+
+                // Show initial variable values
+                updateVariablesWithDebugResults(currentDebugSession);
+
+                highlightInstruction(currentDebugIndex);
+                updateSummary.accept("Stepped back to beginning - instruction 0");
+            }
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Step Back Error", "Failed to step back: " + e.getMessage());
+            updateSummary.accept("Failed to step back: " + e.getMessage());
+        }
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private void highlightInstruction(int index) {
+        currentDebugIndex = index;
+        if (tableController != null) {
+            tableController.highlightCurrentInstruction(index);
+        }
+    }
+
+    private void clearInstructionHighlights() {
+        if (tableController != null) {
+            tableController.clearCurrentInstructionHighlight();
+        }
+    }
+
+    private void updateChangedVariable(ChangedVariable changed) {
+        // This method is no longer needed since we update all variables after each step
+        // But we keep it to highlight the changed variable
+        if (changed == null) return;
+
+        if (tableController != null) {
+            tableController.highlightVariable(changed.getVariable().getRepresentation());
+        }
+    }
+
+    private void updateVariablesWithDebugResults(DebugProgramDTO debugDTO) {
+        System.out.println("=== DEBUG: updateVariablesWithDebugResults ===");
+
+        // First, let's verify the debug DTO is actually set up correctly
+        System.out.println("DebugDTO input values: " + debugDTO.getOrderedInputValues());
+
+        Set<core.logic.variable.Variable> programVariables = debugDTO.getOrderedVariables();
+        List<Long> variableValues = debugDTO.getOrderedValues();
+
+        System.out.println("Program variables count: " + (programVariables != null ? programVariables.size() : "null"));
+        System.out.println("Variable values count: " + (variableValues != null ? variableValues.size() : "null"));
+
+        // Print ALL values to see what we're getting
+        if (variableValues != null) {
+            System.out.println("ALL variable values: " + variableValues);
+        }
+
+        if (programVariables == null || variableValues == null) {
+            System.err.println("ERROR: programVariables or variableValues is null!");
+            return;
+        }
+
+        List<core.logic.variable.Variable> orderedVars = new ArrayList<>(programVariables);
+
+        // Clear and rebuild
+        variables.clear();
+
+        for (int i = 0; i < Math.min(orderedVars.size(), variableValues.size()); i++) {
+            core.logic.variable.Variable engineVar = orderedVars.get(i);
+            Long value = variableValues.get(i);
+
+            System.out.println("Creating UI Variable[" + i + "]: " +
+                    engineVar.getRepresentation() + " = " + value +
+                    " (Type: " + engineVar.getType() + ")");
+
+            Variable uiVar = new Variable(
+                    engineVar.getRepresentation(),
+                    value.intValue(),
+                    engineVar.getType().name()
+            );
+
+            variables.add(uiVar);
+        }
+
+        System.out.println("Variables list now has " + variables.size() + " items");
+        System.out.println("=== END updateVariablesWithDebugResults ===");
+    }
+
+    private Optional<List<Long>> getInputValues(RunProgramDTO runDTO) {
+        Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
+
+        InputDialog inputDialog = new InputDialog(requiredInputs);
+        inputDialog.initOwner(startRegularButton.getScene().getWindow());
+        inputDialog.initModality(Modality.WINDOW_MODAL);
+
+        return inputDialog.showAndWait();
     }
 
     private Optional<List<Long>> getDebugInputValues(DebugProgramDTO debugDTO) {
@@ -275,237 +461,14 @@ public class ProgramExecutionController {
         return inputDialog.showAndWait();
     }
 
-
-    public void handleStop() {
-        if (!isDebugging) {
-            return;
-        }
-
-        // Reset debug state
-        isDebugging = false;
-        currentDebugSession = null;
-        currentDebugIndex = -1;
-
-        // Update UI
+    private void handleExecutionFailure(Throwable exception) {
+        showErrorDialog.accept("Execution Error", "Execution failed: " + exception.getMessage());
         executionResult.setRunning(false);
-        executionResult.setStatus("Stopped");
-
-        // Clear any instruction highlights
-        clearInstructionHighlights();
-
-        updateSummary.accept("Debug session stopped");
+        executionResult.setStatus("Failed");
+        updateSummary.accept("Execution failed: " + exception.getMessage());
     }
 
-    public void handleResume() {
-        if (!isDebugging || currentDebugSession == null) {
-            showErrorDialog.accept("Not Debugging", "No active debug session to resume.");
-            return;
-        }
-
-        try {
-            // Run until end
-            DebugFinalResult result = currentDebugSession.runUntilEnd();
-
-            // Update UI
-            executionResult.setRunning(false);
-            executionResult.setCompleted(true);
-            executionResult.setStatus("Completed");
-            executionResult.setCycles(result.getCycles());
-
-            // Update variables with final values - use the new method
-            updateVariablesWithDebugResults(currentDebugSession);
-
-            // Add to execution history
-            executionResult.addToHistory("Result: " + result.getResult());
-            executionResult.addToHistory("Debug execution completed in " + result.getCycles() + " cycles");
-
-            // Reset debug state
-            isDebugging = false;
-
-            updateSummary.accept("Debug execution completed - Result: " + result.getResult() +
-                    ", Cycles: " + result.getCycles());
-
-        } catch (Exception e) {
-            handleExecutionFailure(e);
-        }
-    }
-
-
-    public void handleStepOver() {
-        if (!isDebugging || currentDebugSession == null) {
-            showErrorDialog.accept("Not Debugging", "No active debug session to step through.");
-            return;
-        }
-
-        try {
-            // Execute the next instruction
-            DebugResult result = currentDebugSession.nextStep();
-
-            // Store the result for potential step back
-            debugHistory.add(result);
-
-            // Update the current index
-            currentDebugIndex = result.getNextIndex();
-
-            // Update cycles in UI
-            executionResult.setCycles(result.getCycles());
-
-            // Highlight the next instruction
-            highlightInstruction(currentDebugIndex);
-
-            // If there's a changed variable, update it in the UI
-            ChangedVariable changed = result.getChangedVariable();
-            if (changed != null) {
-                updateChangedVariable(changed);
-                updateSummary.accept("Stepped to instruction " + currentDebugIndex +
-                        " - Variable " + changed.getVariable().getRepresentation() +
-                        " changed from " + changed.getOldValue() + " to " + changed.getNewValue());
-            } else {
-                updateSummary.accept("Stepped to instruction " + currentDebugIndex);
-            }
-
-            // Check if we've reached the end
-            if (currentDebugIndex == -1) {
-                executionResult.setCompleted(true);
-                executionResult.setRunning(false);
-                executionResult.setStatus("Completed");
-                updateSummary.accept("Debug execution completed");
-                isDebugging = false;
-            }
-
-        } catch (Exception e) {
-            showErrorDialog.accept("Debug Error", "Error during step execution: " + e.getMessage());
-            updateSummary.accept("Step execution failed: " + e.getMessage());
-        }
-    }
-
-    public void handleStepBack() {
-        if (!isDebugging || debugHistory.isEmpty()) {
-            showErrorDialog.accept("Cannot Step Back", "No previous steps to return to.");
-            return;
-        }
-
-        try {
-            // Remove the last step from history
-            debugHistory.remove(debugHistory.size() - 1);
-
-            // We need to restart the debug session and replay up to the previous point
-            if (!debugHistory.isEmpty()) {
-                // Get the last result to determine where we should be
-                DebugResult lastResult = debugHistory.get(debugHistory.size() - 1);
-
-                // Restart debug session
-                ExecuteProgramDTO executeDTO = engine.executeProgram();
-                currentDebugSession = executeDTO.getDebugProgramDTO();
-
-                // Use the same inputs as before
-                currentDebugSession.setInput(lastExecutionInputs);
-
-                // Replay all steps up to the last one
-                for (int i = 0; i < debugHistory.size(); i++) {
-                    currentDebugSession.nextStep();
-                }
-
-                // Update current index
-                currentDebugIndex = lastResult.getNextIndex();
-
-                // Update the variables display to reflect the current state
-                updateVariablesWithDebugResults(currentDebugSession);
-
-                // Highlight the current instruction
-                highlightInstruction(currentDebugIndex);
-
-                // If there was a changed variable in the last step, update the UI to show it
-                ChangedVariable changed = lastResult.getChangedVariable();
-                if (changed != null) {
-                    updateSummary.accept("Stepped back to instruction " + currentDebugIndex +
-                            " - Variable " + changed.getVariable().getRepresentation() +
-                            " reverted from " + changed.getNewValue() + " to " + changed.getOldValue());
-                } else {
-                    updateSummary.accept("Stepped back to instruction " + currentDebugIndex);
-                }
-
-            } else {
-                // If no more history, restart from beginning
-                handleStartDebug();
-            }
-
-        } catch (Exception e) {
-            showErrorDialog.accept("Step Back Error", "Failed to step back: " + e.getMessage());
-            updateSummary.accept("Failed to step back: " + e.getMessage());
-        }
-    }
-
-
-    // Helper methods
-    private void highlightInstruction(int index) {
-        // Clear any existing highlights
-        clearInstructionHighlights();
-
-        // Highlight the current instruction if valid
-        if (index >= 0 && index < instructions.size()) {
-            Instruction current = instructions.get(index);
-            // Mark the instruction as highlighted (similar to TableController approach)
-            current.setHighlighted(true); // Assuming this method exists in Instruction
-
-            // Update the UI to reflect this change
-            executionResult.addToHistory("Highlighting instruction: " + current.getNumber());
-        }
-    }
-
-    private void clearInstructionHighlights() {
-        for (Instruction instruction : instructions) {
-            // Clear highlight state on all instructions
-            instruction.setHighlighted(false); // Assuming this method exists
-        }
-    }
-
-    private void updateChangedVariable(ChangedVariable changed) {
-        String variableName = changed.getVariable().getRepresentation();
-
-        for (Variable var : variables) {
-            // First, clear any previous highlighting
-            var.setHighlighted(false);
-
-            if (var.getName().equals(variableName)) {
-                var.setValue((int) changed.getNewValue());
-                // Mark this variable as highlighted
-                var.setHighlighted(true); // Assuming this method exists
-
-                // Add to execution history for visibility
-                executionResult.addToHistory("Variable " + variableName +
-                        " changed: " + changed.getOldValue() + " → " + changed.getNewValue());
-                break;
-            }
-        }
-    }
-
-    // Add a new method specifically for DebugProgramDTO
-    private void updateVariablesWithDebugResults(DebugProgramDTO debugDTO) {
-        variables.clear();
-
-        Set<core.logic.variable.Variable> programVariables = debugDTO.getOrderedVariables();
-        List<Long> variableValues = debugDTO.getOrderedValues();
-
-        if (programVariables != null && variableValues != null) {
-            List<core.logic.variable.Variable> orderedVars = new ArrayList<>(programVariables);
-
-            for (int i = 0; i < Math.min(orderedVars.size(), variableValues.size()); i++) {
-                core.logic.variable.Variable engineVar = orderedVars.get(i);
-                Long value = variableValues.get(i);
-
-                variables.add(new Variable(
-                        engineVar.getRepresentation(),
-                        value.intValue(),
-                        engineVar.getType().name()
-                ));
-            }
-        }
-
-        executionResult.addToHistory("Variables updated with debug results");
-    }
-
-
+    // ==================== PROGRAM CONTROLS ====================
 
     public void handleRerun() {
         if (!currentProgram.isLoaded()) {
@@ -514,63 +477,132 @@ public class ProgramExecutionController {
         }
 
         try {
-            // Get program statistics to determine available run numbers
             ProgramStatisticsDTO statsDTO = engine.presentProgramStats();
             List<SingleRunStatisticDTO> programStats = statsDTO.getProgramStatisticCopy();
 
             if (programStats.isEmpty()) {
-                showErrorDialog.accept("No Previous Runs", "No previous executions found. Please run the program first.");
+                showErrorDialog.accept("No Previous Runs", "No previous executions found.");
                 return;
             }
 
-            // Show run selection dialog
             Optional<Integer> selectedRunNumber = showRunSelectionDialog(programStats);
-
             if (selectedRunNumber.isEmpty()) {
                 updateSummary.accept("Rerun cancelled by user");
                 return;
             }
 
             int runNumber = selectedRunNumber.get();
-
-            // Use reExecuteProgram to get the ReExecuteProgramDTO
             ReExecuteProgramDTO reExecuteDTO = engine.reExecuteProgram(runNumber);
 
-            // Get the DTOs using the getters
             PresentProgramDTO presentDTO = reExecuteDTO.getPresentProgramDTO();
             ExecuteProgramDTO executeDTO = reExecuteDTO.getExecuteProgramDTO();
 
-            // Update the UI with the program presentation
             instructions.clear();
             instructions.addAll(ModelConverter.convertInstructions(presentDTO));
 
             variables.clear();
             variables.addAll(ModelConverter.convertVariables(presentDTO));
 
-            // Get the RunProgramDTO which already has the inputs pre-configured from reExecuteProgram
             RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
-
-            // The reExecuteProgram method already configured the correct inputs,
-            // but we want to give the user a chance to modify them.
-            // Since we can't easily extract the pre-configured inputs, we'll execute as-is.
-
-            // Execute the program with the pre-configured inputs
             core.logic.execution.ResultCycle result = runDTO.runProgram();
 
-            // Update UI after execution
             updateUIAfterExecution(runDTO, result);
-
-            updateSummary.accept("Rerun of execution #" + runNumber + " completed successfully - " +
+            updateSummary.accept("Rerun of execution #" + runNumber + " completed - " +
                     "Result: " + result.getResult() + ", Cycles: " + result.getCycles());
 
-        } catch (NoProgramException e) {
-            showErrorDialog.accept("No Program", "Please load a program first.");
-        } catch (ProgramNotExecutedYetException e) {
-            showErrorDialog.accept("No Previous Executions", "No previous executions found. Please run the program first.");
         } catch (Exception e) {
-            showErrorDialog.accept("Rerun Error", "Failed to rerun program: " + e.getMessage());
-            updateSummary.accept("Rerun failed: " + e.getMessage());
+            showErrorDialog.accept("Rerun Error", "Failed to rerun: " + e.getMessage());
         }
+    }
+
+    public void handleExpand() {
+        if (!currentProgram.isLoaded()) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        try {
+            int maxDegree = currentProgram.getMaxDegree();
+            if (currentDisplayDegree >= maxDegree) {
+                updateSummary.accept("Already at maximum expansion degree (" + maxDegree + ")");
+                return;
+            }
+
+            int newDegree = currentDisplayDegree + 1;
+            PresentProgramDTO expandedProgram = engine.expandOrShrinkProgram(newDegree);
+
+            instructions.clear();
+            instructions.addAll(ModelConverter.convertInstructions(expandedProgram));
+
+            variables.clear();
+            variables.addAll(ModelConverter.convertVariables(expandedProgram));
+
+            currentDisplayDegree = newDegree;
+            currentProgram.setCurrentDegree(newDegree);
+
+            updateSummary.accept("Expanded to degree " + newDegree);
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Expansion Error", "Failed to expand: " + e.getMessage());
+        }
+    }
+
+    public void handleCollapse() {
+        if (!currentProgram.isLoaded()) {
+            showErrorDialog.accept("No Program", "Please load a program first.");
+            return;
+        }
+
+        try {
+            if (currentDisplayDegree <= 0) {
+                updateSummary.accept("Already at minimum degree (0)");
+                return;
+            }
+
+            int newDegree = currentDisplayDegree - 1;
+            PresentProgramDTO collapsedProgram = engine.expandOrShrinkProgram(newDegree);
+
+            instructions.clear();
+            instructions.addAll(ModelConverter.convertInstructions(collapsedProgram));
+
+            variables.clear();
+            variables.addAll(ModelConverter.convertVariables(collapsedProgram));
+
+            currentDisplayDegree = newDegree;
+            currentProgram.setCurrentDegree(newDegree);
+
+            updateSummary.accept("Collapsed to degree " + newDegree);
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Collapse Error", "Failed to collapse: " + e.getMessage());
+        }
+    }
+
+    public void handleShowStats() {
+        try {
+            ProgramStatisticsDTO statsDTO = engine.presentProgramStats();
+            List<SingleRunStatisticDTO> programStats = statsDTO.getProgramStatisticCopy();
+
+            statistics.clear();
+
+            for (SingleRunStatisticDTO runStat : programStats) {
+                statistics.add(new Statistic(
+                        "Run #" + runStat.getRunNumber() + " (Degree: " + runStat.getRunDegree() + ")",
+                        (int) runStat.getCycles(),
+                        0,
+                        "Result: " + runStat.getResult()
+                ));
+            }
+
+            updateSummary.accept("Statistics displayed - " + programStats.size() + " runs shown");
+
+        } catch (Exception e) {
+            showErrorDialog.accept("Statistics Error", "Failed to load statistics: " + e.getMessage());
+        }
+    }
+
+    public void resetDisplayDegree() {
+        this.currentDisplayDegree = 0;
     }
 
     private Optional<Integer> showRunSelectionDialog(List<SingleRunStatisticDTO> programStats) {
@@ -585,193 +617,13 @@ public class ProgramExecutionController {
         ChoiceDialog<String> dialog = new ChoiceDialog<>(runOptions.get(0), runOptions);
         dialog.setTitle("Select Run to Re-execute");
         dialog.setHeaderText("Choose which run to re-execute:");
-        dialog.setContentText("Available runs:");
-
-        // Set the owner and modality like other dialogs
         dialog.initOwner(startRegularButton.getScene().getWindow());
         dialog.initModality(Modality.WINDOW_MODAL);
 
         Optional<String> result = dialog.showAndWait();
-
         return result.map(selectedOption -> {
             int runIndex = runOptions.indexOf(selectedOption);
             return programStats.get(runIndex).getRunNumber();
         });
-    }
-
-    private Optional<List<Long>> showInputDialogWithDefaults(RunProgramDTO runDTO, List<Long> prefilledValues) {
-        Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
-
-        InputDialog inputDialog = new InputDialog(requiredInputs, prefilledValues);
-        inputDialog.initOwner(startRegularButton.getScene().getWindow());
-        inputDialog.initModality(Modality.WINDOW_MODAL);
-
-        return inputDialog.showAndWait();
-    }
-
-    public void handleExpand() {
-        if (!currentProgram.isLoaded()) {
-            showErrorDialog.accept("No Program", "Please load a program first.");
-            return;
-        }
-
-        try {
-            int maxDegree = currentProgram.getMaxDegree();
-
-            if (maxDegree == 0) {
-                showErrorDialog.accept("Cannot Expand", "The currently selected program cannot be expanded.");
-                return;
-            }
-
-            if (currentDisplayDegree >= maxDegree) {
-                updateSummary.accept("Already at maximum expansion degree (" + maxDegree + ") for " + currentProgram.getName());
-                return;
-            }
-
-            int newDegree = currentDisplayDegree + 1;
-
-            // Wrap the expansion in a try-catch to handle label lookup issues
-            PresentProgramDTO expandedProgram;
-            try {
-                expandedProgram = engine.expandOrShrinkProgram(newDegree);
-            } catch (java.util.NoSuchElementException e) {
-                if (e.getMessage() != null && e.getMessage().contains("label")) {
-                    showErrorDialog.accept("Expansion Error",
-                            "Cannot expand program due to label reference issue: " + e.getMessage());
-                    updateSummary.accept("Expansion failed: Label reference error");
-                    return;
-                }
-                throw e; // Re-throw if it's not a label issue
-            }
-
-            instructions.clear();
-            instructions.addAll(ModelConverter.convertInstructions(expandedProgram));
-
-            // Update variables too in case they changed
-            variables.clear();
-            variables.addAll(ModelConverter.convertVariables(expandedProgram));
-
-            currentDisplayDegree = newDegree;
-            currentProgram.setCurrentDegree(newDegree);
-
-            updateSummary.accept("Expanded '" + currentProgram.getName() + "' to degree " + newDegree);
-
-        } catch (Exception e) {
-            showErrorDialog.accept("Expansion Error", "Failed to expand program: " + e.getMessage());
-            updateSummary.accept("Expansion failed: " + e.getMessage());
-        }
-    }
-
-    public void handleCollapse() {
-        if (!currentProgram.isLoaded()) {
-            showErrorDialog.accept("No Program", "Please load a program first.");
-            return;
-        }
-
-        try {
-            if (currentDisplayDegree <= 0) {
-                updateSummary.accept("Already at minimum degree (0) for " + currentProgram.getName());
-                return;
-            }
-
-            int newDegree = currentDisplayDegree - 1;
-
-            // Wrap the collapse in a try-catch to handle label lookup issues
-            PresentProgramDTO collapsedProgram;
-            try {
-                collapsedProgram = engine.expandOrShrinkProgram(newDegree);
-            } catch (java.util.NoSuchElementException e) {
-                if (e.getMessage() != null && e.getMessage().contains("label")) {
-                    showErrorDialog.accept("Collapse Error",
-                            "Cannot collapse program due to label reference issue: " + e.getMessage());
-                    updateSummary.accept("Collapse failed: Label reference error");
-                    return;
-                }
-                throw e; // Re-throw if it's not a label issue
-            }
-
-            instructions.clear();
-            instructions.addAll(ModelConverter.convertInstructions(collapsedProgram));
-
-            // Update variables too in case they changed
-            variables.clear();
-            variables.addAll(ModelConverter.convertVariables(collapsedProgram));
-
-            currentDisplayDegree = newDegree;
-            currentProgram.setCurrentDegree(newDegree);
-
-            if (newDegree == 0) {
-                updateSummary.accept("Showing original '" + currentProgram.getName() + "' (degree 0)");
-            } else {
-                updateSummary.accept("Collapsed '" + currentProgram.getName() + "' to degree " + newDegree);
-            }
-
-        } catch (Exception e) {
-            showErrorDialog.accept("Collapse Error", "Failed to collapse program: " + e.getMessage());
-            updateSummary.accept("Collapse failed: " + e.getMessage());
-        }
-    }
-
-    // Add method to reset display degree when switching programs
-    public void resetDisplayDegree() {
-        this.currentDisplayDegree = 0;
-    }
-
-    public void handleHighlight() {
-        updateSummary.accept("Instructions highlighted");
-    }
-
-    public void handleShowStats() {
-        try {
-            ProgramStatisticsDTO statsDTO = engine.presentProgramStats();
-
-            List<SingleRunStatisticDTO> programStats = statsDTO.getProgramStatisticCopy();
-
-            statistics.clear();
-
-            for (SingleRunStatisticDTO runStat : programStats) {
-                Statistic uiStatistic = new Statistic(
-                        "Run #" + runStat.getRunNumber() + " (Degree: " + runStat.getRunDegree() + ")",
-                        (int) runStat.getCycles(),
-                        0,
-                        formatExecutionDetails(runStat)
-                );
-
-                statistics.add(uiStatistic);
-            }
-
-            addSummaryStatistics(statistics, programStats);
-
-            updateSummary.accept("Statistics displayed - " + programStats.size() + " program runs shown.");
-
-        } catch (NoProgramException e) {
-            showErrorDialog.accept("No Program", "Please load a program first.");
-        } catch (ProgramNotExecutedYetException e) {
-            showErrorDialog.accept("No Statistics", "Please run the program first to see statistics.");
-        } catch (Exception e) {
-            showErrorDialog.accept("Statistics Error", "Failed to load statistics: " + e.getMessage());
-        }
-    }
-
-    private void addSummaryStatistics(ObservableList<Statistic> statisticsList, List<SingleRunStatisticDTO> programStats) {
-        if (programStats.isEmpty()) return;
-
-        long totalCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).sum();
-        double avgCycles = (double) totalCycles / programStats.size();
-        //long maxCycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).max().orElse(0);
-        long cycles = programStats.stream().mapToLong(SingleRunStatisticDTO::getCycles).min().orElse(0);
-
-        statisticsList.add(new Statistic("=== SUMMARY ===", 0, 0, ""));
-        statisticsList.add(new Statistic("Total Runs", programStats.size(), 0, ""));
-        statisticsList.add(new Statistic("Total Cycles", (int) totalCycles, 0, ""));
-        statisticsList.add(new Statistic("Average Cycles", (int) Math.round(avgCycles), 0, String.format("%.1f per run", avgCycles)));
-        statisticsList.add(new Statistic("last run number of Cycles", (int) cycles, 0, "Best performance"));
-    }
-
-    private String formatExecutionDetails(SingleRunStatisticDTO runStat) {
-        StringBuilder details = new StringBuilder();
-        details.append("Result: ").append(runStat.getResult());
-        details.append(", ").append(runStat.getRepresentation());
-        return details.toString();
     }
 }

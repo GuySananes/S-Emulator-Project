@@ -68,6 +68,7 @@ public class Instruction {
 
     public void setHighlighted(boolean highlighted) {
         this.highlighted = highlighted;
+
     }
 
     public boolean isHighlighted() {

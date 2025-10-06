@@ -88,16 +88,15 @@ public class EmulatorController {
     }
 
     private void initializeSubControllers() {
-        // Pass shared dependencies to sub-controllers
         fileLoadingController = new FileLoadingController(
                 currentProgram, instructions, variables,
                 loadFileButton, loadedFilePath, loadProgress, loadStatusLabel,
-                programSelector,  // Add this parameter
+                programSelector,
                 this::updateSummary, this::showErrorDialog
         );
 
         executionController = new ProgramExecutionController(
-                currentProgram, executionResult, instructions, variables, statistics, // Add statistics here
+                currentProgram, executionResult, instructions, variables, statistics,
                 startRegularButton, startDebugButton, stopButton, resumeButton,
                 stepOverButton, stepBackButton, rerunButton,
                 this::updateSummary, this::showErrorDialog
@@ -105,8 +104,11 @@ public class EmulatorController {
 
         tableController = new TableController(
                 instructionsTable, variablesTable, statisticsTable,
-                historicalChainTable,instructions, variables, statistics
+                historicalChainTable, instructions, variables, statistics
         );
+
+        // IMPORTANT: Wire up the controllers
+        executionController.setTableController(tableController);
 
         bindingController = new UIBindingController(
                 currentProgram, executionResult,
