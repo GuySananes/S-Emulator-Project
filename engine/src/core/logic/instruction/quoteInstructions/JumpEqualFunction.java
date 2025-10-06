@@ -97,4 +97,9 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
     protected String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = " + functionArgument.getRepresentation() + " GOTO " + getTargetLabel().getRepresentation();
     }
+
+    @Override
+    public int getDegree() {
+        return functionArgument.getDegree() + 3;
+    }
 }

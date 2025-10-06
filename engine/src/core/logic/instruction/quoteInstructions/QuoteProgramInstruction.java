@@ -199,9 +199,8 @@ public class QuoteProgramInstruction extends AbstractInstruction implements Expa
 
     @Override
     public int getDegree() {
-        return functionArgument.getDegree();
+        return functionArgument.getDegree() + 2;
     }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
