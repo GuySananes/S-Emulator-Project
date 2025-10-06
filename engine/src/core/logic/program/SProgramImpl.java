@@ -65,6 +65,7 @@ public class SProgramImpl implements SProgram{
             variables.addAll(instruction.getVariables());
         }
 
+        variables.add(Variable.RESULT);
         return variables;
     }
 

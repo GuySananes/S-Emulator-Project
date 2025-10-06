@@ -14,8 +14,7 @@ import expansion.Expandable;
 import expansion.ExpansionContext;
 import expansion.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class JumpEqualFunction extends AbstractInstructionTwoLabels implements Expandable, Quotable {
 
@@ -33,6 +32,18 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
     @Override
     public FunctionArgument getFunctionArgument() {
         return functionArgument;
+    }
+
+    @Override
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = super.getVariables();
+        variables.addAll(functionArgument.getVariablesInArgumentList());
+        return variables;
+    }
+
+    @Override
+    public void setVariablesInFunctionArgument(Map<Variable, Variable> xyzToz, ExpansionContext context) {
+        functionArgument.setArgumentsThatAreVariable(xyzToz, context);
     }
 
     @Override
@@ -66,7 +77,20 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
 
     @Override
     public SInstruction clone() {
-        return new JumpEqualFunction(getVariable(), getLabel(), getTargetLabel(), functionArgument);
+        return new JumpEqualFunction(getVariable(), getLabel(), getTargetLabel(), functionArgument.clone());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        JumpEqualFunction that = (JumpEqualFunction) o;
+        return Objects.equals(functionArgument, that.functionArgument);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), functionArgument);
     }
 
     @Override

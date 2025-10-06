@@ -11,7 +11,7 @@ import java.util.Set;
 public abstract class AbstractExecuteProgramDTO {
 
     protected final SProgram program;
-    protected List<Long> input;
+    protected List<Long> input = new ArrayList<>();
 
     public AbstractExecuteProgramDTO(SProgram program) {
         this.program = program;

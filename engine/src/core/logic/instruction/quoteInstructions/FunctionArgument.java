@@ -6,6 +6,7 @@ import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ResultCycle;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
+import expansion.ExpansionContext;
 
 import java.util.*;
 
@@ -17,6 +18,33 @@ public class FunctionArgument implements Argument {
         this.program = program;
         this.arguments = arguments;
     }
+
+    public FunctionArgument(FunctionArgument other) {
+        this.program = other.program;
+        this.arguments = new ArrayList<>();
+        this.arguments.addAll(other.arguments);
+    }
+
+    public void setArgumentsThatAreVariable(Map<Variable, Variable> xyzToz, ExpansionContext context) {
+        for (int i = 0; i < arguments.size(); i++) {
+            Argument arg = arguments.get(i);
+            if(arg instanceof Variable var) {
+                Variable z;
+                if(!xyzToz.containsKey(var)){
+                    z = context.generateZ();
+                    xyzToz.put(var, z);
+                } else {
+                    z = xyzToz.get(var);
+                }
+                arguments.set(i, (Argument)z);
+            }
+            else if(arg instanceof FunctionArgument fa) {
+                fa.setArgumentsThatAreVariable(xyzToz, context);
+            }
+        }
+    }
+
+
 
     public SProgram getProgram() {
         return program;
@@ -83,5 +111,10 @@ public class FunctionArgument implements Argument {
     @Override
     public int hashCode() {
         return Objects.hash(program, arguments);
+    }
+
+    @Override
+    public FunctionArgument clone() {
+        return new FunctionArgument(this);
     }
 }
