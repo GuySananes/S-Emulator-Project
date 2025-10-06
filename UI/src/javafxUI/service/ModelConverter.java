@@ -46,8 +46,8 @@ public class ModelConverter {
             String display = formatDTOInstruction(instructionDTO);
             String type = deriveTypeFromRepresentation(instructionDTO.getRepresentation());
 
-            // FIXED: Get actual cycles from the DTO instead of hardcoding 1
-            int cycles = getInstructionCycles(instructionDTO);
+            // Get cycle representation as a string
+            String cycles = getInstructionCyclesRepresentation(instructionDTO);
 
             instructions.add(new Instruction(line, type, cycles, display));
         }
@@ -55,38 +55,18 @@ public class ModelConverter {
         return instructions;
     }
 
-    // this helper method extracts cycles from the DTO
-    private static int getInstructionCycles(PresentInstructionDTO instructionDTO) {
-        // Try to get cycles from InstructionData if available
+    // Helper method to get cycle representation as string
+    private static String getInstructionCyclesRepresentation(PresentInstructionDTO instructionDTO) {
+        // Try to get cycle representation from InstructionData if available
         if (instructionDTO.getInstructionData() != null) {
-            try {
-                String cycleString = instructionDTO.getInstructionData().getCycleRepresentation();
-                if (cycleString != null && !cycleString.trim().isEmpty()) {
-                    return Integer.parseInt(cycleString.trim());
-                }
-            } catch (NumberFormatException e) {
-                // If parsing fails, fall through to fallback logic
+            String cycleRep = instructionDTO.getInstructionData().getCycleRepresentation();
+            if (cycleRep != null && !cycleRep.trim().isEmpty()) {
+                return cycleRep;
             }
         }
 
-
-                // Fallback: try to derive cycles from instruction type if InstructionData is null
-        String representation = instructionDTO.getRepresentation();
-        if (representation != null) {
-            String lower = representation.toLowerCase();
-
-            // Different instruction types have different cycle costs
-            if (lower.contains("jump") || lower.contains("goto")) {
-                return 1; // Branch instructions typically cost 1 cycle
-            } else if (lower.contains("increase") || lower.contains("decrease")) {
-                return 1; // Simple arithmetic operations
-            } else if (lower.contains("assignment")) {
-                return 1; // Assignment operations
-            }
-        }
-
-        // Default fallback
-        return 1;
+        // Fallback: return "1" for basic instructions
+        return "1";
     }
 
     public static List<Variable> convertVariables(PresentProgramDTO dto) {
@@ -130,7 +110,7 @@ public class ModelConverter {
         return representation
                 .replaceFirst("^#\\d+\\s*\\([A-Za-z]\\)\\s*", "")
                 .replaceFirst("^\\[\\s*[^]]*\\]\\s*", "")
-                .replaceFirst("\\(\\d+\\)\\s*$", "")
+                .replaceFirst("\\([^)]*\\)\\s*$", "")  // Changed to match any content in parentheses at the end
                 .trim();
     }
 

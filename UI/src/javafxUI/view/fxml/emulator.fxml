@@ -106,14 +106,11 @@
                                     <Label text="Debugger \ Execution Commands:" />
                                     <Button fx:id="startRegularButton" styleClass="start-regular-btn" text="Start Regular Execution" />
                                     <Button fx:id="startDebugButton" styleClass="start-debug-btn" text="Start Debug Execution" />
-                                    <Button fx:id="stopButton" styleClass="stop-btn" text="Stop" />
+                                      <Button fx:id="stepOverButton" styleClass="step-over-btn" text="Step over" />
                                     <Button fx:id="resumeButton" styleClass="resume-btn" text="Resume" />
-                                    <HBox prefHeight="0.0" prefWidth="307.0" spacing="5">
-                                        <children>
-                                            <Button fx:id="stepOverButton" styleClass="step-over-btn" text="Step over" HBox.hgrow="ALWAYS" />
-                                            <Button fx:id="stepBackButton" styleClass="step-back-btn" text="Step backward" HBox.hgrow="ALWAYS" />
-                                        </children>
-                                    </HBox>
+                                      <Button fx:id="stepBackButton" styleClass="step-back-btn" text="Step backward" />
+                                    <Button fx:id="stopButton" styleClass="stop-btn" text="Stop" />
+                                    <HBox prefHeight="0.0" prefWidth="307.0" spacing="5" />
                                 </children>
                             </VBox>
                             <HBox prefHeight="250" spacing="10">

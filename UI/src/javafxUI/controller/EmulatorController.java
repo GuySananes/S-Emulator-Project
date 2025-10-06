@@ -563,7 +563,7 @@ public class EmulatorController {
         }
 
         String type = deriveTypeFromDTO(dto);
-        int cycles = extractCyclesFromDTO(dto);
+        String cycles = extractCyclesRepresentationFromDTO(dto);  // Changed to return String
 
         return new Instruction(
                 dto.getIndex(),
@@ -571,6 +571,17 @@ public class EmulatorController {
                 cycles,
                 cleanDescription
         );
+    }
+
+    // New method to extract cycle representation as string
+    private String extractCyclesRepresentationFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
+        if (dto.getInstructionData() != null) {
+            String cycleRep = dto.getInstructionData().getCycleRepresentation();
+            if (cycleRep != null && !cycleRep.isEmpty()) {
+                return cycleRep;
+            }
+        }
+        return "1";  // Default fallback
     }
 
     /**
@@ -647,6 +658,7 @@ public class EmulatorController {
     }
 
 
+
     /**
      * Derives instruction type from DTO
      */
@@ -671,23 +683,4 @@ public class EmulatorController {
         return "S";
     }
 
-    private int extractCyclesFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
-        if (dto.getInstructionData() != null) {
-            String cycleRep = dto.getInstructionData().getCycleRepresentation();
-            if (cycleRep != null) {
-                try {
-                    if (cycleRep.matches("\\d+")) {
-                        return Integer.parseInt(cycleRep);
-                    }
-                    if (cycleRep.contains("execution")) {
-                        return 5;
-                    }
-                } catch (NumberFormatException e) {
-                    // Fall through to default
-                }
-            }
-        }
-
-        return 1;
-    }
 }

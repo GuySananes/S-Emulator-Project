@@ -102,10 +102,17 @@ public class ProgramExecutionController {
 
     // ==================== REGULAR EXECUTION ====================
 
+
     public void handleStartRegular() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
             return;
+        }
+
+        // Stop debug session if it's running
+        if (isDebugging) {
+            handleStop();
+            updateSummary.accept("Debug session stopped - starting regular execution");
         }
 
         try {

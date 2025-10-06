@@ -10,7 +10,7 @@ import javafx.collections.ObservableList;
 public class Instruction {
     private final IntegerProperty number = new SimpleIntegerProperty();
     private final StringProperty type = new SimpleStringProperty();
-    private final IntegerProperty cycles = new SimpleIntegerProperty();
+    private final StringProperty cycles = new SimpleStringProperty();  // Changed to StringProperty
     private final StringProperty description = new SimpleStringProperty();
     // New field for historical chain
     private final ObservableList<Instruction> historicalChain = FXCollections.observableArrayList();
@@ -21,7 +21,7 @@ public class Instruction {
     // Constructors
     public Instruction() {}
 
-    public Instruction(int number, String type, int cycles, String description) {
+    public Instruction(int number, String type, String cycles, String description) {  // Changed parameter type
         this.number.set(number);
         this.type.set(type);
         this.cycles.set(cycles);
@@ -31,7 +31,7 @@ public class Instruction {
     // Property getters for TableView binding
     public IntegerProperty numberProperty() { return number; }
     public StringProperty typeProperty() { return type; }
-    public IntegerProperty cyclesProperty() { return cycles; }
+    public StringProperty cyclesProperty() { return cycles; }  // Changed return type
     public StringProperty descriptionProperty() { return description; }
 
     // Value getters/setters
@@ -41,8 +41,8 @@ public class Instruction {
     public String getType() { return type.get(); }
     public void setType(String type) { this.type.set(type); }
 
-    public int getCycles() { return cycles.get(); }
-    public void setCycles(int cycles) { this.cycles.set(cycles); }
+    public String getCycles() { return cycles.get(); }  // Changed return type
+    public void setCycles(String cycles) { this.cycles.set(cycles); }  // Changed parameter type
 
     public String getDescription() { return description.get(); }
     public void setDescription(String description) { this.description.set(description); }

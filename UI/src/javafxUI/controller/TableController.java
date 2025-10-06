@@ -75,12 +75,12 @@ public class TableController {
         typeCol.setMaxWidth(80);
         typeCol.setMinWidth(50);
 
-        TableColumn<Instruction, Number> cyclesCol = new TableColumn<>("Cycles");
+        TableColumn<Instruction, String> cyclesCol = new TableColumn<>("Cycles");  // Changed to String
         cyclesCol.setCellValueFactory(cellData -> cellData.getValue().cyclesProperty());
         cyclesCol.setSortable(false);
-        cyclesCol.setPrefWidth(80);
-        cyclesCol.setMaxWidth(100);
-        cyclesCol.setMinWidth(60);
+        cyclesCol.setPrefWidth(120);  // Made wider to accommodate "execution + 5"
+        cyclesCol.setMaxWidth(150);
+        cyclesCol.setMinWidth(80);
 
         TableColumn<Instruction, String> descCol = new TableColumn<>("Instruction");
         descCol.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
@@ -110,16 +110,10 @@ public class TableController {
                         boolean isCurrent = (currentDebugInstruction != null &&
                                 currentDebugInstruction == instruction);
 
-                        System.out.println("Row update - Instruction: " + instruction.getNumber() +
-                                ", isCurrent: " + isCurrent +
-                                ", currentDebugInstruction: " +
-                                (currentDebugInstruction != null ? currentDebugInstruction.getNumber() : "null"));
-
                         if (isCurrent) {
                             getStyleClass().removeAll("highlighted-row");
                             if (!getStyleClass().contains("current-instruction-row")) {
                                 getStyleClass().add("current-instruction-row");
-                                System.out.println("  -> Added current-instruction-row class to instruction " + instruction.getNumber());
                             }
                         } else {
                             getStyleClass().removeAll("current-instruction-row");
@@ -225,12 +219,12 @@ public class TableController {
         typeCol.setMaxWidth(80);
         typeCol.setMinWidth(50);
 
-        TableColumn<Instruction, Number> cyclesCol = new TableColumn<>("Cycles");
+        TableColumn<Instruction, String> cyclesCol = new TableColumn<>("Cycles");  // Changed to String
         cyclesCol.setCellValueFactory(cellData -> cellData.getValue().cyclesProperty());
         cyclesCol.setSortable(false);
-        cyclesCol.setPrefWidth(80);
-        cyclesCol.setMaxWidth(100);
-        cyclesCol.setMinWidth(60);
+        cyclesCol.setPrefWidth(120);  // Made wider
+        cyclesCol.setMaxWidth(150);
+        cyclesCol.setMinWidth(80);
 
         TableColumn<Instruction, String> descCol = new TableColumn<>("Instruction");
         descCol.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
