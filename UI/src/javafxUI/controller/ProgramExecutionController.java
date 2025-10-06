@@ -187,6 +187,7 @@ public class ProgramExecutionController {
     // ==================== DEBUG EXECUTION ====================
 
 
+
     public void handleStartDebug() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
@@ -204,15 +205,7 @@ public class ProgramExecutionController {
             }
 
             lastExecutionInputs = new ArrayList<>(inputValues.get());
-
-            // DEBUG: Log what we got from the dialog
-            System.out.println("=== INPUT FROM DIALOG: " + inputValues.get() + " ===");
-
-            // IMPORTANT: Set input BEFORE calling updateVariablesWithDebugResults
             currentDebugSession.setInput(inputValues.get());
-
-            // DEBUG: Verify input was set correctly
-            System.out.println("=== INPUT AFTER setInput(): " + currentDebugSession.getOrderedInputValues() + " ===");
 
             isDebugging = true;
             currentDebugIndex = 0;
@@ -222,15 +215,11 @@ public class ProgramExecutionController {
             executionResult.setStatus("Debugging");
             executionResult.setCompleted(false);
 
-            // NOW update variables - after setInput has been called
-            System.out.println("=== Calling updateVariablesWithDebugResults at start ===");
             updateVariablesWithDebugResults(currentDebugSession);
-
             highlightInstruction(currentDebugIndex);
             updateSummary.accept("Debug session started at instruction 0");
 
         } catch (Exception e) {
-            e.printStackTrace();  // Add stack trace
             showErrorDialog.accept("Debug Error", "Failed to start debug: " + e.getMessage());
             updateSummary.accept("Failed to start debug session");
         }
@@ -254,25 +243,12 @@ public class ProgramExecutionController {
         }
 
         try {
+            // Clear highlighting before resuming
+            if (tableController != null) {
+                tableController.clearHighlighting();
+            }
+
             DebugFinalResult result = currentDebugSession.runUntilEnd();
-
-            currentDebugIndex = -1;
-            clearInstructionHighlights();
-
-            executionResult.setRunning(false);
-            executionResult.setCompleted(true);
-            executionResult.setStatus("Completed");
-            executionResult.setCycles(result.getCycles());
-
-            updateVariablesWithDebugResults(currentDebugSession);
-
-            executionResult.addToHistory("Result: " + result.getResult());
-            executionResult.addToHistory("Debug execution completed in " + result.getCycles() + " cycles");
-
-            updateSummary.accept("Program completed with result: " + result.getResult() +
-                    " (Total cycles: " + result.getCycles() + ")");
-
-            isDebugging = false;
 
         } catch (Exception e) {
             showErrorDialog.accept("Resume Error", "Failed to resume: " + e.getMessage());
@@ -317,16 +293,19 @@ public class ProgramExecutionController {
 
             highlightInstruction(currentDebugIndex);
 
-            // Still highlight the changed variable if there is one
+            // REMOVED: Don't use the manual variable highlight during debug
+            // The red instruction highlight is enough to show what's executing
+            // If you want to show which variable changed, display it in the summary instead
             if (result.getChangedVariable() != null) {
                 ChangedVariable changed = result.getChangedVariable();
-                if (tableController != null) {
-                    tableController.highlightVariable(changed.getVariable().getRepresentation());
-                }
+                updateSummary.accept("Stepped to instruction " + currentDebugIndex +
+                        " (Cycles: " + result.getCycles() +
+                        ") - Changed: " + changed.getVariable().getRepresentation() +
+                        " = " + changed.getNewValue());
+            } else {
+                updateSummary.accept("Stepped to instruction " + currentDebugIndex +
+                        " (Cycles: " + result.getCycles() + ")");
             }
-
-            updateSummary.accept("Stepped to instruction " + currentDebugIndex +
-                    " (Cycles: " + result.getCycles() + ")");
 
         } catch (Exception e) {
             showErrorDialog.accept("Step Error", "Failed to step: " + e.getMessage());
@@ -517,7 +496,36 @@ public class ProgramExecutionController {
             variables.clear();
             variables.addAll(ModelConverter.convertVariables(presentDTO));
 
+            // Get the original inputs from the selected run
+            SingleRunStatisticDTO selectedRun = programStats.stream()
+                    .filter(stat -> stat.getRunNumber() == runNumber)
+                    .findFirst()
+                    .orElse(null);
+
+            if (selectedRun == null) {
+                showErrorDialog.accept("Rerun Error", "Could not find selected run statistics.");
+                return;
+            }
+
+            List<Long> originalInputs = selectedRun.getInput();
+
+            // Show input dialog with pre-filled values from the selected run
             RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
+            Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
+
+            // Create dialog with pre-filled values
+            InputDialog inputDialog = new InputDialog(requiredInputs, originalInputs);
+            inputDialog.initOwner(startRegularButton.getScene().getWindow());
+            inputDialog.initModality(Modality.WINDOW_MODAL);
+
+            Optional<List<Long>> inputValues = inputDialog.showAndWait();
+            if (inputValues.isEmpty()) {
+                updateSummary.accept("Rerun cancelled by user");
+                return;
+            }
+
+            // Execute with the (possibly modified) input values
+            runDTO.setInput(inputValues.get());
             core.logic.execution.ResultCycle result = runDTO.runProgram();
 
             updateUIAfterExecution(runDTO, result);
