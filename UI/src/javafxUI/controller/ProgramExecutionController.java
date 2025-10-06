@@ -186,6 +186,7 @@ public class ProgramExecutionController {
 
     // ==================== DEBUG EXECUTION ====================
 
+
     public void handleStartDebug() {
         if (!currentProgram.isLoaded()) {
             showErrorDialog.accept("No Program", "Please load a program first.");
@@ -204,8 +205,14 @@ public class ProgramExecutionController {
 
             lastExecutionInputs = new ArrayList<>(inputValues.get());
 
+            // DEBUG: Log what we got from the dialog
+            System.out.println("=== INPUT FROM DIALOG: " + inputValues.get() + " ===");
+
             // IMPORTANT: Set input BEFORE calling updateVariablesWithDebugResults
             currentDebugSession.setInput(inputValues.get());
+
+            // DEBUG: Verify input was set correctly
+            System.out.println("=== INPUT AFTER setInput(): " + currentDebugSession.getOrderedInputValues() + " ===");
 
             isDebugging = true;
             currentDebugIndex = 0;

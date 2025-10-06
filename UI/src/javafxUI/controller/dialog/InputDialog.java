@@ -138,14 +138,19 @@ public class InputDialog extends Dialog<List<Long>> {
         List<Long> values = new ArrayList<>();
         for (InputRow row : inputRows) {
             String value = row.getValue().trim();
+            System.out.println("InputDialog: Collecting value from row: '" + value + "'");
             if (!value.isEmpty()) {
                 try {
-                    values.add(Long.parseLong(value));
+                    long parsedValue = Long.parseLong(value);
+                    values.add(parsedValue);
+                    System.out.println("InputDialog: Added value: " + parsedValue);
                 } catch (NumberFormatException e) {
                     // Skip invalid values (should be caught by validation)
+                    System.err.println("InputDialog: Failed to parse value: " + value);
                 }
             }
         }
+        System.out.println("InputDialog: Final collected values: " + values);
         return values;
     }
 

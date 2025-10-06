@@ -51,7 +51,20 @@ public class ExecutionContext {
         List<Long> result = new ArrayList<>(orderedVariables.size());
         for (Variable var : orderedVariables) {
             Long value = variablesToValues.get(var);
-            result.add(value);
+
+            // Debug logging
+            if (value == null) {
+                System.err.println("WARNING: Variable " + var.getRepresentation() +
+                        " not found in context! Type=" + var.getType() + ", Number=" + var.getNumber());
+                System.err.println("Available variables in context:");
+                for (Variable key : variablesToValues.keySet()) {
+                    System.err.println("  - " + key.getRepresentation() +
+                            " (Type=" + key.getType() + ", Number=" + key.getNumber() +
+                            ", Value=" + variablesToValues.get(key) + ")");
+                }
+            }
+
+            result.add(value != null ? value : 0L);
         }
 
         return result;
