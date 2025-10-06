@@ -85,29 +85,41 @@ public class FileLoadingController {
     }
 
     private void loadProgramFromFile(File file) {
-        setLoadingState(true);
-
+        // Create the loading task
         Task<LoadProgramDTO> loadingTask = fileLoadingService.createLoadingTask(file);
 
-        if (loadProgress != null) {
-            loadProgress.progressProperty().bind(loadingTask.progressProperty());
-        }
-        if (loadStatusLabel != null) {
-            loadStatusLabel.textProperty().bind(loadingTask.messageProperty());
-        }
+        // Bind progress indicator to the task
+        loadProgress.progressProperty().bind(loadingTask.progressProperty());
+        loadProgress.setVisible(true);
 
+        // Bind status label to task message
+        loadStatusLabel.textProperty().bind(loadingTask.messageProperty());
+        loadStatusLabel.setVisible(true);
+
+        // Set loading state
+        setLoadingState(true);
+
+        // Handle task completion
         loadingTask.setOnSucceeded(event -> {
             LoadProgramDTO loadDto = loadingTask.getValue();
+            unbindProgress();
+            loadStatusLabel.setVisible(false);
             handleLoadingSuccess(file, loadDto);
+            setLoadingState(false);
         });
 
+        // Handle task failure
         loadingTask.setOnFailed(event -> {
+            unbindProgress();
+            loadStatusLabel.setVisible(false);
             handleLoadingFailure(loadingTask.getException());
+            setLoadingState(false);
         });
 
-        Thread loadThread = new Thread(loadingTask);
-        loadThread.setDaemon(true);
-        loadThread.start();
+        // Run the task in a background thread
+        Thread loadingThread = new Thread(loadingTask);
+        loadingThread.setDaemon(true);
+        loadingThread.start();
     }
 
     // Add this new method
@@ -150,10 +162,11 @@ public class FileLoadingController {
     }
 
     private void unbindProgress() {
-        if (loadProgress != null) loadProgress.progressProperty().unbind();
-        if (loadStatusLabel != null) loadStatusLabel.textProperty().unbind();
+        loadProgress.progressProperty().unbind();
+        loadProgress.setProgress(0);
+        loadProgress.setVisible(false);
+        loadStatusLabel.textProperty().unbind();
     }
-
 
     private void updateUIWithLoadedDto(File file, PresentProgramDTO dto) {
         Program uiProgram = ModelConverter.convertProgram(dto);
