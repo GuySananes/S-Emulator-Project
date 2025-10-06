@@ -1,8 +1,11 @@
 package statistic;
 
+import java.util.List;
+
 public class SingleRunStatisticDTO {
     private final int runNumber;
     private final int runDegree;
+    private final List<Long> input;
     private final long result;
     private final long cycles;
     private final String representation;
@@ -10,6 +13,7 @@ public class SingleRunStatisticDTO {
     public SingleRunStatisticDTO(SingleRunStatistic singleRunStatistic) {
         this.runNumber = singleRunStatistic.getRunNumber();
         this.runDegree = singleRunStatistic.getRunDegree();
+        this.input = singleRunStatistic.getInput();
         this.result = singleRunStatistic.getResult();
         this.cycles = singleRunStatistic.getCycles();
         this.representation = singleRunStatistic.getRepresentation();
@@ -21,6 +25,10 @@ public class SingleRunStatisticDTO {
 
     public int getRunDegree() {
         return runDegree;
+    }
+
+    public List<Long> getInput() {
+        return input;
     }
 
     public long getResult() {

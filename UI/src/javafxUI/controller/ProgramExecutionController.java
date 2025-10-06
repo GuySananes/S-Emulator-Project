@@ -592,22 +592,77 @@ public class ProgramExecutionController {
 
             statistics.clear();
 
+            // Add individual run statistics FIRST
             for (SingleRunStatisticDTO runStat : programStats) {
+                String inputStr = runStat.getInput().toString();
+
                 statistics.add(new Statistic(
-                        "Run #" + runStat.getRunNumber() + " (Degree: " + runStat.getRunDegree() + ")",
+                        "Run #" + runStat.getRunNumber() + " (Degree " + runStat.getRunDegree() + ")",
                         (int) runStat.getCycles(),
-                        0,
-                        "Result: " + runStat.getResult()
+                        runStat.getRunNumber(),
+                        "Input: " + inputStr,
+                        runStat.getResult()  // The result value (y)
                 ));
             }
 
-            updateSummary.accept("Statistics displayed - " + programStats.size() + " runs shown");
+            // Calculate statistics
+            int totalRuns = programStats.size();
+            long totalCycles = 0;
+            for (SingleRunStatisticDTO runStat : programStats) {
+                totalCycles += runStat.getCycles();
+            }
+
+            // Count Basic vs Synthetic instructions
+            int basicCount = 0;
+            int syntheticCount = 0;
+            for (Instruction inst : instructions) {
+                if ("B".equals(inst.getType())) {
+                    basicCount++;
+                } else if ("S".equals(inst.getType())) {
+                    syntheticCount++;
+                }
+            }
+
+            // Add SUMMARY SECTION with separator rows
+            statistics.add(new Statistic(
+                    "═══ SUMMARY ═══",
+                    0,
+                    0,
+                    "",
+                    0
+            ));
+
+            statistics.add(new Statistic(
+                    "Total Cycles",
+                    (int) totalCycles,
+                    0,
+                    "Across " + totalRuns + " run(s)",
+                    0
+            ));
+
+            statistics.add(new Statistic(
+                    "Basic Commands",
+                    basicCount,
+                    0,
+                    "Type: B",
+                    0
+            ));
+
+            statistics.add(new Statistic(
+                    "Synthetic Commands",
+                    syntheticCount,
+                    0,
+                    "Type: S",
+                    0
+            ));
+
+            updateSummary.accept(String.format("Statistics: %d runs | Total: %d cycles | Instructions: %d B, %d S",
+                    totalRuns, totalCycles, basicCount, syntheticCount));
 
         } catch (Exception e) {
             showErrorDialog.accept("Statistics Error", "Failed to load statistics: " + e.getMessage());
         }
     }
-
     public void resetDisplayDegree() {
         this.currentDisplayDegree = 0;
     }

@@ -183,16 +183,29 @@ public class TableController {
         execTypeCol.setSortable(false);
         execTypeCol.setPrefWidth(200);
         execTypeCol.setMinWidth(150);
-        execTypeCol.setMaxWidth(250);
+        execTypeCol.setMaxWidth(300);
 
         TableColumn<Statistic, Number> cyclesStatsCol = new TableColumn<>("Total Cycles");
         cyclesStatsCol.setCellValueFactory(cellData -> cellData.getValue().totalCyclesProperty());
         cyclesStatsCol.setSortable(false);
-        cyclesStatsCol.setPrefWidth(150);
+        cyclesStatsCol.setPrefWidth(120);
         cyclesStatsCol.setMinWidth(100);
-        cyclesStatsCol.setMaxWidth(200);
+        cyclesStatsCol.setMaxWidth(150);
 
-        statisticsTable.getColumns().setAll(execTypeCol, cyclesStatsCol);
+        TableColumn<Statistic, Number> resultCol = new TableColumn<>("Result (y)");
+        resultCol.setCellValueFactory(cellData -> cellData.getValue().resultValueProperty());
+        resultCol.setSortable(false);
+        resultCol.setPrefWidth(100);
+        resultCol.setMinWidth(80);
+        resultCol.setMaxWidth(120);
+
+        TableColumn<Statistic, String> detailsCol = new TableColumn<>("Details");
+        detailsCol.setCellValueFactory(cellData -> cellData.getValue().additionalInfoProperty());
+        detailsCol.setSortable(false);
+        detailsCol.setPrefWidth(300);
+        detailsCol.setMinWidth(200);
+
+        statisticsTable.getColumns().setAll(execTypeCol, cyclesStatsCol, resultCol, detailsCol);
         statisticsTable.setItems(statistics);
         statisticsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
