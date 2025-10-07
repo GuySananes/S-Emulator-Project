@@ -1,4 +1,452 @@
-package consoleUI;
+
+
+
+//מיין בדיקה של התוכנית minus בהרצה בדיבאג
+// לראות אם הדיבאג עובד גם בהגעה לגוטו אקזיט. עובד
+/*package consoleUI;
+
+import core.logic.execution.*;
+import core.logic.program.*;
+import core.logic.variable.*;
+import core.logic.label.*;
+import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstructions.*; // אם אין לך GotoInstruction כאן, הסר
+import expansion.Expansion;
+
+import java.util.*;
+
+public class Main {
+
+    // בונה את התוכנית מהתמונה
+    private static SProgram buildProgram() {
+        Variable x1 = new VariableImpl(VariableType.INPUT, 1);
+        Variable x2 = new VariableImpl(VariableType.INPUT, 2);
+        Variable y  = Variable.RESULT;
+        Variable z1 = new VariableImpl(VariableType.WORK, 1);
+
+        Label L1 = new LabelImpl(1);
+        Label L2 = new LabelImpl(2);
+        Label L3 = new LabelImpl(3);
+
+        List<SInstruction> ins = new ArrayList<>();
+
+        // [ ] y <- x1
+        ins.add(new AssignmentInstruction(y, x1));
+        // [ ] z1 <- x2
+        ins.add(new AssignmentInstruction(z1, x2));
+
+        // [L3] IF z1 != 0 GOTO L1
+        ins.add(new JumpNotZeroInstruction(z1, L3, L1));
+
+        // [ ] GOTO EXIT
+        ins.add(new GotoLabel(FixedLabel.EXIT));
+
+        // [L1] IF y != 0 GOTO L2
+        ins.add(new JumpNotZeroInstruction(y, L1, L2));
+
+        // [ ] GOTO EXIT
+        ins.add(new GotoLabel(FixedLabel.EXIT));
+
+        // [L2] y <- y - 1
+        ins.add(new DecreaseInstruction(y, L2));
+        // [ ] z1 <- z1 - 1
+        ins.add(new DecreaseInstruction(z1));
+        // [ ] GOTO L3
+        ins.add(new GotoLabel(L3));
+
+        return new SProgramImpl("GotoExitTest", null, ins);
+    }
+
+    private static boolean runDebugAndAssert(SProgram prog, List<Long> input, long expectedY) {
+        Debug dbg = new Debug(prog);
+        dbg.setInput(input);
+
+        int steps = 0;
+        int lastNextIndex = Integer.MIN_VALUE;
+        int lastCycles = -1;
+
+        while (true) {
+            DebugResult r = dbg.nextStep();
+            steps++;
+
+            // ודא שמספר ה-cycles לא יורד (מונוטוני לא-יורד)
+            if (r.getCycles() < lastCycles) {
+                System.out.println("FAILED: cycles decreased (" + lastCycles + " -> " + r.getCycles() + ")");
+                return false;
+            }
+            lastCycles = r.getCycles();
+
+            // ודא שאין "סיום כפול": אם זה צעד סופי, אין עוד צעד אחרי זה
+            if (r instanceof DebugFinalResult fin) {
+                long got = fin.getResult();
+                boolean ok = (got == expectedY);
+                System.out.println(
+                        "Input=" + input + "  RESULT=" + got + "  cycles=" + fin.getCycles()
+                                + "  steps=" + steps + "  => " + (ok ? "PASSED" : "FAILED (expected " + expectedY + ")")
+                );
+                return ok;
+            }
+
+            // לא אמור להיות פעמיים nextIndex=-1 לפני סיום
+            if (r.getNextIndex() == -1 && lastNextIndex == -1) {
+                System.out.println("FAILED: saw nextIndex=-1 twice before finish");
+                return false;
+            }
+            lastNextIndex = r.getNextIndex();
+        }
+    }
+
+    public static void main(String[] args) {
+        SProgram P = buildProgram();
+
+        System.out.println("=== Program Representation ===");
+        System.out.println(P.getRepresentation());
+
+       // מקרי בדיקה:
+        // 1) x1=5, x2=3  => מצופה y=2 (לולאה תרד 3 פעמים)
+        boolean t1 = runDebugAndAssert(P, List.of(5L, 3L), 2L);
+
+        // 2) x1=0, x2=4  => ב-L1 התנאי נכשל ויבוצע GOTO EXIT => מצופה y=0
+        boolean t2 = runDebugAndAssert(P, List.of(0L, 4L), 0L);
+
+        // 3) x1=7, x2=0  => ב-L3 התנאי נכשל, יתבצע GOTO EXIT => מצופה y=7
+        boolean t3 = runDebugAndAssert(P, List.of(7L, 0L), 7L);
+
+        // סיכום
+        if (t1 && t2 && t3) {
+            System.out.println("\nALL TESTS PASSED");
+        } else {
+            System.out.println("\nSOME TESTS DIDN'T PASS");
+        }
+    }
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//מיין בדיקה של quotation אם עובדת או לא מבחינת דיבאג כשמגיעה
+// לגוטו אקזיט. אצל גיא לא עבד אבל בקונסול עובד
+/*package consoleUI;
+
+import core.logic.execution.*;
+import core.logic.program.*;
+import core.logic.variable.*;
+import core.logic.label.*;
+import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstructions.*;
+import expansion.Expansion;
+
+import java.util.*;
+
+public class Main {
+
+    // === Q: CONST-3 – מחזירה תמיד 3 ===
+    private static SProgram buildCONST3() {
+        Variable y = Variable.RESULT;
+        List<SInstruction> ins = new ArrayList<>();
+        ins.add(new ZeroVariableInstruction(y));     // y <- 0
+        ins.add(new IncreaseInstruction(y));
+        ins.add(new IncreaseInstruction(y));
+        ins.add(new IncreaseInstruction(y));          // y == 3
+        return new SProgramImpl("CONST-3", null, ins);
+    }
+
+    // === P: התוכנית שבתמונה ===
+    // 1) IF x1 = (CONST-3) GOTO EXIT
+    // 2) z1 <- (CONST-3)
+    // 3) y  <- x1
+    // 4) [L1] y <- y + 1
+    // 5) z1 <- z1 - 1
+    // 6) IF z1 != 0 GOTO L1
+    private static SProgram buildProgram(SProgram CONST3) {
+        Variable x1 = new VariableImpl(VariableType.INPUT, 1);
+        Variable y  = Variable.RESULT;
+        Variable z1 = new VariableImpl(VariableType.WORK, 1);
+        Label L1 = new LabelImpl(1);
+
+        // (CONST-3)
+        FunctionArgument const3 = new FunctionArgument(CONST3, List.of());
+
+        List<SInstruction> ins = new ArrayList<>();
+
+        // 1) IF x1 = (CONST-3) GOTO EXIT
+        ins.add(new JumpEqualFunction(x1, FixedLabel.EXIT, const3));
+
+        // 2) z1 <- (CONST-3)
+        ins.add(new QuoteProgramInstruction(z1, const3));
+
+        // 3) y <- x1
+        ins.add(new AssignmentInstruction(y, x1));
+
+        // 4) [L1] y <- y + 1
+        ins.add(new IncreaseInstruction(y, L1));
+
+        // 5) z1 <- z1 - 1
+        ins.add(new DecreaseInstruction(z1));
+
+        // 6) IF z1 != 0 GOTO L1
+        ins.add(new JumpNotZeroInstruction(z1, L1));
+
+        return new SProgramImpl("ImgTest", null, ins);
+    }
+
+    private static void runDebugOnce(SProgram prog, List<Long> input) {
+        System.out.println("=== Program ===");
+        System.out.println(prog.getRepresentation());
+
+        Debug dbg = new Debug(prog);
+        dbg.setInput(input);
+
+        while (true) {
+            DebugResult r = dbg.nextStep();
+
+            if (r instanceof DebugFinalResult fin) {
+                System.out.println("FINISHED. result=" + fin.getResult()
+                        + ", cycles=" + fin.getCycles());
+                break;
+            }
+
+            ChangedVariable cv = r.getChangedVariable();
+            if (cv != null) {
+                System.out.println("Step: " + cv.getVariable().getRepresentation()
+                        + " : " + cv.getOldValue() + " -> " + cv.getNewValue());
+            }
+            System.out.println("cycles=" + r.getCycles()
+                    + ", nextIndex=" + r.getNextIndex());
+            System.out.println("---");
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        SProgram CONST3 = buildCONST3();
+        SProgram P = buildProgram(CONST3);
+
+        // בדיקה 1: x1=5  → מצופה y=8
+*//*
+        runDebugOnce(P, List.of(5L));
+*//*
+
+        // בדיקה 2 (edge): x1=3 → יציאה מיידית, מצופה y=0
+        runDebugOnce(P, List.of(3L));
+
+        // אופציונלי: בדיקת עקביות מול הרחבה
+        SProgram P1 = Expansion.expand(P, 1);
+        SProgram P2 = Expansion.expand(P, 2);
+        System.out.println("RUN expanded deg1 (x1=5): " +
+                new ProgramExecutor(P1).run(List.of(5L)).getResult());
+        System.out.println("RUN expanded deg2 (x1=5): " +
+                new ProgramExecutor(P2).run(List.of(5L)).getResult());
+    }
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//טסט לתוכנית קומפוזישן. כשהיא מורחבת היא עובדת
+// ברמת הקונסול. אך לא אצל גיא ביו איי של ג'אווה אף איקס
+/*package consoleUI;
+
+import core.logic.program.*;
+import core.logic.variable.*;
+import core.logic.label.*;
+import core.logic.instruction.mostInstructions.*;
+import core.logic.instruction.quoteInstructions.*;
+import core.logic.execution.ProgramExecutor;
+import expansion.Expansion;
+
+import java.util.*;
+
+public class Main {
+
+    // ===== Program: CONST7 =====
+    // קלט: ללא. תוצאה: תמיד 7
+    private static SProgram buildCONST7() {
+        Variable y = Variable.RESULT;
+        List<SInstruction> ins = new ArrayList<>();
+        ins.add(new ZeroVariableInstruction(y));     // y <- 0
+        for (int i = 0; i < 7; i++) ins.add(new IncreaseInstruction(y)); // y++ ×7
+        return new SProgramImpl("CONST-7", null, ins);
+    }
+
+    // ===== Program: S (successor) =====
+    // קלט: x1. תוצאה: x1 + 1
+    private static SProgram buildS() {
+        Variable x1 = new VariableImpl(VariableType.INPUT, 1);
+        Variable y  = Variable.RESULT;
+        List<SInstruction> ins = new ArrayList<>();
+        ins.add(new AssignmentInstruction(y, x1)); // y <- x1
+        ins.add(new IncreaseInstruction(y));       // y++
+        return new SProgramImpl("S", null, ins);
+    }
+
+    // ===== Program: MINUS =====
+    // קלט: a=x1, b=x2. תוצאה: a - b (מניחים a ≥ b)
+    private static SProgram buildMINUS() {
+        Variable a  = new VariableImpl(VariableType.INPUT, 1); // x1
+        Variable b  = new VariableImpl(VariableType.INPUT, 2); // x2
+        Variable y  = Variable.RESULT;
+        Variable z1 = new VariableImpl(VariableType.WORK, 1);  // עותק של a
+        Variable z2 = new VariableImpl(VariableType.WORK, 2);  // מונה b
+
+        Label L = new LabelImpl(1);
+
+        List<SInstruction> ins = new ArrayList<>();
+        ins.add(new AssignmentInstruction(z1, a));         // z1 <- a
+        ins.add(new AssignmentInstruction(z2, b));         // z2 <- b
+        ins.add(new ZeroVariableInstruction(y));          // y <- 0 (לא חובה, רק לניקיון)
+        ins.add(new JumpZero(z2, L, FixedLabel.EXIT));     // if z2==0 goto EXIT
+        ins.add(new DecreaseInstruction(z1));              // z1--
+        ins.add(new DecreaseInstruction(z2));              // z2--
+        ins.add(new JumpNotZeroInstruction(z2, L));        // if z2!=0 goto L
+        ins.add(new AssignmentInstruction(y, z1));         // y <- z1
+        return new SProgramImpl("-", null, ins);
+    }
+
+    // ===== Program: P =====
+    // הוראה יחידה: y <- (-,(CONST-7),(S,x1))
+    private static SProgram buildP(SProgram CONST7, SProgram S, SProgram MINUS) {
+        Variable x1 = new VariableImpl(VariableType.INPUT, 1);
+        Variable y  = Variable.RESULT;
+
+        // ארגומנט ראשון: (CONST-7)
+        FunctionArgument argConst7 = new FunctionArgument(CONST7, List.of());
+
+        // ארגומנט שני: (S, x1)
+        FunctionArgument argSx1 = new FunctionArgument(S, List.of(x1));
+
+        // פונקציה חיצונית: (-, <const7>, <S(x1)>)
+        FunctionArgument minusCall = new FunctionArgument(MINUS, List.of(argConst7, argSx1));
+
+        List<SInstruction> pIns = new ArrayList<>();
+        pIns.add(new QuoteProgramInstruction(y, minusCall));
+
+        return new SProgramImpl("P_minus_const7_minus_Sx1", null, pIns);
+    }
+
+    public static void main(String[] args) {
+        SProgram CONST7 = buildCONST7();
+        SProgram S      = buildS();
+        SProgram MINUS  = buildMINUS();
+        SProgram P      = buildP(CONST7, S, MINUS);
+
+        // נריץ עם x1=3 → S(x1)=4 → 7-4=3
+        List<Long> input = List.of(3L);
+
+        System.out.println("=== Program P (original) ===");
+        System.out.println(P.getRepresentation());
+        ProgramExecutor execP = new ProgramExecutor(P);
+        System.out.println("RUN P  (x1=3) => " + execP.run(input).getResult());
+
+        SProgram P1 = Expansion.expand(P, 4);
+        System.out.println("=== Program P expanded to degree 4 ===");
+        System.out.println(P1.getRepresentation());
+        ProgramExecutor execP1 = new ProgramExecutor(P1);
+        System.out.println("RUN P4 (x1=3) => " + execP1.run(input).getResult());
+
+        SProgram P2 = Expansion.expand(P, 2);
+        System.out.println("=== Program P expanded to degree 2 ===");
+        System.out.println(P2.getRepresentation());
+        ProgramExecutor execP2 = new ProgramExecutor(P2);
+        System.out.println("RUN P2 (x1=3) => " + execP2.run(input).getResult());
+
+        // בדיקת קצה: x1=6 → S(x1)=7 → 7-7=0
+        List<Long> edge = List.of(6L);
+        System.out.println("\n=== Edge case x1=6 (expect 0) ===");
+        System.out.println("RUN P  => "  + new ProgramExecutor(P).run(edge).getResult());
+        System.out.println("RUN P1 => "  + new ProgramExecutor(P1).run(edge).getResult());
+        System.out.println("RUN P2 => "  + new ProgramExecutor(P2).run(edge).getResult());
+    }
+}
+
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//כאן למטה טסטים פחות חשובים, שאין צורך לבחון//////
+
+
+
+
+//בדיקת דיבאג- את המתודה נקסט סטפ ורזיום. עובד
+/*package consoleUI;
 
 import core.logic.execution.*;
 import core.logic.program.*;
@@ -8,58 +456,78 @@ import core.logic.instruction.mostInstructions.*;
 import core.logic.instruction.quoteInstructions.*;
 import java.util.*;
 
-
 public class Main {
     public static void main(String[] args) {
-        // יצירת משתנים
+        // ====== בניית תוכנית בסיסית ======
         Variable x1 = new VariableImpl(VariableType.INPUT, 1);
-        Variable y = Variable.RESULT;
+        Variable y  = Variable.RESULT;
 
-        // תוויות
         Label L1 = new LabelImpl(1);
 
-        // בניית ההוראות
         List<SInstruction> instructions = List.of(
-                new DecreaseInstruction(x1, L1),                         // x0--
-                new IncreaseInstruction(y),// y++
+                new DecreaseInstruction(x1, L1),    // x1--
+                new IncreaseInstruction(y),         // y++
                 new NoOpInstruction(y),
-                new JumpNotZeroInstruction(x1, L1) // if x0 == 0 -> EXIT else -> loop
+                new JumpNotZeroInstruction(x1, L1)  // אם x1 != 0 -> קפוץ ל-L1, אחרת סיים (EXIT)
         );
 
-        // יצירת תוכנית
         SProgram program = new SProgramImpl("DebugTest", null, instructions);
 
-        // דיבאג
-        Debug debug = new Debug(program);
-        debug.setInput(List.of(2L)); // נכניס 5 ל־x0
-
-        // הרצה שלב-שלב
+        // ====== טסט 0: ריצה צעד-אחר-צעד (כבר היה אצלך) ======
+        System.out.println("=== Test 0: step-by-step ===");
+        Debug debug0 = new Debug(program);
+        debug0.setInput(List.of(2L)); // x1 = 2
         while (true) {
-            DebugResult result = debug.nextStep();
+            DebugResult result = debug0.nextStep();
 
-            // הדפסת המשתנה שהשתנה
             if (result.getChangedVariable() != null) {
                 ChangedVariable cv = result.getChangedVariable();
-                System.out.println("Step: "
-                        + "Variable " + cv.getVariable().getRepresentation()
-                        + " changed from " + cv.getOldValue()
-                        + " to " + cv.getNewValue());
+                System.out.println("Step: Variable " + cv.getVariable().getRepresentation()
+                        + " changed from " + cv.getOldValue() + " to " + cv.getNewValue());
             }
 
-            // הדפסת מחזור
             System.out.println("Total Cycles so far: " + result.getCycles());
             System.out.println("Next instruction index: " + result.getNextIndex());
             System.out.println("---");
 
-            // אם הסתיים
             if (result instanceof DebugFinalResult finalResult) {
                 System.out.println("Program finished. Final result: " + finalResult.getResult());
                 System.out.println("Total Cycles: " + finalResult.getCycles());
                 break;
             }
         }
+
+        // ====== טסט A: resume() מהריצה ההתחלתית ======
+        System.out.println("\n=== Test A: resume() from start ===");
+        Debug debugA = new Debug(program);
+        debugA.setInput(List.of(2L)); // x1 = 2
+        DebugFinalResult finalA = debugA.resume();
+        long expectedA = 2L;
+        System.out.println("resume() -> result = " + finalA.getResult() + ", cycles = " + finalA.getCycles());
+        System.out.println("Test A " + (finalA.getResult() == expectedA ? "PASSED" : "FAILED (expected " + expectedA + ")"));
+
+        // ====== טסט B: כמה צעדים ידניים ואז resume() ======
+        System.out.println("\n=== Test B: few nextStep() then resume() ===");
+        Debug debugB = new Debug(program);
+        debugB.setInput(List.of(3L)); // x1 = 3
+
+        // שני צעדים ידניים (לא משנה איזו הוראה – אנחנו רק רוצים להתקדם קצת)
+        for (int i = 0; i < 2; i++) {
+            DebugResult r = debugB.nextStep();
+            if (r instanceof DebugFinalResult finEarly) {
+                System.out.println("Finished earlier than expected. result=" + finEarly.getResult());
+                break;
+            }
+        }
+
+        // המשך עד הסוף עם resume()
+        DebugFinalResult finalB = debugB.resume();
+        long expectedB = 3L; // בסוף y אמור להיות שווה לערך ההתחלתי של x1
+        System.out.println("after partial steps, resume() -> result = " + finalB.getResult() + ", cycles = " + finalB.getCycles());
+        System.out.println("Test B " + (finalB.getResult() == expectedB ? "PASSED" : "FAILED (expected " + expectedB + ")"));
     }
-}
+}*/
+
 
 
 

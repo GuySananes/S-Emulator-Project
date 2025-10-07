@@ -85,7 +85,17 @@ public class FunctionArgument implements Argument {
     }
 
     public int getDegree() {
-        return program.getDegree();
+        int maxDegree = 0;
+        for (Argument argument : arguments) {
+            if(argument instanceof FunctionArgument fa) {
+                int degree = fa.getDegree();
+                if(degree > maxDegree) {
+                    maxDegree = degree;
+                }
+            }
+        }
+
+        return Math.max(maxDegree, program.getDegree());
     }
 
     public Set<Variable> getVariablesInArgumentList() {

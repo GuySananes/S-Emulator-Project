@@ -42,6 +42,11 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
     }
 
     @Override
+    public int getDegree() {
+        return functionArgument.getDegree() + 3;
+    }
+
+    @Override
     public void setVariablesInFunctionArgument(Map<Variable, Variable> xyzToz, ExpansionContext context) {
         functionArgument.setArgumentsThatAreVariable(xyzToz, context);
     }
