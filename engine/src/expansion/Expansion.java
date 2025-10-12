@@ -13,11 +13,6 @@ import java.util.List;
 public class Expansion {
 
     public static SProgram expand(SProgram program, int degree) {
-        if (degree < program.getMinDegree() + 1 || degree > program.getDegree()) {
-            throw new IllegalArgumentException("Degree must be between 1 and "
-                    + program.getDegree() + " when expanding program");
-        }
-
         List<SInstruction> instructions = program.getInstructionList();
         ExpansionContext expansionContext = new ExpansionContext(program);
 
@@ -26,16 +21,15 @@ public class Expansion {
         }
 
         SProgram expandedProgram;
-        String programName = program.getName() + "_" + degree + "D";
+        String name = program.getName() + "_" + degree + "D";
 
         if(program instanceof SFunction sf) {
-            expandedProgram = new SFunction(programName, sf.getUserName(), program);
+            expandedProgram = new SFunction(name, sf.getUserName(), program, instructions);
         }
         else {
-            expandedProgram = new SProgramImpl(programName, program);
+            expandedProgram = new SProgramImpl(name, program, instructions);
         }
 
-        expandedProgram.addInstructions(instructions);
         return expandedProgram;
     }
 
@@ -46,7 +40,7 @@ public class Expansion {
                 expandedList.addAll(expandable.expand(context));
             }
             else {
-                expandedList.add(instruction);
+                expandedList.add(instruction.clone());
             }
         }
 

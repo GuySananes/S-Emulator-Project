@@ -1,14 +1,8 @@
 package javafxUI.controller;
 
-import core.logic.engine.Engine;
-import core.logic.engine.EngineImpl;
-import expand.ExpandDTO;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafxUI.model.ui.Instruction;
@@ -17,7 +11,7 @@ import javafxUI.model.ui.Variable;
 import javafxUI.service.FileLoadingService;
 import javafxUI.service.ModelConverter;
 import present.program.PresentProgramDTO;
-import run.RunProgramDTO;
+import load.LoadProgramDTO;
 
 import java.io.File;
 import java.util.List;
@@ -27,6 +21,7 @@ import java.util.function.Consumer;
 /**
  * Handles all file loading operations
  */
+
 public class FileLoadingController {
 
     private final Program currentProgram;
@@ -38,6 +33,9 @@ public class FileLoadingController {
     private final ProgressIndicator loadProgress;
     private final Label loadStatusLabel;
 
+    // Add this field
+    private final ComboBox<String> programSelector;
+
     private final Consumer<String> updateSummary;
     private final BiConsumer<String, String> showErrorDialog;
 
@@ -48,6 +46,7 @@ public class FileLoadingController {
                                  ObservableList<Variable> variables,
                                  Button loadFileButton, TextField loadedFilePath,
                                  ProgressIndicator loadProgress, Label loadStatusLabel,
+                                 ComboBox<String> programSelector,  // Add this parameter
                                  Consumer<String> updateSummary,
                                  BiConsumer<String, String> showErrorDialog) {
         this.currentProgram = currentProgram;
@@ -57,9 +56,11 @@ public class FileLoadingController {
         this.loadedFilePath = loadedFilePath;
         this.loadProgress = loadProgress;
         this.loadStatusLabel = loadStatusLabel;
+        this.programSelector = programSelector;  // Add this assignment
         this.updateSummary = updateSummary;
         this.showErrorDialog = showErrorDialog;
     }
+
 
     public void setupEventHandlers() {
         loadFileButton.setOnAction(e -> handleLoadFile());
@@ -84,30 +85,61 @@ public class FileLoadingController {
     }
 
     private void loadProgramFromFile(File file) {
+        // Create the loading task
+        Task<LoadProgramDTO> loadingTask = fileLoadingService.createLoadingTask(file);
+
+        // Bind progress indicator to the task
+        loadProgress.progressProperty().bind(loadingTask.progressProperty());
+        loadProgress.setVisible(true);
+
+        // Bind status label to task message
+        loadStatusLabel.textProperty().bind(loadingTask.messageProperty());
+        loadStatusLabel.setVisible(true);
+
+        // Set loading state
         setLoadingState(true);
-        updateSummary.accept("Loading file...");
 
-        if (loadStatusLabel != null) loadStatusLabel.setText("Starting...");
-        if (loadProgress != null) loadProgress.setProgress(-1);
+        // Handle task completion
+        loadingTask.setOnSucceeded(event -> {
+            LoadProgramDTO loadDto = loadingTask.getValue();
+            unbindProgress();
+            loadStatusLabel.setVisible(false);
+            handleLoadingSuccess(file, loadDto);
+            setLoadingState(false);
+        });
 
-        Task<PresentProgramDTO> loadingTask = fileLoadingService.createLoadingTask(file);
+        // Handle task failure
+        loadingTask.setOnFailed(event -> {
+            unbindProgress();
+            loadStatusLabel.setVisible(false);
+            handleLoadingFailure(loadingTask.getException());
+            setLoadingState(false);
+        });
 
-        if (loadProgress != null) loadProgress.progressProperty().bind(loadingTask.progressProperty());
-        if (loadStatusLabel != null) loadStatusLabel.textProperty().bind(loadingTask.messageProperty());
-
-        loadingTask.setOnSucceeded(event -> handleLoadingSuccess(file, loadingTask.getValue()));
-        loadingTask.setOnFailed(event -> handleLoadingFailure(loadingTask.getException()));
-
+        // Run the task in a background thread
         Thread loadingThread = new Thread(loadingTask);
         loadingThread.setDaemon(true);
         loadingThread.start();
     }
 
-    private void handleLoadingSuccess(File file, PresentProgramDTO dto) {
+    // Add this new method
+    private void handleLoadingSuccess(File file, LoadProgramDTO loadDto) {
         unbindProgress();
 
         try {
-            updateUIWithLoadedDto(file, dto);
+            updateUIWithLoadedDto(file, loadDto.getPresentProgramDTO());
+
+            // Populate program selector with context programs
+            if (programSelector != null && loadDto.getContextProgramsNames() != null) {
+                programSelector.getItems().clear();
+                programSelector.getItems().addAll(loadDto.getContextProgramsNames());
+
+                // Select the main program by default
+                if (!programSelector.getItems().isEmpty()) {
+                    programSelector.getSelectionModel().selectFirst();
+                }
+            }
+
             if (loadProgress != null) loadProgress.setProgress(1);
             if (loadStatusLabel != null) loadStatusLabel.setText("Loaded");
         } catch (Exception e) {
@@ -130,8 +162,10 @@ public class FileLoadingController {
     }
 
     private void unbindProgress() {
-        if (loadProgress != null) loadProgress.progressProperty().unbind();
-        if (loadStatusLabel != null) loadStatusLabel.textProperty().unbind();
+        loadProgress.progressProperty().unbind();
+        loadProgress.setProgress(0);
+        loadProgress.setVisible(false);
+        loadStatusLabel.textProperty().unbind();
     }
 
     private void updateUIWithLoadedDto(File file, PresentProgramDTO dto) {
@@ -142,37 +176,16 @@ public class FileLoadingController {
         currentProgram.setLoaded(true);
         currentProgram.setTotalCycles(uiProgram.getTotalCycles());
 
-        // Get degree information using DTOs only
-        try {
-            Engine engine = EngineImpl.getInstance();
-
-            // Primary strategy: Use RunProgramDTO for degrees
-            RunProgramDTO runDTO = engine.runProgram();
-            currentProgram.setMaxDegree(runDTO.getMaxDegree());
-            currentProgram.setMinDegree(runDTO.getMinDegree());
-            currentProgram.setCurrentDegree(0); // Always start at degree 0
-
-        } catch (Exception e) {
-            // Fallback: Use ExpandDTO for degrees
-            try {
-                Engine engine = EngineImpl.getInstance();
-                ExpandDTO expandDTO = engine.expandProgram();
-                currentProgram.setMaxDegree(expandDTO.getMaxDegree());
-                currentProgram.setMinDegree(expandDTO.getMinDegree());
-                currentProgram.setCurrentDegree(0);
-            } catch (Exception fallbackException) {
-                // Final fallback to defaults
-                currentProgram.setMaxDegree(0);
-                currentProgram.setMinDegree(0);
-                currentProgram.setCurrentDegree(0);
-                updateSummary.accept("Warning: Could not determine program expansion degrees");
-            }
-        }
+        // Get degree information from PresentProgramDTO
+        currentProgram.setMaxDegree(dto.getOriginMaxDegree());
+        currentProgram.setMinDegree(0); // Always starts at 0
+        currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
 
         updateUICollections(dto);
         updateSummary.accept("File loaded successfully: " + file.getName() +
                 " (Max degree: " + currentProgram.getMaxDegree() + ")");
     }
+
 
     private void updateUICollections(PresentProgramDTO dto) {
         instructions.clear();

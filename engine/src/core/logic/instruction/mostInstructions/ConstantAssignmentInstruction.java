@@ -1,7 +1,8 @@
 package core.logic.instruction.mostInstructions;
 
+import core.logic.execution.ChangedVariable;
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.instruction.InstructionData;
 import core.logic.label.FixedLabel;
 import core.logic.label.Label;
@@ -43,9 +44,15 @@ public class ConstantAssignmentInstruction extends AbstractInstruction implement
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
+        Variable toChange = getVariable();
+        long oldValue = context.getVariableValue(toChange);
+        long newValue = constantValue;
         context.updateVariable(getVariable(), constantValue);
-        return new LabelCycle(FixedLabel.EMPTY, Integer.parseInt(getInstructionData().getCycleRepresentation()));
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                getInstructionData().getCycles(),
+                newValue == oldValue ? null :
+                        new ChangedVariable(toChange, oldValue, newValue));
 
     }
 

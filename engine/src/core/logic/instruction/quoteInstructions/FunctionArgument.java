@@ -1,14 +1,14 @@
 package core.logic.instruction.quoteInstructions;
 
+import core.logic.variable.Variable;
 import core.logic.execution.ExecutionContext;
+import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ResultCycle;
-import core.logic.execution.ProgramExecutorImpl;
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
+import expansion.ExpansionContext;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class FunctionArgument implements Argument {
     private final SProgram program;
@@ -18,6 +18,33 @@ public class FunctionArgument implements Argument {
         this.program = program;
         this.arguments = arguments;
     }
+
+    public FunctionArgument(FunctionArgument other) {
+        this.program = other.program;
+        this.arguments = new ArrayList<>();
+        this.arguments.addAll(other.arguments);
+    }
+
+    public void setArgumentsThatAreVariable(Map<Variable, Variable> xyzToz, ExpansionContext context) {
+        for (int i = 0; i < arguments.size(); i++) {
+            Argument arg = arguments.get(i);
+            if(arg instanceof Variable var) {
+                Variable z;
+                if(!xyzToz.containsKey(var)){
+                    z = context.generateZ();
+                    xyzToz.put(var, z);
+                } else {
+                    z = xyzToz.get(var);
+                }
+                arguments.set(i, (Argument)z);
+            }
+            else if(arg instanceof FunctionArgument fa) {
+                fa.setArgumentsThatAreVariable(xyzToz, context);
+            }
+        }
+    }
+
+
 
     public SProgram getProgram() {
         return program;
@@ -42,7 +69,7 @@ public class FunctionArgument implements Argument {
 
     @Override
     public ResultCycle evaluate(ExecutionContext context) {
-        ProgramExecutorImpl executor = new ProgramExecutorImpl(program);
+        ProgramExecutor executor = new ProgramExecutor(program);
         ResultCycle result;
         int totalCycles = 0;
         List<Long> input = new ArrayList<>(arguments.size());
@@ -52,13 +79,36 @@ public class FunctionArgument implements Argument {
             totalCycles += result.getCycles();
         }
 
-        result = executor.run(input, 0);
+        result = executor.run(input);
         totalCycles += result.getCycles();
         return new ResultCycle(result.getResult(), totalCycles);
     }
 
     public int getDegree() {
-        return program.getDegree();
+        int maxDegree = 0;
+        for (Argument argument : arguments) {
+            if(argument instanceof FunctionArgument fa) {
+                int degree = fa.getDegree();
+                if(degree > maxDegree) {
+                    maxDegree = degree;
+                }
+            }
+        }
+
+        return Math.max(maxDegree, program.getDegree());
+    }
+
+    public Set<Variable> getVariablesInArgumentList() {
+        Set<Variable> variables = new HashSet<>();
+        for (Argument argument : arguments) {
+            if(argument instanceof FunctionArgument fa) {
+                variables.addAll(fa.getVariablesInArgumentList());
+            } else {//argument is Variable
+                variables.add((Variable) argument);
+            }
+        }
+
+        return variables;
     }
 
     @Override
@@ -71,5 +121,10 @@ public class FunctionArgument implements Argument {
     @Override
     public int hashCode() {
         return Objects.hash(program, arguments);
+    }
+
+    @Override
+    public FunctionArgument clone() {
+        return new FunctionArgument(this);
     }
 }

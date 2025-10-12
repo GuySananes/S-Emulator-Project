@@ -1,7 +1,7 @@
 package core.logic.instruction.quoteInstructions;
 
 import core.logic.execution.ExecutionContext;
-import core.logic.execution.LabelCycle;
+import core.logic.execution.LabelCycleChangedVariable;
 import core.logic.execution.ResultCycle;
 import core.logic.instruction.InstructionData;
 import core.logic.instruction.mostInstructions.AbstractInstructionTwoLabels;
@@ -14,8 +14,7 @@ import expansion.Expandable;
 import expansion.ExpansionContext;
 import expansion.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class JumpEqualFunction extends AbstractInstructionTwoLabels implements Expandable, Quotable {
 
@@ -36,15 +35,31 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
     }
 
     @Override
-    public LabelCycle execute(ExecutionContext context) {
+    public Set<Variable> getVariables() {
+        Set<Variable> variables = super.getVariables();
+        variables.addAll(functionArgument.getVariablesInArgumentList());
+        return variables;
+    }
+
+    @Override
+    public void setVariablesInFunctionArgument(Map<Variable, Variable> xyzToz, ExpansionContext context) {
+        functionArgument.setArgumentsThatAreVariable(xyzToz, context);
+    }
+
+    @Override
+    public LabelCycleChangedVariable execute(ExecutionContext context) {
         long variableValue = context.getVariableValue(getVariable());
         ResultCycle resultCycle = functionArgument.evaluate(context);
 
         if (variableValue == resultCycle.getResult()) {
-            return new LabelCycle(getTargetLabel(), resultCycle.getCycles());
+            return new LabelCycleChangedVariable(getTargetLabel(),
+                    resultCycle.getCycles() + getInstructionData().getCycles(),
+                    null);
         }
 
-        return new LabelCycle(FixedLabel.EMPTY, resultCycle.getCycles());
+        return new LabelCycleChangedVariable(FixedLabel.EMPTY,
+                resultCycle.getCycles(),
+                null);
     }
 
     @Override
@@ -62,11 +77,29 @@ public class JumpEqualFunction extends AbstractInstructionTwoLabels implements E
 
     @Override
     public SInstruction clone() {
-        return new JumpEqualFunction(getVariable(), getLabel(), getTargetLabel(), functionArgument);
+        return new JumpEqualFunction(getVariable(), getLabel(), getTargetLabel(), functionArgument.clone());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        JumpEqualFunction that = (JumpEqualFunction) o;
+        return Objects.equals(functionArgument, that.functionArgument);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), functionArgument);
     }
 
     @Override
     protected String getCommandRepresentation() {
         return "IF " + getVariable().getRepresentation() + " = " + functionArgument.getRepresentation() + " GOTO " + getTargetLabel().getRepresentation();
+    }
+
+    @Override
+    public int getDegree() {
+        return functionArgument.getDegree() + 3;
     }
 }

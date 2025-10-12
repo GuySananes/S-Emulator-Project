@@ -1,15 +1,13 @@
-
 package javafxUI.controller;
 
 import core.logic.engine.Engine;
-import core.logic.engine.EngineImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafxUI.model.ui.*;
 import javafx.scene.control.*;
 import javafxUI.model.ui.*;
 import javafxUI.service.ModelConverter;
+import javafxUI.service.ThemeManager;
 import present.program.PresentProgramDTO;
 
 import java.util.ArrayList;
@@ -50,6 +48,13 @@ public class EmulatorController {
     @FXML private Button showStatsButton;
     @FXML private Button rerunButton;
     @FXML private TableView<Instruction> historicalChainTable = new TableView<>();
+    @FXML private TextField highlightInputField;
+    @FXML private Button applyHighlightButton;
+
+    private Engine engine;
+
+    // Theme toggle button
+    @FXML private Button themeToggleButton;
 
     // Model objects (shared with sub-controllers)
     private final Program currentProgram = new Program();
@@ -64,24 +69,34 @@ public class EmulatorController {
     private TableController tableController;
     private UIBindingController bindingController;
 
+    // Theme manager
+    private ThemeManager themeManager;
+
     @FXML
     public void initialize() {
+        this.engine = Engine.getInstance();
+        initializeThemeManager();
         initializeSubControllers();
         setupTables();
         setupEventHandlers();
         setupDataBinding();
     }
 
+    private void initializeThemeManager() {
+        themeManager = ThemeManager.getInstance();
+        updateThemeButtonText();
+    }
+
     private void initializeSubControllers() {
-        // Pass shared dependencies to sub-controllers
         fileLoadingController = new FileLoadingController(
                 currentProgram, instructions, variables,
                 loadFileButton, loadedFilePath, loadProgress, loadStatusLabel,
+                programSelector,
                 this::updateSummary, this::showErrorDialog
         );
 
         executionController = new ProgramExecutionController(
-                currentProgram, executionResult, instructions, variables, statistics, // Add statistics here
+                currentProgram, executionResult, instructions, variables, statistics,
                 startRegularButton, startDebugButton, stopButton, resumeButton,
                 stepOverButton, stepBackButton, rerunButton,
                 this::updateSummary, this::showErrorDialog
@@ -89,8 +104,11 @@ public class EmulatorController {
 
         tableController = new TableController(
                 instructionsTable, variablesTable, statisticsTable,
-                historicalChainTable,instructions, variables, statistics
+                historicalChainTable, instructions, variables, statistics
         );
+
+        // IMPORTANT: Wire up the controllers
+        executionController.setTableController(tableController);
 
         bindingController = new UIBindingController(
                 currentProgram, executionResult,
@@ -102,11 +120,12 @@ public class EmulatorController {
     private void setupTables() {
         tableController.setupAllTables();
 
-        // Set up the instruction expansion callback
-        tableController.setInstructionExpansionCallback(this::expandInstruction);
+        // Set the callback for instruction expansion (historical chain display)
+        tableController.setInstructionExpansionCallback(this::showInstructionHistory);
     }
 
-        // Modify this method to expand instruction into the table instead of history chain
+
+    // Modify this method to expand instruction into the table instead of a history chain
     private void expandInstruction(Instruction instruction) {
         try {
             // Get expanded instructions for this specific instruction
@@ -130,12 +149,12 @@ public class EmulatorController {
     }
 
     // Add this new method to get expanded instructions for a specific instruction
+    // Add this new method to get expanded instructions for a specific instruction
     private List<Instruction> getExpandedInstructionsForInstruction(Instruction targetInstruction) throws Exception {
-        Engine engine = EngineImpl.getInstance();
-        expand.ExpandDTO expandDTO = engine.expandProgram();
+        Engine engine = Engine.getInstance(); // Changed from EngineImpl.getInstance()
 
-        // Expand the program to get the detailed view
-        PresentProgramDTO expandedProgram = expandDTO.expand(1); // Start with degree 1
+        // Use the engine's expandOrShrinkProgram method to get expanded view
+        PresentProgramDTO expandedProgram = engine.expandOrShrinkProgram(1); // Start with degree 1
 
         // Convert all expanded instructions
         List<Instruction> allExpandedInstructions = ModelConverter.convertInstructions(expandedProgram);
@@ -198,35 +217,15 @@ public class EmulatorController {
         );
     }
 
-    // Add this method to get the instruction chain
-    private String getInstructionChain(Instruction instruction) {
-        // This is where you'll implement the logic to get the instruction chain
-        // You might need to call your DTO services or expansion logic here
-
-        StringBuilder chain = new StringBuilder();
-        chain.append("Instruction Chain for #").append(instruction.getNumber()).append(":\n");
-        chain.append("Type: ").append(instruction.getType()).append("\n");
-        chain.append("Cycles: ").append(instruction.getCycles()).append("\n");
-        chain.append("Description: ").append(instruction.getDescription()).append("\n");
-        chain.append("---\n");
-
-        // TODO: Add actual expansion logic here
-        // You may need to use your ExpandDTO or other services to get the real chain
-        // For example:
-        // if (currentProgram.hasExpandableInstructions()) {
-        //     ExpandDTO expandDTO = // get expand DTO
-        //     String expandedChain = expandDTO.expandInstruction(instruction.getNumber());
-        //     chain.append(expandedChain);
-        // }
-
-        return chain.toString();
-    }
-
-
 
     private void setupEventHandlers() {
         fileLoadingController.setupEventHandlers();
         executionController.setupEventHandlers();
+
+        // Theme toggle button
+        if (themeToggleButton != null) {
+            themeToggleButton.setOnAction(e -> handleThemeToggle());
+        }
 
         // Program selector (stays here as it's simple)
         programSelector.setOnAction(e -> handleProgramSelection());
@@ -234,8 +233,83 @@ public class EmulatorController {
         // Program controls (delegate to execution controller)
         collapseButton.setOnAction(e -> executionController.handleCollapse());
         expandButton.setOnAction(e -> executionController.handleExpand());
-        highlightButton.setOnAction(e -> executionController.handleHighlight());
+
+        // Clear highlight button functionality
+        highlightButton.setOnAction(e -> handleClearHighlightClick());
+
+        // Add Apply button handler (this was missing!)
+        if (applyHighlightButton != null) {
+            applyHighlightButton.setOnAction(e -> handleApplyHighlightClick());
+        }
+
         showStatsButton.setOnAction(e -> executionController.handleShowStats());
+
+        // Add real-time highlighting as user types
+        if (highlightInputField != null) {
+            highlightInputField.textProperty().addListener((observable, oldValue, newValue) -> {
+                handleHighlightInputChange(newValue);
+            });
+        }
+    }
+
+    private void handleThemeToggle() {
+        themeManager.toggleTheme();
+        updateThemeButtonText();
+        updateSummary("Theme switched to " + (themeManager.isDarkMode() ? "Dark" : "Light") + " mode");
+    }
+
+    private void updateThemeButtonText() {
+        if (themeToggleButton != null) {
+            if (themeManager.isDarkMode()) {
+                themeToggleButton.setText("🌙 Dark Mode");
+            } else {
+                themeToggleButton.setText("☀️ Light Mode");
+            }
+        }
+    }
+
+    // Public method for Main.java to set the scene
+    public void setScene(javafx.scene.Scene scene) {
+        themeManager.setScene(scene);
+        // Apply initial theme
+        themeManager.setTheme(ThemeManager.Theme.DARK);
+    }
+
+    private void handleClearHighlightClick() {
+        // Clear the input field
+        if (highlightInputField != null) {
+            highlightInputField.clear();
+        }
+        // Clear the highlighting
+        tableController.clearHighlighting();
+        updateSummary("Highlighting cleared");
+    }
+
+    // New method to handle apply button click
+    private void handleApplyHighlightClick() {
+        if (highlightInputField != null) {
+            String inputText = highlightInputField.getText().trim();
+            if (inputText.isEmpty()) {
+                // Clear highlighting if input is empty
+                tableController.clearHighlighting();
+                updateSummary("Highlighting cleared - input field is empty");
+            } else {
+                // Highlight the variable/label
+                tableController.highlightVariable(inputText);
+                updateSummary("Highlighting instructions containing: " + inputText);
+            }
+        }
+    }
+
+    // Keep the real-time highlighting method
+    private void handleHighlightInputChange(String newValue) {
+        if (newValue == null || newValue.trim().isEmpty()) {
+            // Clear highlighting if input is empty
+            tableController.clearHighlighting();
+        } else {
+            // Highlight the variable/label in real-time
+            tableController.highlightVariable(newValue.trim());
+        }
     }
 
     private void setupDataBinding() {
@@ -244,10 +318,59 @@ public class EmulatorController {
 
     private void handleProgramSelection() {
         String selectedProgram = programSelector.getValue();
-        if (selectedProgram != null) {
-            currentProgram.setName(selectedProgram);
-            updateSummary("Switched to program: " + selectedProgram);
+        if (selectedProgram != null && currentProgram.isLoaded()) {
+            try {
+                // Call engine to switch context program
+                PresentProgramDTO newProgram = engine.chooseContextProgram(selectedProgram);
+
+                // Update the name FIRST (before updateUIWithSelectedProgram)
+                // so the binding can reflect the correct program name
+                currentProgram.setName(selectedProgram);
+
+                // Update UI with the new program
+                updateUIWithSelectedProgram(newProgram);
+
+                updateSummary("Switched to program: " + selectedProgram);
+            } catch (Exception e) {
+                showErrorDialog("Program Selection Error",
+                        "Failed to switch to program '" + selectedProgram + "': " + e.getMessage());
+                updateSummary("Error switching program: " + e.getMessage());
+            }
         }
+    }
+
+    private void updateUIWithSelectedProgram(PresentProgramDTO dto) {
+        // Clear existing data
+        instructions.clear();
+        variables.clear();
+        statistics.clear();
+
+        // Update with new program data
+        instructions.addAll(ModelConverter.convertInstructions(dto));
+        variables.addAll(ModelConverter.convertVariables(dto));
+
+        // Update program metadata
+        Program uiProgram = ModelConverter.convertProgram(dto);
+        currentProgram.setTotalCycles(uiProgram.getTotalCycles());
+        currentProgram.setMaxDegree(dto.getOriginMaxDegree());
+        currentProgram.setCurrentDegree(dto.getCurrentProgramDegree());
+
+        // Reset execution state
+        executionResult.reset();
+        executionResult.setStatus("Ready");
+        executionResult.setCompleted(false);
+        executionResult.setRunning(false);
+        executionResult.setCycles(0);
+        executionResult.clearHistory();
+
+        // Reset the execution controller's display degree
+        executionController.resetDisplayDegree();
+
+        // Clear the historical chain table
+        if (tableController != null) {
+            tableController.updateHistoricalChainTable(new ArrayList<>());
+        }
+
     }
 
     // Utility methods used by sub-controllers
@@ -262,4 +385,302 @@ public class EmulatorController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    // Add this method to get the instruction chain
+    private String getInstructionChain(Instruction instruction) {
+        StringBuilder chain = new StringBuilder();
+        chain.append("Instruction Chain for #").append(instruction.getNumber()).append(":\n");
+        chain.append("Type: ").append(instruction.getType()).append("\n");
+        chain.append("Cycles: ").append(instruction.getCycles()).append("\n");
+        chain.append("Description: ").append(instruction.getDescription()).append("\n");
+        chain.append("---\n");
+
+        try {
+            // Get the historical chain using the DTO parents
+            List<Instruction> historicalChain = buildHistoricalChain(instruction);
+
+            if (!historicalChain.isEmpty()) {
+                chain.append("\nHistorical Chain (from parent to current):\n");
+                for (int i = 0; i < historicalChain.size(); i++) {
+                    Instruction chainInst = historicalChain.get(i);
+                    chain.append(String.format("%d. #%d [%s] - %s (%d cycles)\n",
+                            i + 1, chainInst.getNumber(), chainInst.getType(),
+                            chainInst.getDescription(), chainInst.getCycles()));
+                }
+            } else {
+                chain.append("\nNo parent instructions found - this is a root instruction.\n");
+            }
+
+        } catch (Exception e) {
+            chain.append("\nError retrieving historical chain: ").append(e.getMessage()).append("\n");
+        }
+
+        return chain.toString();
+    }
+
+    /**
+     * Builds the historical chain for an instruction using the DTO parents
+     */
+    private List<Instruction> buildHistoricalChain(Instruction targetInstruction) throws Exception {
+        List<Instruction> historicalChain = new ArrayList<>();
+
+        System.out.println("=== DEBUG: buildHistoricalChain for instruction #" + targetInstruction.getNumber() + " ===");
+
+        try {
+            // Get current program presentation from engine
+            PresentProgramDTO currentProgram = engine.presentProgram();
+
+            System.out.println("Current program obtained: " + (currentProgram != null));
+
+            if (currentProgram == null) {
+                throw new Exception("No program is currently loaded");
+            }
+
+            System.out.println("Program name: " + currentProgram.getProgramName());
+            System.out.println("Number of instructions in DTO: " +
+                    (currentProgram.getInstructionList() != null ? currentProgram.getInstructionList().size() : "null"));
+
+            // Find the corresponding PresentInstructionDTO for this instruction
+            present.mostInstructions.PresentInstructionDTO targetDTO = findInstructionDTO(currentProgram, targetInstruction);
+            System.out.println("Found matching DTO: " + (targetDTO != null));
+
+            if (targetDTO != null) {
+                System.out.println("DTO representation: " + targetDTO.getRepresentation());
+                System.out.println("DTO parents count: " +
+                        (targetDTO.getParents() != null ? targetDTO.getParents().size() : "null"));
+
+                buildChainFromParents(targetDTO, historicalChain);
+                System.out.println("Historical chain built with " + historicalChain.size() + " parents");
+            } else {
+                System.out.println("Could not find matching DTO - instruction might be generated/expanded");
+            }
+
+        } catch (Exception e) {
+            System.err.println("=== ERROR in buildHistoricalChain ===");
+            System.err.println("Error for instruction #" + targetInstruction.getNumber() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+
+        return historicalChain;
+    }
+
+    private void buildChainFromParents(present.mostInstructions.PresentInstructionDTO instructionDTO, List<Instruction> chain) {
+        System.out.println("=== DEBUG: buildChainFromParents ===");
+        System.out.println("Processing DTO: " + instructionDTO.getRepresentation());
+
+        List<present.mostInstructions.PresentInstructionDTO> parents = instructionDTO.getParents();
+        System.out.println("Parents: " + (parents != null ? parents.size() : "null"));
+
+        if (parents != null && !parents.isEmpty()) {
+            System.out.println("Processing " + parents.size() + " parent(s):");
+
+            for (int i = 0; i < parents.size(); i++) {
+                present.mostInstructions.PresentInstructionDTO parent = parents.get(i);
+                System.out.println("Parent[" + i + "]: " + parent.getRepresentation());
+
+                buildChainFromParents(parent, chain);
+
+                Instruction convertedParent = convertDTOToInstruction(parent);
+                chain.add(convertedParent);
+                System.out.println("Added parent to chain: #" + convertedParent.getNumber() + " - " + convertedParent.getDescription());
+            }
+        } else {
+            System.out.println("No parents to process - reached root instruction");
+        }
+
+        System.out.println("Chain now has " + chain.size() + " instructions");
+    }
+
+
+    private present.mostInstructions.PresentInstructionDTO findInstructionDTO(PresentProgramDTO programDTO, Instruction targetInstruction) {
+        System.out.println("=== DEBUG: findInstructionDTO ===");
+        System.out.println("Looking for instruction #" + targetInstruction.getNumber() + ": " + targetInstruction.getDescription());
+
+        if (programDTO == null) {
+            System.err.println("Program DTO is null");
+            return null;
+        }
+
+        List<present.mostInstructions.PresentInstructionDTO> instructionList = programDTO.getInstructionList();
+        if (instructionList == null) {
+            System.err.println("Instruction list is null");
+            return null;
+        }
+
+        System.out.println("Searching through " + instructionList.size() + " DTOs:");
+
+        for (int i = 0; i < instructionList.size(); i++) {
+            present.mostInstructions.PresentInstructionDTO dto = instructionList.get(i);
+            if (dto != null) {
+                System.out.println("DTO[" + i + "]: index=" + dto.getIndex() +
+                        ", representation=" + dto.getRepresentation());
+
+                if (matchesInstruction(dto, targetInstruction)) {
+                    System.out.println("*** MATCH FOUND at index " + i + " ***");
+                    return dto;
+                }
+            }
+        }
+
+        System.out.println("No matching DTO found for instruction #" + targetInstruction.getNumber());
+        return null;
+    }
+
+    private boolean matchesInstruction(present.mostInstructions.PresentInstructionDTO dto, Instruction targetInstruction) {
+        System.out.println("  Comparing DTO(index=" + dto.getIndex() + ") with Instruction(number=" + targetInstruction.getNumber() + ")");
+
+        if (dto.getIndex() == targetInstruction.getNumber()) {
+            System.out.println("  → Index match!");
+            return true;
+        }
+
+        String dtoDesc = dto.getRepresentation();
+        String targetDesc = targetInstruction.getDescription();
+
+        if (dtoDesc != null && targetDesc != null) {
+            String cleanDtoDesc = dtoDesc.replaceAll("^>+\\s*", "").trim();
+            String cleanTargetDesc = targetDesc.replaceAll("^>+\\s*", "").trim();
+
+            if (cleanDtoDesc.equals(cleanTargetDesc)) {
+                System.out.println("  → Description match!");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Instruction convertDTOToInstruction(present.mostInstructions.PresentInstructionDTO dto) {
+        String representation = dto.getRepresentation();
+        if (representation == null) {
+            representation = "Unknown instruction";
+        }
+
+        String cleanDescription = representation;
+        if (representation.matches("^#\\d+\\s+\\([BS]\\)\\s+.*")) {
+            cleanDescription = representation.replaceFirst("^#\\d+\\s+\\([BS]\\)\\s+", "");
+        }
+
+        String type = deriveTypeFromDTO(dto);
+        String cycles = extractCyclesRepresentationFromDTO(dto);  // Changed to return String
+
+        return new Instruction(
+                dto.getIndex(),
+                type,
+                cycles,
+                cleanDescription
+        );
+    }
+
+    // New method to extract cycle representation as string
+    private String extractCyclesRepresentationFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
+        if (dto.getInstructionData() != null) {
+            String cycleRep = dto.getInstructionData().getCycleRepresentation();
+            if (cycleRep != null && !cycleRep.isEmpty()) {
+                return cycleRep;
+            }
+        }
+        return "1";  // Default fallback
+    }
+
+    /**
+     * Updates the historical chain table with the chain for the given instruction
+     */
+    private void updateHistoricalChainTable(Instruction instruction) {
+        System.out.println("=== DEBUG: updateHistoricalChainTable ===");
+
+        try {
+            List<Instruction> chain = buildHistoricalChain(instruction);
+            System.out.println("Built chain with " + chain.size() + " instructions");
+
+            // Create the ordered chain: selected instruction first, then parents in order
+            List<Instruction> orderedChain = new ArrayList<>();
+
+            // Add the selected instruction at the top
+            orderedChain.add(instruction);
+            System.out.println("Added selected instruction: #" + instruction.getNumber());
+
+            // Add the parent chain below it
+            orderedChain.addAll(chain);
+            System.out.println("Final ordered chain has " + orderedChain.size() + " instructions:");
+            for (int i = 0; i < orderedChain.size(); i++) {
+                Instruction inst = orderedChain.get(i);
+                System.out.println("  [" + i + "] #" + inst.getNumber() + " (" + inst.getType() + ") - " + inst.getDescription());
+            }
+
+            // Update the instruction's historical chain
+            instruction.setHistoricalChain(FXCollections.observableArrayList(orderedChain));
+            System.out.println("Set historical chain on instruction object");
+
+            // Update the controller's historical chain table
+            if (tableController != null) {
+                System.out.println("Calling tableController.updateHistoricalChainTable...");
+                tableController.updateHistoricalChainTable(orderedChain);
+                System.out.println("tableController.updateHistoricalChainTable called");
+            } else {
+                System.err.println("ERROR: tableController is null!");
+            }
+
+            // Skip the TextArea update since it's null and not needed
+            System.out.println("Skipped TextArea update - using table display instead");
+
+        } catch (Exception e) {
+            System.err.println("=== ERROR in updateHistoricalChainTable ===");
+            e.printStackTrace();
+            // Show more detailed error information
+            String errorMsg = "Failed to build historical chain: " + e.getMessage();
+            if (e.getCause() != null) {
+                errorMsg += "\nCause: " + e.getCause().getMessage();
+            }
+            showErrorDialog("Chain Error", errorMsg);
+        }
+
+        System.out.println("=== END updateHistoricalChainTable ===");
+    }
+
+    /**
+     * Public method to get historical chain for an instruction (can be called from TableController)
+     */
+    public void showInstructionHistory(Instruction instruction) {
+        System.out.println("=== DEBUG: showInstructionHistory called for instruction #" + instruction.getNumber() + " ===");
+        System.out.println("Instruction description: " + instruction.getDescription());
+        System.out.println("Instruction type: " + instruction.getType());
+
+        try {
+            updateHistoricalChainTable(instruction);
+            updateSummary("Showing historical chain for instruction #" + instruction.getNumber());
+        } catch (Exception e) {
+            System.err.println("=== ERROR in showInstructionHistory ===");
+            e.printStackTrace();
+            showErrorDialog("Chain Error", "Failed to show instruction history: " + e.getMessage());
+        }
+    }
+
+
+
+    /**
+     * Derives instruction type from DTO
+     */
+    private String deriveTypeFromDTO(present.mostInstructions.PresentInstructionDTO dto) {
+        if (dto.getInstructionData() != null) {
+            return dto.getInstructionData().getInstructionType();
+        }
+
+        String representation = dto.getRepresentation();
+        if (representation == null) {
+            return "B";
+        }
+
+        String cleanRep = representation.replaceAll("^>+\\s*", "").trim();
+
+        if (cleanRep.matches(".*\\+\\+.*") || cleanRep.matches(".*--.*") ||
+                cleanRep.startsWith("JNZ") || cleanRep.startsWith("INC") ||
+                cleanRep.startsWith("DEC") || cleanRep.startsWith("NOOP")) {
+            return "B";
+        }
+
+        return "S";
+    }
+
 }

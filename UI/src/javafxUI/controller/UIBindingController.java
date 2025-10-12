@@ -1,4 +1,3 @@
-
 package javafxUI.controller;
 
 import javafxUI.model.ui.ExecutionResult;
@@ -34,8 +33,43 @@ public class UIBindingController {
     }
 
     public void setupAllBindings() {
-        setupProgramBindings();
-        setupExecutionBindings();
+        // Bind file path
+        if (loadedFilePath != null) {
+            loadedFilePath.textProperty().bind(currentProgram.filePathProperty());
+        }
+
+        // Bind cycles
+        if (cyclesLabel != null) {
+            cyclesLabel.textProperty().bind(
+                    javafx.beans.binding.Bindings.concat("Cycles: ", executionResult.cyclesProperty())
+            );
+        }
+
+        // Bind history chain - convert ObservableList to String
+        if (historyChain != null) {
+            executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
+                StringBuilder historyText = new StringBuilder();
+                for (String historyItem : executionResult.getExecutionHistory()) {
+                    historyText.append(historyItem).append("\n");
+                }
+                historyChain.setText(historyText.toString());
+            });
+        }
+
+        // Bind current degree with program name
+        if (currentDegreeLabel != null) {
+            currentDegreeLabel.textProperty().bind(
+                    javafx.beans.binding.Bindings.concat(
+                            "Current Degree: ",
+                            currentProgram.currentDegreeProperty(),
+                            " / ",
+                            currentProgram.maxDegreeProperty(),
+                            " (Program: ",
+                            currentProgram.nameProperty(),
+                            ")"
+                    )
+            );
+        }
     }
 
     private void setupProgramBindings() {
@@ -58,13 +92,17 @@ public class UIBindingController {
         // Bind execution result to cycles label
         cyclesLabel.textProperty().bind(executionResult.cyclesProperty().asString());
 
-        // Bind execution history to history chain
-        executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
-            StringBuilder history = new StringBuilder();
-            for (String step : executionResult.getExecutionHistory()) {
-                history.append(step).append("\n");
-            }
-            historyChain.setText(history.toString());
-        });
+        // Bind execution history to history chain - only if historyChain exists
+        if (historyChain != null) {
+            executionResult.getExecutionHistory().addListener((javafx.collections.ListChangeListener<String>) change -> {
+                StringBuilder history = new StringBuilder();
+                for (String step : executionResult.getExecutionHistory()) {
+                    history.append(step).append("\n");
+                }
+                historyChain.setText(history.toString());
+            });
+        }
+        // If historyChain is null (removed from FXML), the binding is simply skipped
+        // and no history display will be updated, which is the intended behavior
     }
 }

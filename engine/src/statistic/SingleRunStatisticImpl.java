@@ -31,8 +31,8 @@ public class SingleRunStatisticImpl implements SingleRunStatistic {
     }
 
     @Override
-    public List<Long> getInputCopy() {
-        return new ArrayList<>(input);
+    public List<Long> getInput() {
+        return input;
     }
 
     @Override

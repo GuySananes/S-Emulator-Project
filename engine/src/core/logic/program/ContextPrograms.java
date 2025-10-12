@@ -1,10 +1,9 @@
-package core.logic.engine;
+package core.logic.program;
 
 import core.logic.instruction.mostInstructions.SInstruction;
 import core.logic.instruction.quoteInstructions.Argument;
 import core.logic.instruction.quoteInstructions.FunctionArgument;
 import core.logic.instruction.quoteInstructions.Quotable;
-import core.logic.program.SProgram;
 
 import java.util.*;
 
@@ -42,7 +41,6 @@ public class ContextPrograms {
         for(SInstruction instruction : instructions) {
             if(instruction instanceof Quotable quotable) {
                 names.addAll(getProgramsNames(quotable.getFunctionArgument()));
-
             }
         }
 
@@ -55,14 +53,14 @@ public class ContextPrograms {
         List<SInstruction> instructions = program.getInstructionList();
         for(SInstruction instruction : instructions) {
             if(instruction instanceof Quotable quotable) {
-                getNamesToProgramsFromFunctionArgument(quotable.getFunctionArgument(), nameToProgram);
+                updateNamesToProgramsFromFunctionArgument(quotable.getFunctionArgument(), nameToProgram);
             }
         }
 
         return nameToProgram;
     }
 
-    private void getNamesToProgramsFromFunctionArgument(FunctionArgument functionArgument, Map<String, SProgram> nameToProgram) {
+    private void updateNamesToProgramsFromFunctionArgument(FunctionArgument functionArgument, Map<String, SProgram> nameToProgram) {
         SProgram program = functionArgument.getProgram();
         if(!nameToProgram.containsKey(program.getName())) {
             nameToProgram.put(program.getName(), program);
@@ -71,7 +69,7 @@ public class ContextPrograms {
         List<Argument> arguments = functionArgument.getArguments();
         for(Argument argument : arguments) {
             if(argument instanceof FunctionArgument funcArg) {
-                getNamesToProgramsFromFunctionArgument(funcArg, nameToProgram);
+                updateNamesToProgramsFromFunctionArgument(funcArg, nameToProgram);
             }
         }
     }
