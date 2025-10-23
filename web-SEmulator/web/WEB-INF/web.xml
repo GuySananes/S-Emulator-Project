@@ -11,7 +11,25 @@
         <listener-class>sserver.ctx.AppBootstrapListener</listener-class>
     </listener>
 
-    <!-- V1 Servlets -->
+    <!-- Session Configuration -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <name>JSESSIONID</name>
+            <http-only>true</http-only>
+        </cookie-config>
+    </session-config>
+
+    <!-- Core API Servlets -->
+    <servlet>
+        <servlet-name>SessionServlet</servlet-name>
+        <servlet-class>sserver.api.SessionServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SessionServlet</servlet-name>
+        <url-pattern>/api/session/me</url-pattern>
+    </servlet-mapping>
+
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>sserver.api.LoginServlet</servlet-class>
@@ -21,7 +39,83 @@
         <url-pattern>/api/login</url-pattern>
     </servlet-mapping>
 
-    <!-- V2 Servlets -->
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>sserver.api.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/api/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CreditsServlet</servlet-name>
+        <servlet-class>sserver.api.CreditsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CreditsServlet</servlet-name>
+        <url-pattern>/api/credits/charge</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UsersServlet</servlet-name>
+        <servlet-class>sserver.api.UsersServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UsersServlet</servlet-name>
+        <url-pattern>/api/users/live</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <servlet-class>sserver.api.ProgramsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <url-pattern>/api/programs</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <url-pattern>/api/programs/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FunctionsServlet</servlet-name>
+        <servlet-class>sserver.api.FunctionsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FunctionsServlet</servlet-name>
+        <url-pattern>/api/programs/*/functions</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FileLoadServlet</servlet-name>
+        <servlet-class>sserver.api.FileLoadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FileLoadServlet</servlet-name>
+        <url-pattern>/api/file/load</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExecuteServlet</servlet-name>
+        <servlet-class>sserver.api.ExecuteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExecuteServlet</servlet-name>
+        <url-pattern>/api/execute/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StatisticsServlet</servlet-name>
+        <servlet-class>sserver.api.StatisticsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StatisticsServlet</servlet-name>
+        <url-pattern>/api/statistics/history</url-pattern>
+    </servlet-mapping>
+
+    <!-- Keep V2 for backward compatibility if needed -->
     <servlet>
         <servlet-name>LoginServletV2</servlet-name>
         <servlet-class>sserver.api.v2.LoginServletV2</servlet-class>
@@ -47,7 +141,6 @@
     <servlet-mapping>
         <servlet-name>UsersServletV2</servlet-name>
         <url-pattern>/api/v2/users</url-pattern>
-
     </servlet-mapping>
 
     <welcome-file-list>

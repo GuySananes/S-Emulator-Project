@@ -1,0 +1,220 @@
+/* Login page */
+.page-login .container {
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+.login-card {
+    height: fit-content;
+}
+
+.login-card form {
+    margin: var(--spacing-md) 0;
+}
+
+.credits-info {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.users-card {
+    min-height: 400px;
+}
+
+/* Dashboard page */
+.page-dashboard .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.filepath-display {
+    min-width: 300px;
+}
+
+.page-dashboard .main-grid {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.grid-left, .grid-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-dashboard .bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.list-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.function-item {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.function-item:last-child {
+    border-bottom: none;
+}
+
+/* Execute page */
+.page-execute .header-controls {
+    background-color: var(--color-card);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selector-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.selector-group label {
+    font-weight: 500;
+    margin: 0;
+}
+
+.selector-group select {
+    width: 200px;
+}
+
+.view-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.page-execute .execution-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+}
+
+.left-panel, .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.instructions-card {
+    flex: 1;
+    min-height: 400px;
+}
+
+.history-card {
+    max-height: 300px;
+}
+
+.table-virtualized {
+    max-height: 500px;
+}
+
+.summary-line {
+    padding: var(--spacing-sm) 0;
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    border-top: 1px solid var(--color-border);
+}
+
+.chain-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.chain-card {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-hover);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--color-primary);
+}
+
+.chain-card .degree-badge {
+    float: right;
+    font-size: 0.75rem;
+    background-color: var(--color-accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.debugger-card .button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.status-display {
+    padding: var(--spacing-md);
+    background-color: var(--color-hover);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+}
+
+.inputs-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.cycles-meter {
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.cycles-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.cycles-label {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    margin-top: var(--spacing-xs);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .page-login .container {
+        grid-template-columns: 1fr;
+    }
+
+    .page-dashboard .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-execute .execution-layout {
+        grid-template-columns: 1fr;
+    }
+}

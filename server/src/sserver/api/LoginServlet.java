@@ -1,3 +1,4 @@
+
 package sserver.api;
 
 import com.google.gson.Gson;
@@ -13,11 +14,14 @@ public class LoginServlet extends HttpServlet {
     static class LoginResp {
         boolean ok;
         String error;
-        String sessionId;
-        LoginResp(boolean ok, String e, String sid){
+        String username;
+        int credits;
+
+        LoginResp(boolean ok, String e, String username, int credits){
             this.ok=ok;
             this.error=e;
-            this.sessionId=sid;
+            this.username=username;
+            this.credits=credits;
         }
     }
 
@@ -29,7 +33,7 @@ public class LoginServlet extends HttpServlet {
 
             if (in == null || in.username == null || in.username.trim().isEmpty()) {
                 resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_required", null)));
+                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_required", null, 0)));
                 return;
             }
 
@@ -37,23 +41,32 @@ public class LoginServlet extends HttpServlet {
 
             if (username.length() > 50) {
                 resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_too_long", null)));
+                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_too_long", null, 0)));
                 return;
             }
 
             boolean added = AppContext.users().tryAdd(username);
             if (!added) {
                 resp.setStatus(409);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_taken", null)));
+                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_taken", null, 0)));
                 return;
             }
 
             String sessionId = AppContext.sessions().createSession(username);
-            resp.getWriter().write(gson.toJson(new LoginResp(true, null, sessionId)));
+
+            // Set cookie
+            Cookie sessionCookie = new Cookie("JSESSIONID", sessionId);
+            sessionCookie.setHttpOnly(true);
+            sessionCookie.setPath("/");
+            sessionCookie.setMaxAge(30 * 60); // 30 minutes
+            resp.addCookie(sessionCookie);
+
+            int credits = AppContext.users().getCredits(username);
+            resp.getWriter().write(gson.toJson(new LoginResp(true, null, username, credits)));
 
         } catch (Exception e) {
             resp.setStatus(500);
-            resp.getWriter().write(gson.toJson(new LoginResp(false, "server_error", null)));
+            resp.getWriter().write(gson.toJson(new LoginResp(false, "server_error", null, 0)));
         }
     }
 }
