@@ -2,45 +2,53 @@ package javafxUI;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
 import javafxUI.controller.EmulatorController;
-import javafxUI.service.ThemeManager;
-
-import java.net.URL;
+import javafxUI.controller.ServerModeController;
 
 public class Main extends Application {
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Load the FXML file
-        URL fxmlLocation = getClass().getResource("/javafxUI/view/fxml/emulator.fxml");
-        FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
-        Parent root = fxmlLoader.load();
+        // Create TabPane
+        TabPane tabPane = new TabPane();
 
-        // Get the controller
-        EmulatorController controller = fxmlLoader.getController();
+        // Local Mode Tab (existing functionality)
+        Tab localTab = new Tab("Local Mode");
+        localTab.setClosable(false);
+        FXMLLoader localLoader = new FXMLLoader(getClass().getResource("/javafxUI/view/fxml/emulator.fxml"));
+        localTab.setContent(localLoader.load());
+        EmulatorController localController = localLoader.getController();
 
-        // Scene setup
-        Scene scene = new Scene(root, 1200, 1020);
+        // Server Mode Tab (new functionality)
+        Tab serverTab = new Tab("Server Mode");
+        serverTab.setClosable(false);
+        FXMLLoader serverLoader = new FXMLLoader(getClass().getResource("/javafxUI/view/fxml/serverMode.fxml"));
+        serverTab.setContent(serverLoader.load());
+        ServerModeController serverController = serverLoader.getController();
 
-        // Initialize theme manager with the scene
-        ThemeManager themeManager = ThemeManager.getInstance();
-        themeManager.setScene(scene);
+        tabPane.getTabs().addAll(localTab, serverTab);
 
-        // Set the controller's scene reference
-        controller.setScene(scene);
+        // Create scene
+        Scene scene = new Scene(tabPane, 1200, 800);
 
-        // Apply initial dark theme (this will load the CSS)
-        themeManager.setTheme(ThemeManager.Theme.DARK);
+        // Apply theme to local controller
+        localController.setScene(scene);
 
-        primaryStage.setTitle("S-Emulator - Dark/Light Theme Support");
+        primaryStage.setTitle("S-Emulator - Hybrid Mode");
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        // Cleanup on close
+        primaryStage.setOnCloseRequest(event -> {
+            serverController.cleanup();
+        });
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

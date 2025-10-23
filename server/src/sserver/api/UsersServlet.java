@@ -8,9 +8,18 @@ import java.io.IOException;
 
 @WebServlet(name = "UsersServlet", urlPatterns = "/api/users")
 public class UsersServlet extends HttpServlet {
-  private final Gson gson = new Gson();
-  @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    resp.setContentType("application/json");
-    resp.getWriter().write(gson.toJson(AppContext.users().list()));
-  }
+    private final Gson gson = new Gson();
+
+    @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json");
+
+        String sessionId = req.getHeader("X-Session-Id");
+        if (!AppContext.sessions().isValidSession(sessionId)) {
+            resp.setStatus(401);
+            resp.getWriter().write("{\"error\":\"unauthorized\"}");
+            return;
+        }
+
+        resp.getWriter().write(gson.toJson(AppContext.users().list()));
+    }
 }

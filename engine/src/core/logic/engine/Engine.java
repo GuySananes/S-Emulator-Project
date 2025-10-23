@@ -18,7 +18,7 @@ import statistic.StatisticManager;
 public class Engine {
 
     private static final Engine instance = new Engine();
-    private Engine() {}
+    public Engine() {}
     public static Engine getInstance() {
         return instance;
     }
