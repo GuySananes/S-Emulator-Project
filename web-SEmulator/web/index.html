@@ -2,10 +2,380 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hello World - Test Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Emulator - Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .login-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.logged-out {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .status.logged-in {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .users-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .users-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .credits-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
-    <p>This is a simple test page.</p>
+<div class="container">
+    <div class="header">
+        <h1>🖥️ S-Emulator</h1>
+        <p>Web Interface - Server Mode</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="card">
+        <h2>Login</h2>
+
+        <div id="status" class="status logged-out">
+            Not logged in
+        </div>
+
+        <div class="login-section">
+            <input
+                    type="text"
+                    id="usernameInput"
+                    placeholder="Enter your username"
+                    onkeypress="handleKeyPress(event)"
+            />
+            <button id="loginButton" onclick="handleLogin()">
+                Login
+            </button>
+        </div>
+
+        <div id="creditsDisplay" style="display: none;">
+            <span class="credits-badge" id="creditsValue">Credits: 0</span>
+        </div>
+    </div>
+
+    <!-- Live Users Card -->
+    <div class="card">
+        <h2>Live Users</h2>
+
+        <div id="usersContainer">
+            <div class="empty-state">
+                Login to see live users
+            </div>
+        </div>
+
+        <div class="timestamp" id="lastUpdate"></div>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+    let pollingInterval = null;
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            handleLogin();
+        }
+    }
+
+    async function handleLogin() {
+        const username = document.getElementById('usernameInput').value.trim();
+
+        if (!username) {
+            showStatus('Please enter a username', 'error');
+            return;
+        }
+
+        const loginButton = document.getElementById('loginButton');
+        loginButton.disabled = true;
+        loginButton.textContent = 'Logging in...';
+
+        try {
+            const response = await fetch('/web_SEmulator_Web_exploded/api/v2/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user: username })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.ok) {
+                currentUser = {
+                    name: data.user,
+                    credits: data.credits
+                };
+
+                showStatus(`Logged in as: ${data.user}`, 'logged-in');
+                document.getElementById('creditsValue').textContent = `Credits: ${data.credits}`;
+                document.getElementById('creditsDisplay').style.display = 'block';
+                document.getElementById('usernameInput').disabled = true;
+                loginButton.textContent = 'Logged In';
+
+                // Start polling users
+                startPolling();
+            } else {
+                showStatus(data.reason || 'Login failed', 'error');
+                loginButton.disabled = false;
+                loginButton.textContent = 'Login';
+            }
+        } catch (error) {
+            showStatus('Connection error: ' + error.message, 'error');
+            loginButton.disabled = false;
+            loginButton.textContent = 'Login';
+        }
+    }
+
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`;
+    }
+
+    let lastTimestamp = null;
+
+    async function fetchUsers() {
+        if (!currentUser) return;
+
+        try {
+            let url = '/web_SEmulator_Web_exploded/api/v2/users';
+            if (lastTimestamp) {
+                url += `?sinceTs=${lastTimestamp}`;
+            }
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                console.error('Failed to fetch users:', response.status);
+                return;
+            }
+
+            const data = await response.json();
+            lastTimestamp = data.ts;
+
+            displayUsers(data.users);
+            updateTimestamp();
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    }
+
+    function displayUsers(users) {
+        const container = document.getElementById('usersContainer');
+
+        if (!users || users.length === 0) {
+            container.innerHTML = '<div class="empty-state">No users yet</div>';
+            return;
+        }
+
+        const table = `
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mains</th>
+                            <th>Funcs</th>
+                            <th>Credits</th>
+                            <th>Used</th>
+                            <th>Runs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr>
+                                <td><strong>${user.name}</strong></td>
+                                <td>${user.mainCount}</td>
+                                <td>${user.funcCount}</td>
+                                <td>${user.credits}</td>
+                                <td>${user.used}</td>
+                                <td>${user.runs}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+        container.innerHTML = table;
+    }
+
+    function updateTimestamp() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        document.getElementById('lastUpdate').textContent = `Last updated: ${timeString}`;
+    }
+
+    function startPolling() {
+        // Initial fetch
+        fetchUsers();
+
+        // Poll every 1 second
+        pollingInterval = setInterval(fetchUsers, 1000);
+    }
+
+    function stopPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', stopPolling);
+</script>
 </body>
 </html>
