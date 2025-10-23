@@ -80,6 +80,28 @@ public class EmulatorController {
         setupTables();
         setupEventHandlers();
         setupDataBinding();
+        performLoginAndFetchPrograms();
+    }
+
+    private void performLoginAndFetchPrograms() {
+        try {
+            var dialog = new TextInputDialog("user");
+            dialog.setTitle("Login");
+            dialog.setHeaderText("Enter username");
+            var res = dialog.showAndWait();
+            String username = res.orElse("guest");
+            boolean ok = new javafxUI.service.AuthApi().login(username);
+            if (!ok) {
+                updateSummary("Username already exists, using: " + username);
+            }
+            var arr = new javafxUI.service.ProgramsApi().list();
+            programSelector.getItems().clear();
+            for (present.program.ProgramSummary ps : arr) {
+                programSelector.getItems().add(ps.name);
+            }
+        } catch (Exception e) {
+            showErrorDialog("Server error", e.getMessage());
+        }
     }
 
     private void initializeThemeManager() {
