@@ -3,6 +3,7 @@ import { state } from './state.js';
 import { showToast, createTable, createButton, formatDateTime, updateCreditsDisplay, setButtonLoading } from './ui.js';
 
 let pollInterval = null;
+let selectedProgramForFunctions = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
@@ -43,15 +44,26 @@ function setupControls() {
         const file = e.target.files[0];
         if (!file) return;
 
+        console.log('=== FILE UPLOAD START ===');
+        console.log('File selected:', file.name, file.type, file.size);
         setButtonLoading(loadFileBtn, true);
 
         try {
             const response = await api.loadFile(file);
+            console.log('File upload response:', response);
+            console.log('Response keys:', Object.keys(response));
+            console.log('LoadedFilePath:', response.loadedFilePath);
+            console.log('Programs loaded:', response.programsLoaded);
+
             state.setLoadedFilePath(response.loadedFilePath);
             loadedFilePathInput.value = response.loadedFilePath;
-            showToast('success', 'File loaded successfully');
+            showToast('success', `File loaded successfully - ${response.programsLoaded || 0} program(s) loaded`);
+
+            console.log('Calling loadPrograms after file upload...');
             await loadPrograms();
+            console.log('=== FILE UPLOAD END ===');
         } catch (error) {
+            console.error('File load error:', error);
             showToast('error', `File load failed: ${error.message}`);
         } finally {
             setButtonLoading(loadFileBtn, false);
@@ -104,7 +116,6 @@ function setupControls() {
         state.reset();
         window.location.href = contextPath + '/index.html';
     });
-
 }
 
 function startPolling() {
@@ -180,19 +191,77 @@ async function updateCredits() {
 async function loadPrograms() {
     const container = document.getElementById('programsTableContainer');
 
+    console.log('Loading programs...');
+
     try {
         const response = await api.getPrograms();
 
+        console.log('Programs API response:', response);
+        console.log('Programs array:', response.programs);
+        console.log('Programs count:', response.programs ? response.programs.length : 0);
+
         if (response.programs && response.programs.length > 0) {
-            const headers = ['Name', 'Functions', 'Action'];
+            console.log('Creating table with programs:', response.programs);
+
+            const headers = ['Name', 'Owner', 'Functions', 'Action'];
             const rows = response.programs.map(program => {
-                const executeBtn = createButton('Execute Program', 'primary', () => {
+                console.log('Creating row for program:', program);
+                const executeBtn = createButton('Execute', 'primary', (e) => {
+                    e.stopPropagation();
                     state.selectProgram(program);
-                    window.location.href = contextPath + `/execution.html?programId=${program.id}`;
+                    window.location.href = contextPath + `/execution.html?programId=${encodeURIComponent(program.name)}`;
                 });
                 return [
                     program.name,
+                    program.owner || 'Unknown',
                     program.functions || 0,
+                    executeBtn
+                ];
+            });
+
+            const table = createTable(headers, rows, {
+                onRowClick: (rowData, idx) => {
+                    const program = response.programs[idx];
+                    selectedProgramForFunctions = program;
+                    loadFunctionsForProgram(program.name);
+                }
+            });
+            container.innerHTML = '';
+            container.appendChild(table);
+            console.log('Table created and appended');
+        } else {
+            console.log('No programs found, showing empty state');
+            container.innerHTML = '<div class="empty-state">No programs loaded</div>';
+        }
+
+        if (response.loadedFilePath) {
+            state.setLoadedFilePath(response.loadedFilePath);
+            document.getElementById('loadedFilePath').value = response.loadedFilePath;
+            console.log('Loaded file path:', response.loadedFilePath);
+        }
+    } catch (error) {
+        console.error('Failed to fetch programs:', error);
+        console.error('Error details:', error.message, error.stack);
+        showToast('error', 'Failed to load programs');
+        container.innerHTML = '<div class="empty-state">Failed to load programs</div>';
+    }
+}
+
+async function loadFunctionsForProgram(programName) {
+    const container = document.getElementById('functionsListContainer');
+
+    try {
+        const response = await api.getFunctions(programName);
+
+        if (response.functions && response.functions.length > 0) {
+            const headers = ['Function Name', 'Action'];
+            const rows = response.functions.map(func => {
+                const executeBtn = createButton('Execute', 'primary', (e) => {
+                    e.stopPropagation();
+                    window.location.href = contextPath + `/execution.html?programId=${encodeURIComponent(programName)}&functionId=${encodeURIComponent(func.name)}`;
+                });
+                return [
+                    func.name,
                     executeBtn
                 ];
             });
@@ -201,16 +270,11 @@ async function loadPrograms() {
             container.innerHTML = '';
             container.appendChild(table);
         } else {
-            container.innerHTML = '<div class="empty-state">No programs loaded</div>';
-        }
-
-        if (response.loadedFilePath) {
-            state.setLoadedFilePath(response.loadedFilePath);
-            document.getElementById('loadedFilePath').value = response.loadedFilePath;
+            container.innerHTML = '<div class="empty-state">No functions available</div>';
         }
     } catch (error) {
-        console.error('Failed to fetch programs:', error);
-        container.innerHTML = '<div class="empty-state">Failed to load programs</div>';
+        console.error('Failed to fetch functions:', error);
+        container.innerHTML = '<div class="empty-state">Failed to load functions</div>';
     }
 }
 

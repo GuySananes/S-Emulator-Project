@@ -115,6 +115,15 @@
         <url-pattern>/api/statistics/history</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ProgramSelectServlet</servlet-name>
+        <servlet-class>sserver.api.ProgramSelectServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProgramSelectServlet</servlet-name>
+        <url-pattern>/api/execution/select-program</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

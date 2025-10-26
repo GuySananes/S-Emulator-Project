@@ -19,9 +19,11 @@ public class FileLoadServlet extends HttpServlet {
 
     static class FileLoadResponse {
         String loadedFilePath;
+        int programsLoaded;
 
-        FileLoadResponse(String path) {
+        FileLoadResponse(String path, int programsLoaded) {
             this.loadedFilePath = path;
+            this.programsLoaded = programsLoaded;
         }
     }
 
@@ -40,9 +42,16 @@ public class FileLoadServlet extends HttpServlet {
         try {
             // Check authentication
             String sessionId = getSessionIdFromCookie(req);
-            if (sessionId == null || !AppContext.sessions().isValidSession(sessionId)) {
+            if (sessionId == null) {
                 resp.setStatus(401);
-                resp.getWriter().write(gson.toJson(new ErrorResponse("unauthorized")));
+                resp.getWriter().write(gson.toJson(new ErrorResponse("unauthorized - no session")));
+                return;
+            }
+
+            String username = AppContext.sessions().getUserBySession(sessionId);
+            if (username == null) {
+                resp.setStatus(401);
+                resp.getWriter().write(gson.toJson(new ErrorResponse("unauthorized - invalid session")));
                 return;
             }
 
@@ -57,24 +66,48 @@ public class FileLoadServlet extends HttpServlet {
 
             String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
 
+            if (!fileName.toLowerCase().endsWith(".xml")) {
+                resp.setStatus(400);
+                resp.getWriter().write(gson.toJson(new ErrorResponse("invalid_file_type - must be XML")));
+                return;
+            }
+
             // Save file to temp directory
             Path uploadDir = Paths.get(System.getProperty("java.io.tmpdir"), "semulator-uploads");
             Files.createDirectories(uploadDir);
 
-            Path filePath = uploadDir.resolve(fileName);
+            Path filePath = uploadDir.resolve(System.currentTimeMillis() + "_" + fileName);
 
             try (InputStream input = filePart.getInputStream()) {
                 Files.copy(input, filePath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // TODO: Process the XML file and load programs
-            // For now, just return the path
-            String absolutePath = filePath.toAbsolutePath().toString();
+            // Read the file content
+            String xmlContent = Files.readString(filePath);
 
-            FileLoadResponse response = new FileLoadResponse(absolutePath);
-            resp.getWriter().write(gson.toJson(response));
+            // Load the program using ProgramsRegistry
+            try {
+                AppContext.programs().loadProgram(xmlContent, fileName, username);
+
+                String absolutePath = filePath.toAbsolutePath().toString();
+                int programCount = AppContext.programs().list().size();
+
+                System.out.println("File loaded successfully: " + fileName);
+                System.out.println("Total programs now: " + programCount);
+
+                FileLoadResponse response = new FileLoadResponse(absolutePath, programCount);
+                resp.getWriter().write(gson.toJson(response));
+
+            } catch (Exception e) {
+                System.err.println("Failed to load program: " + e.getMessage());
+                e.printStackTrace();
+                resp.setStatus(400);
+                resp.getWriter().write(gson.toJson(new ErrorResponse("program_load_failed: " + e.getMessage())));
+            }
 
         } catch (Exception e) {
+            System.err.println("File upload error: " + e.getMessage());
+            e.printStackTrace();
             resp.setStatus(500);
             resp.getWriter().write(gson.toJson(new ErrorResponse("file_upload_failed: " + e.getMessage())));
         }

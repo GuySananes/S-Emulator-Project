@@ -45,12 +45,12 @@ export const api = {
     async login(username) {
         return apiCall('/login', {
             method: 'POST',
-            body: JSON.stringify({ username })
+            body: JSON.stringify({username})
         });
     },
 
     async logout() {
-        return apiCall('/logout', { method: 'POST' });
+        return apiCall('/logout', {method: 'POST'});
     },
 
     // Users
@@ -60,7 +60,24 @@ export const api = {
 
     // Programs
     async getPrograms() {
-        return apiCall('/programs');
+        console.log('API: Calling /programs endpoint');
+        const result = await apiCall('/programs');
+        console.log('API: /programs response:', result);
+        return result;
+    },
+
+    async getFunctions(programName) {
+        console.log('API: Calling functions for program:', programName);
+        const response = await fetch(`${contextPath}/api/programs/functions/${encodeURIComponent(programName)}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            console.error('API: Functions request failed:', response.status, response.statusText);
+            throw new Error('Failed to fetch functions');
+        }
+        const result = await response.json();
+        console.log('API: Functions response:', result);
+        return result;
     },
 
     async getProgramFunctions(programId) {
@@ -69,6 +86,7 @@ export const api = {
 
     // File
     async loadFile(file) {
+        console.log('API: Uploading file:', file.name);
         const formData = new FormData();
         formData.append('file', file);
 
@@ -77,8 +95,15 @@ export const api = {
             credentials: 'include',
             body: formData
         }).then(r => {
-            if (!r.ok) throw new Error('File upload failed');
+            console.log('API: File upload response status:', r.status);
+            if (!r.ok) {
+                console.error('API: File upload failed with status:', r.status);
+                throw new Error('File upload failed');
+            }
             return r.json();
+        }).then(data => {
+            console.log('API: File upload result:', data);
+            return data;
         });
     },
 

@@ -39,13 +39,22 @@ export function createTable(headers, rows, options = {}) {
         const tr = document.createElement('tr');
         if (options.onRowClick) {
             tr.style.cursor = 'pointer';
-            tr.addEventListener('click', () => options.onRowClick(row, idx, tr));
+            tr.addEventListener('click', (e) => {
+                // Don't trigger row click if clicking on a button or inside a button
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    return;
+                }
+                options.onRowClick(row, idx, tr);
+            });
         }
 
         row.forEach(cell => {
             const td = document.createElement('td');
             if (typeof cell === 'string' || typeof cell === 'number') {
                 td.textContent = cell;
+            } else if (cell instanceof HTMLElement) {
+                // If it's an HTML element (like a button), append it
+                td.appendChild(cell);
             } else {
                 td.appendChild(cell);
             }
