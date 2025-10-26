@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, contextPath } from './api.js';
 import { state } from './state.js';
 import { showToast, createTable, updateCreditsDisplay, setButtonLoading } from './ui.js';
 
@@ -17,24 +17,23 @@ async function checkAuth() {
     try {
         const session = await api.getSession();
         if (!session || !session.username) {
-            window.location.href = '/index.html';
+            window.location.href = contextPath + '/index.html';
             return;
         }
         state.setUser(session.username, session.credits);
         updateCreditsDisplay(session.credits);
     } catch (error) {
-        window.location.href = '/index.html';
+        window.location.href = contextPath + '/index.html';
     }
 }
 
 function initializePage() {
-    // Get programId from query
     const params = new URLSearchParams(window.location.search);
     const programId = params.get('programId');
 
     if (!programId) {
         showToast('error', 'No program selected');
-        setTimeout(() => window.location.href = '/dashboard.html', 2000);
+        setTimeout(() => window.location.href = contextPath + '/dashboard.html', 2000);
         return;
     }
 
@@ -71,9 +70,10 @@ function setupControls() {
     });
 }
 
+
 function goToDashboard() {
     if (pollInterval) clearInterval(pollInterval);
-    window.location.href = '/dashboard.html';
+    window.location.href = contextPath + '/dashboard.html';
 }
 
 async function startExecution(mode) {

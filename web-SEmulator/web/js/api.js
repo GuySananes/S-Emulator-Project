@@ -1,5 +1,13 @@
 // API wrapper for all backend endpoints
-const BASE_URL = '/api';
+
+// Get the context path (e.g., '/web_SEmulator_Web_exploded')
+const getContextPath = () => {
+    const path = window.location.pathname;
+    const contextPath = path.substring(0, path.indexOf('/', 1));
+    return contextPath || '';
+};
+
+const BASE_URL = getContextPath() + '/api';
 
 async function apiCall(endpoint, options = {}) {
     const defaultOptions = {
@@ -25,6 +33,8 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
+// Export context path helper
+export const contextPath = getContextPath();
 export const api = {
     // Session
     async getSession() {

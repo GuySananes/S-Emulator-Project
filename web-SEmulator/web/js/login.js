@@ -1,4 +1,4 @@
-import { api } from './api.js';
+import { api, contextPath } from './api.js';
 import { state } from './state.js';
 import { showToast, createTable, formatDateTime, updateCreditsDisplay } from './ui.js';
 
@@ -15,8 +15,8 @@ async function checkExistingSession() {
     try {
         const session = await api.getSession();
         if (session && session.username) {
-            state.setUser(session.username, session.credits);
-            updateUI();
+            window.location.href = contextPath + '/dashboard.html';
+            return;
         }
     } catch (error) {
         console.log('No existing session');
@@ -74,7 +74,7 @@ function setupLoginForm() {
 
                 // Redirect to dashboard
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = contextPath + '/dashboard.html';
                 }, 500);
             } else {
                 throw new Error(response.error || 'Login failed');

@@ -115,34 +115,6 @@
         <url-pattern>/api/statistics/history</url-pattern>
     </servlet-mapping>
 
-    <!-- Keep V2 for backward compatibility if needed -->
-    <servlet>
-        <servlet-name>LoginServletV2</servlet-name>
-        <servlet-class>sserver.api.v2.LoginServletV2</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LoginServletV2</servlet-name>
-        <url-pattern>/api/v2/login</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>CreditsServletV2</servlet-name>
-        <servlet-class>sserver.api.v2.CreditsServletV2</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>CreditsServletV2</servlet-name>
-        <url-pattern>/api/v2/credits/add</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>UsersServletV2</servlet-name>
-        <servlet-class>sserver.api.v2.UsersServletV2</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>UsersServletV2</servlet-name>
-        <url-pattern>/api/v2/users</url-pattern>
-    </servlet-mapping>
-
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

@@ -1,4 +1,4 @@
-package sserver.api.dto.v2;
+package sserver.api.dto;
 
 public class LoginRequest {
     public String user;

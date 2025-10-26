@@ -1,5 +1,4 @@
-
-import { api } from './api.js';
+import { api, contextPath } from './api.js';
 import { state } from './state.js';
 import { showToast, createTable, createButton, formatDateTime, updateCreditsDisplay, setButtonLoading } from './ui.js';
 
@@ -17,13 +16,13 @@ async function checkAuth() {
     try {
         const session = await api.getSession();
         if (!session || !session.username) {
-            window.location.href = '/index.html';
+            window.location.href = contextPath + '/index.html';
             return;
         }
         state.setUser(session.username, session.credits);
         updateUserDisplay();
     } catch (error) {
-        window.location.href = '/index.html';
+        window.location.href = contextPath + '/index.html';
     }
 }
 
@@ -103,8 +102,9 @@ function setupControls() {
             console.error('Logout error:', error);
         }
         state.reset();
-        window.location.href = '/index.html';
+        window.location.href = contextPath + '/index.html';
     });
+
 }
 
 function startPolling() {
@@ -188,7 +188,7 @@ async function loadPrograms() {
             const rows = response.programs.map(program => {
                 const executeBtn = createButton('Execute Program', 'primary', () => {
                     state.selectProgram(program);
-                    window.location.href = `/execute.html?programId=${program.id}`;
+                    window.location.href = contextPath + `/execution.html?programId=${program.id}`;
                 });
                 return [
                     program.name,

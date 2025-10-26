@@ -1,4 +1,4 @@
-package javafxUI.service.v2;
+package javafxUI.service;
 
 import com.google.gson.Gson;
 import java.net.URI;
@@ -26,32 +26,29 @@ public class ApiClient {
     }
 
     public static class LoginRequest {
-        public String user;
+        public String username;
 
-        public LoginRequest(String user) {
-            this.user = user;
+        public LoginRequest(String username) {
+            this.username = username;
         }
     }
 
     public static class LoginResponse {
         public boolean ok;
-        public String user;
+        public String username;
         public int credits;
     }
 
-    public static class CreditsAddRequest {
-        public String user;
+    public static class CreditsRequest {
         public int amount;
 
-        public CreditsAddRequest(String user, int amount) {
-            this.user = user;
+        public CreditsRequest(int amount) {
             this.amount = amount;
         }
     }
 
     public static class CreditsResponse {
         public int credits;
-        public int used;
     }
 
     public static class UserRow {
@@ -77,22 +74,22 @@ public class ApiClient {
     }
 
     public Session login(String username) throws Exception {
-        LoginResponse resp = sendJson("/api/v2/login", "POST",
+        LoginResponse resp = sendJson("/api/login", "POST",
                 new LoginRequest(username), LoginResponse.class);
 
         if (!resp.ok) {
             throw new Exception("Login failed: Server returned ok=false");
         }
-        return new Session(resp.user, resp.credits);
+        return new Session(resp.username, resp.credits);
     }
 
-    public CreditsResponse addCredits(String user, int amount) throws Exception {
-        return sendJson("/api/v2/credits/add", "POST",
-                new CreditsAddRequest(user, amount), CreditsResponse.class);
+    public CreditsResponse chargeCredits(int amount) throws Exception {
+        return sendJson("/api/credits/charge", "POST",
+                new CreditsRequest(amount), CreditsResponse.class);
     }
 
     public UsersResponse getUsers(Long sinceTs) throws Exception {
-        String path = "/api/v2/users";
+        String path = "/api/users/live";
         if (sinceTs != null) {
             path += "?sinceTs=" + sinceTs;
         }
@@ -101,8 +98,6 @@ public class ApiClient {
 
     private <T> T sendJson(String path, String method, Object body, Class<T> responseType) throws Exception {
         URI uri = URI.create(BASE_URL + path);
-        // Remove or comment out these debug lines:
-        // System.out.println("Sending " + method + " to: " + uri);
 
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                 .timeout(Duration.ofSeconds(10))
@@ -110,7 +105,6 @@ public class ApiClient {
 
         if ("POST".equals(method) && body != null) {
             String jsonBody = GSON.toJson(body);
-            // System.out.println("Request body: " + jsonBody);
             builder.POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         } else if ("GET".equals(method)) {
             builder.GET();
@@ -120,10 +114,6 @@ public class ApiClient {
 
         HttpResponse<String> response = HTTP.send(builder.build(),
                 HttpResponse.BodyHandlers.ofString());
-
-        // Remove or comment out these debug lines:
-        // System.out.println("Response status: " + response.statusCode());
-        // System.out.println("Response body: " + response.body());
 
         if (response.statusCode() >= 400) {
             throw new Exception("HTTP " + response.statusCode() + ": " + response.body());

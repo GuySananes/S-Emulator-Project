@@ -5,8 +5,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafxUI.service.v2.ApiClient;
-import javafxUI.service.v2.PullService;
+import javafxUI.service.ApiClient;
+import javafxUI.service.PullService;
 
 public class ServerModeController {
 
