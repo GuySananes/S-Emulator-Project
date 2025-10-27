@@ -1,6 +1,5 @@
 package jaxb;
 
-
 import exception.ProgramValidationException;
 import exception.XMLUnmarshalException;
 import jakarta.xml.bind.JAXBContext;
@@ -13,10 +12,16 @@ import java.io.File;
 public class JAXBLoader {
 
     public core.logic.program.SProgram load(String path) throws XMLUnmarshalException, ProgramValidationException {
-        return unmarshalXMLFile(path);
+        return load(path, null);
     }
 
-    private core.logic.program.SProgram unmarshalXMLFile(String xmlFilePath) throws XMLUnmarshalException, ProgramValidationException {
+    public core.logic.program.SProgram load(String path, java.util.Set<String> systemFunctionNames)
+            throws XMLUnmarshalException, ProgramValidationException {
+        return unmarshalXMLFile(path, systemFunctionNames);
+    }
+
+    private core.logic.program.SProgram unmarshalXMLFile(String xmlFilePath, java.util.Set<String> systemFunctionNames)
+            throws XMLUnmarshalException, ProgramValidationException {
         // Check if the path ends with ".xml"
         if (!xmlFilePath.endsWith(".xml")) {
             throw new XMLUnmarshalException("File must have .xml extension: " + xmlFilePath);
@@ -29,22 +34,14 @@ public class JAXBLoader {
                 throw new XMLUnmarshalException("File not found: " + xmlFilePath);
             }
 
-            //System.out.println("Processing: " + xmlFilePath);
-
             // JAXB will automatically create the objects when unmarshalling
             JAXBContext context = JAXBContext.newInstance(SProgram.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
             jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram = (jaxb.engine.src.jaxb.schema.generated.SProgram) unmarshaller
                     .unmarshal(xmlFile);
 
-            //System.out.println("JAXB Program: " + jaxbProgram.getName());
-            //System.out.println("JAXB Instructions: " + jaxbProgram.getSInstructions().getSInstruction().size());
-
-            // Convert JAXB objects to real engine objects (may throw ProgramValidationException)
-            engineProgram = JAXBToEngineConverter.convertJAXBToEngine(jaxbProgram);
-
-            //System.out.println("Engine Program: " + engineProgram.getName());
-            //System.out.println("Engine Instructions: " + engineProgram.getInstructionList().size());
+            // Convert JAXB objects to real engine objects with system function context
+            engineProgram = JAXBToEngineConverter.convertJAXBToEngine(jaxbProgram, systemFunctionNames);
 
         } catch (JAXBException e) {
             throw new XMLUnmarshalException("JAXB unmarshalling failed for file: " + xmlFilePath, e);

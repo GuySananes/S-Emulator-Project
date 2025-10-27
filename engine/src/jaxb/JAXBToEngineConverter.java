@@ -27,7 +27,7 @@ public class JAXBToEngineConverter {
     /**
      * Collects all defined labels from the list of JAXB instructions.
      * Any instruction with an S-Label defines that label as a jump target.
-     * 
+     *
      * @param jaxbInstructions List of JAXB instructions
      * @return Set of defined label names
      */
@@ -44,7 +44,7 @@ public class JAXBToEngineConverter {
 
     /**
      * Validates that a single JAXB instruction's label references are valid.
-     * 
+     *
      * @param jaxbInstruction The JAXB instruction to validate
      * @param definedLabels Set of all defined labels in the program
      * @throws ProgramValidationException if a referenced label is not found or missing
@@ -60,7 +60,7 @@ public class JAXBToEngineConverter {
         if (isLabelReferencingInstruction(instructionName)) {
             if (referencedLabel == null || referencedLabel.isEmpty()) {
                 throw new ProgramValidationException(
-                    "Instruction " + instructionName + " requires a label but none was provided"
+                        "Instruction " + instructionName + " requires a label but none was provided"
                 );
             }
 
@@ -71,8 +71,8 @@ public class JAXBToEngineConverter {
 
             if (!definedLabels.contains(referencedLabel)) {
                 throw new ProgramValidationException(
-                    "Instruction " + instructionName + " references undefined label: " + referencedLabel +
-                    ". Available labels: " + definedLabels
+                        "Instruction " + instructionName + " references undefined label: " + referencedLabel +
+                                ". Available labels: " + definedLabels
                 );
             }
         }
@@ -81,7 +81,7 @@ public class JAXBToEngineConverter {
     /**
      * Extracts the referenced label from a JAXB instruction's arguments.
      * This finds the label that the instruction wants to jump to, not the label that defines this instruction.
-     * 
+     *
      * @param jaxbInstruction The JAXB instruction
      * @return The referenced label name, or null if none found
      */
@@ -94,7 +94,7 @@ public class JAXBToEngineConverter {
                 if ("gotoLabel".equals(arg.getName()) || "JNZLabel".equals(arg.getName()) ||
                         "JZLabel".equals(arg.getName()) || "jumpLabel".equals(arg.getName()) ||
                         "JEConstantLabel".equals(arg.getName()) || "JEVariableLabel".equals(arg.getName()) ||
-                        "JEFunctionLabel".equals(arg.getName())) {  // Remove functionName, only JEFunctionLabel is the actual jump target
+                        "JEFunctionLabel".equals(arg.getName())) {
                     return arg.getValue();
                 }
             }
@@ -140,14 +140,16 @@ public class JAXBToEngineConverter {
      *
      * @param jaxbInstructions List of JAXB instructions from main program
      * @param jaxbFunctionMap Map of all defined functions in the file
+     * @param systemFunctionNames Set of all function names available in the system (from Engine/ContextPrograms)
      * @throws ProgramValidationException if a referenced function is not defined
      */
     private static void validateMainProgramFunctionReferences(
             List<jaxb.engine.src.jaxb.schema.generated.SInstruction> jaxbInstructions,
-            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            java.util.Set<String> systemFunctionNames) throws ProgramValidationException {
 
         for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction : jaxbInstructions) {
-            validateInstructionFunctionReferences(instruction, jaxbFunctionMap, "main program");
+            validateInstructionFunctionReferences(instruction, jaxbFunctionMap, systemFunctionNames, "main program");
         }
     }
 
@@ -156,16 +158,18 @@ public class JAXBToEngineConverter {
      *
      * @param jaxbFunction The function to validate
      * @param jaxbFunctionMap Map of all defined functions in the file
+     * @param systemFunctionNames Set of all function names available in the system
      * @throws ProgramValidationException if a referenced function is not defined
      */
     private static void validateFunctionReferences(
             jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction,
-            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap) throws ProgramValidationException {
+            Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            java.util.Set<String> systemFunctionNames) throws ProgramValidationException {
 
         if (jaxbFunction.getSInstructions() != null) {
             for (jaxb.engine.src.jaxb.schema.generated.SInstruction instruction :
                     jaxbFunction.getSInstructions().getSInstruction()) {
-                validateInstructionFunctionReferences(instruction, jaxbFunctionMap,
+                validateInstructionFunctionReferences(instruction, jaxbFunctionMap, systemFunctionNames,
                         "function '" + jaxbFunction.getName() + "'");
             }
         }
@@ -175,13 +179,15 @@ public class JAXBToEngineConverter {
      * Validates function references within a single instruction.
      *
      * @param instruction The instruction to validate
-     * @param jaxbFunctionMap Map of all defined functions
+     * @param jaxbFunctionMap Map of all defined functions in the file
+     * @param systemFunctionNames Set of all function names available in the system
      * @param context Description of where the instruction appears (for error messages)
      * @throws ProgramValidationException if a referenced function is not defined
      */
     private static void validateInstructionFunctionReferences(
             jaxb.engine.src.jaxb.schema.generated.SInstruction instruction,
             Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            java.util.Set<String> systemFunctionNames,
             String context) throws ProgramValidationException {
 
         if (instruction.getSInstructionArguments() == null) {
@@ -197,20 +203,24 @@ public class JAXBToEngineConverter {
             String referencedFunction = functionName != null ? functionName : programName;
 
             if (referencedFunction != null) {
-                // Validate the main function reference (case-sensitive)
-                if (!jaxbFunctionMap.containsKey(referencedFunction)) {
+                // Check if function exists in this file OR in the system
+                boolean isDefined = jaxbFunctionMap.containsKey(referencedFunction) ||
+                        (systemFunctionNames != null && systemFunctionNames.contains(referencedFunction));
+
+                if (!isDefined) {
                     throw new ProgramValidationException(
                             "In " + context + ", instruction " + instructionName +
                                     " references undefined function: '" + referencedFunction +
-                                    "' (function names are case-sensitive). Available functions: " +
-                                    jaxbFunctionMap.keySet()
+                                    "' (function names are case-sensitive). " +
+                                    "Available in file: " + jaxbFunctionMap.keySet() +
+                                    (systemFunctionNames != null ? ", Available in system: " + systemFunctionNames : "")
                     );
                 }
 
                 // Validate nested function arguments
                 String functionArgumentsStr = getArgumentValue(instruction.getSInstructionArguments(), "functionArguments");
                 if (functionArgumentsStr != null && !functionArgumentsStr.trim().isEmpty()) {
-                    validateFunctionArgumentsString(functionArgumentsStr, jaxbFunctionMap, context, referencedFunction);
+                    validateFunctionArgumentsString(functionArgumentsStr, jaxbFunctionMap, systemFunctionNames, context, referencedFunction);
                 }
             }
         }
@@ -221,7 +231,8 @@ public class JAXBToEngineConverter {
      * Recursively checks nested function arguments.
      *
      * @param argumentsStr The arguments string to validate
-     * @param jaxbFunctionMap Map of all defined functions
+     * @param jaxbFunctionMap Map of all defined functions in the file
+     * @param systemFunctionNames Set of all function names available in the system
      * @param context Description of where the arguments appear (for error messages)
      * @param parentFunction Name of the parent function being called
      * @throws ProgramValidationException if a referenced function is not defined
@@ -229,6 +240,7 @@ public class JAXBToEngineConverter {
     private static void validateFunctionArgumentsString(
             String argumentsStr,
             Map<String, jaxb.engine.src.jaxb.schema.generated.SFunction> jaxbFunctionMap,
+            java.util.Set<String> systemFunctionNames,
             String context,
             String parentFunction) throws ProgramValidationException {
 
@@ -253,19 +265,23 @@ public class JAXBToEngineConverter {
                     funcArgs = innerContent.substring(firstComma + 1).trim();
                 }
 
-                // Validate this function exists (case-sensitive)
-                if (!jaxbFunctionMap.containsKey(funcName)) {
+                // Check if function exists in this file OR in the system
+                boolean isDefined = jaxbFunctionMap.containsKey(funcName) ||
+                        (systemFunctionNames != null && systemFunctionNames.contains(funcName));
+
+                if (!isDefined) {
                     throw new ProgramValidationException(
                             "In " + context + ", function '" + parentFunction +
                                     "' has an argument that references undefined function: '" + funcName +
-                                    "' (function names are case-sensitive). Available functions: " +
-                                    jaxbFunctionMap.keySet()
+                                    "' (function names are case-sensitive). " +
+                                    "Available in file: " + jaxbFunctionMap.keySet() +
+                                    (systemFunctionNames != null ? ", Available in system: " + systemFunctionNames : "")
                     );
                 }
 
                 // Recursively validate nested arguments
                 if (funcArgs != null && !funcArgs.trim().isEmpty()) {
-                    validateFunctionArgumentsString(funcArgs, jaxbFunctionMap, context, funcName);
+                    validateFunctionArgumentsString(funcArgs, jaxbFunctionMap, systemFunctionNames, context, funcName);
                 }
             }
             // Variables don't need validation for function existence
@@ -276,6 +292,19 @@ public class JAXBToEngineConverter {
 
 
     public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram) throws ProgramValidationException {
+        return convertJAXBToEngine(jaxbProgram, null);
+    }
+
+    /**
+     * Converts a JAXB program to an Engine program with optional system function validation.
+     *
+     * @param jaxbProgram The JAXB program to convert
+     * @param systemFunctionNames Set of function names available in the system (null if not available yet)
+     * @return The converted Engine program
+     * @throws ProgramValidationException if validation fails
+     */
+    public static SProgram convertJAXBToEngine(jaxb.engine.src.jaxb.schema.generated.SProgram jaxbProgram,
+                                               java.util.Set<String> systemFunctionNames) throws ProgramValidationException {
         if (jaxbProgram == null) {
             throw new ProgramValidationException("JAXB program cannot be null");
         }
@@ -291,7 +320,7 @@ public class JAXBToEngineConverter {
         // Validate function references in all functions
         if (jaxbProgram.getSFunctions() != null) {
             for (jaxb.engine.src.jaxb.schema.generated.SFunction jaxbFunction : jaxbProgram.getSFunctions().getSFunction()) {
-                validateFunctionReferences(jaxbFunction, jaxbFunctionMap);
+                validateFunctionReferences(jaxbFunction, jaxbFunctionMap, systemFunctionNames);
             }
         }
 
@@ -434,11 +463,10 @@ public class JAXBToEngineConverter {
             // Convert the JAXB function to engine SFunction HERE - pass the function map
             engineFunction = convertFunction(jaxbFunction, jaxbFunctionMap);
         } else {
-            // REPLACE THE FALLBACK WITH STRICT VALIDATION
-            throw new ProgramValidationException(
-                    "Function '" + functionName + "' is not defined in this file. " +
-                            "Available functions: " + jaxbFunctionMap.keySet()
-            );
+            // Function not in current file - it must be in the system
+            // Create a stub function that will be resolved at runtime via ContextPrograms
+            // This is OK because we've already validated that it exists in the system
+            engineFunction = new SFunction(functionName, functionName, null, new ArrayList<>());
         }
 
         // Parse function arguments - this also validates nested function references
@@ -626,7 +654,7 @@ public class JAXBToEngineConverter {
                 return new VariableImpl(VariableType.INPUT, varNumber);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid input variable format: " + variableName +
-                                                 ". Expected format: x<number> (e.g., x1, x2)");
+                        ". Expected format: x<number> (e.g., x1, x2)");
             }
         } else if (variableName.startsWith("z")) {
             // Work variables: z1, z2, z3, etc.
@@ -636,16 +664,16 @@ public class JAXBToEngineConverter {
                 return new VariableImpl(VariableType.WORK, varNumber);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid work variable format: " + variableName +
-                                                 ". Expected format: z<number> (e.g., z1, z2)");
+                        ". Expected format: z<number> (e.g., z1, z2)");
             }
         } else {
             throw new IllegalArgumentException("Unknown variable format: " + variableName +
-                                             ". Expected formats: y, x<number>, or z<number>");
+                    ". Expected formats: y, x<number>, or z<number>");
         }
     }
 
     private static SInstruction createAssignmentInstruction(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "assignedVariable");
             if (secondaryVarName != null) {
@@ -656,7 +684,7 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createConstantAssignmentInstruction(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                                    jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
             if (constantValue != null) {
@@ -667,21 +695,21 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpEqualConstant(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                        jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEConstantLabel");
             String constantValue = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "constantValue");
             if (targetLabelName != null && constantValue != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
                 return label != null ? new JumpEqualConstant(variable, Long.parseLong(constantValue), label, targetLabel)
-                                     : new JumpEqualConstant(variable, Long.parseLong(constantValue), targetLabel);
+                        : new JumpEqualConstant(variable, Long.parseLong(constantValue), targetLabel);
             }
         }
         throw new IllegalArgumentException("JumpEqualConstant instruction requires both JEConstantLabel and constantValue arguments");
     }
 
     private static SInstruction createJumpEqualVariable(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                        jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String secondaryVarName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "variableName");
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JEVariableLabel");
@@ -689,7 +717,7 @@ public class JAXBToEngineConverter {
                 Variable secondaryVariable = createVariable(secondaryVarName);
                 Label targetLabel = new LabelImpl(targetLabelName);
                 return label != null ? new JumpEqualVariable(variable, secondaryVariable, targetLabel, label)
-                                     : new JumpEqualVariable(variable, secondaryVariable, targetLabel);
+                        : new JumpEqualVariable(variable, secondaryVariable, targetLabel);
             }
         }
         throw new IllegalArgumentException("JumpEqualVariable instruction requires both variableName and JEVariableLabel arguments");
@@ -708,26 +736,26 @@ public class JAXBToEngineConverter {
     }
 
     private static SInstruction createJumpNotZero(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                                  jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JNZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
                 return label != null ? new JumpNotZeroInstruction(variable, label, targetLabel)
-                                     : new JumpNotZeroInstruction(variable, targetLabel);
+                        : new JumpNotZeroInstruction(variable, targetLabel);
             }
         }
         throw new IllegalArgumentException("JUMP_NOT_ZERO instruction requires a JNZLabel argument");
     }
 
     private static SInstruction createJumpZero(Variable variable,
-            jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
+                                               jaxb.engine.src.jaxb.schema.generated.SInstruction jaxbInstruction, Label label) {
         if (jaxbInstruction.getSInstructionArguments() != null) {
             String targetLabelName = getArgumentValue(jaxbInstruction.getSInstructionArguments(), "JZLabel");
             if (targetLabelName != null) {
                 Label targetLabel = new LabelImpl(targetLabelName);
                 return label != null ? new JumpZero(variable, label, targetLabel)
-                                     : new JumpZero(variable, targetLabel);
+                        : new JumpZero(variable, targetLabel);
             }
         }
         throw new IllegalArgumentException("JUMP_ZERO instruction requires a JZLabel argument");

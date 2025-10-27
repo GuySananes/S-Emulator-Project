@@ -29,8 +29,15 @@ public class Engine {
     private final StatisticManager statisticManager = StatisticManager.getInstance();
 
     public LoadProgramDTO loadProgram(String fullPath) throws XMLUnmarshalException, ProgramValidationException {
+        // Get existing system functions if any programs are already loaded
+        java.util.Set<String> systemFunctionNames = null;
+        if (this.contextPrograms != null) {
+            systemFunctionNames = this.contextPrograms.getNames();
+        }
+
+        // Load the program with system function context
         JAXBLoader loader = new JAXBLoader();
-        program = loader.load(fullPath);
+        this.program = loader.load(fullPath, systemFunctionNames);
         effectiveProgram = program;
         contextPrograms = program.getContextPrograms();
         return new LoadProgramDTO(getPresentDTOOfCurrentEffectiveProgram(),
