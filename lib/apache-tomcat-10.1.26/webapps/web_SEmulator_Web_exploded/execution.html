@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Emulator - Execution</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="page-execute">
+<div class="topbar">
+    <div class="topbar-left">
+        <h1 class="app-title">S-Emulator – Execution</h1>
+    </div>
+    <div class="topbar-right">
+        <div id="creditsDisplay" class="badge badge-credits">Available Credits: 0</div>
+        <button id="backToDashboardBtn" class="btn btn-secondary btn-small">Back to Dashboard</button>
+    </div>
+</div>
+
+<div class="header-controls">
+    <div class="selector-group">
+        <label for="programSelector">Program:</label>
+        <select id="programSelector" class="dropdown">
+            <option value="">Select program...</option>
+        </select>
+        <label for="functionSelector">Function:</label>
+        <select id="functionSelector" class="dropdown" disabled>
+            <option value="">Select function...</option>
+        </select>
+    </div>
+    <div class="view-controls">
+        <button id="collapseBtn" class="btn btn-icon" title="Collapse">−</button>
+        <button id="expandBtn" class="btn btn-icon" title="Expand">+</button>
+        <label class="toggle-switch">
+            <input type="checkbox" id="highlightToggle">
+            <span class="toggle-label">Highlight selection</span>
+        </label>
+    </div>
+</div>
+
+<div class="execution-layout">
+    <div class="left-panel">
+        <div class="card instructions-card">
+            <h3 class="card-title">Instructions</h3>
+            <div id="instructionsTableContainer" class="table-container table-virtualized">
+                <div class="empty-state">Start execution to load instructions</div>
+            </div>
+            <div class="summary-line" id="summaryLine">
+                Summary: <span id="summaryText">-</span>
+            </div>
+        </div>
+
+        <div class="card history-card">
+            <h3 class="card-title">Selected Instruction History Chain</h3>
+            <div id="historyChainContainer" class="chain-container">
+                <div class="empty-state">Click an instruction to view history</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="card debugger-card">
+            <h3 class="card-title">Debugger \ Execution</h3>
+            <div class="button-grid">
+                <button id="startExecutionBtn" class="btn btn-primary" disabled>Start Execution</button>
+                <button id="startRegularBtn" class="btn btn-primary">Start Regular</button>
+                <button id="startDebugBtn" class="btn btn-primary">Start Debug</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
+                <button id="resumeBtn" class="btn btn-success" disabled>Resume</button>
+                <button id="stepForwardBtn" class="btn btn-secondary" disabled>Step Forward</button>
+                <button id="stepBackwardBtn" class="btn btn-secondary" disabled>Step Backward</button>
+            </div>
+            <div class="status-display">
+                Status: <span id="executionStatus" class="badge badge-idle">idle</span>
+                <br>Step: <span id="executionStep">0</span>
+            </div>
+        </div>
+
+        <div class="card architecture-card">
+            <h3 class="card-title">Architecture Selection</h3>
+            <select id="architectureSelector" class="dropdown">
+                <option value="default">Default</option>
+            </select>
+        </div>
+
+        <div class="card inputs-card">
+            <h3 class="card-title">Execution Inputs</h3>
+            <form id="inputsForm" class="inputs-form">
+                <div class="empty-state">No inputs required</div>
+            </form>
+        </div>
+
+        <div class="card variables-card">
+            <h3 class="card-title">Variables</h3>
+            <div id="variablesTableContainer" class="table-container">
+                <div class="empty-state">No variables</div>
+            </div>
+        </div>
+
+        <div class="card cycles-card">
+            <h3 class="card-title">Cycles</h3>
+            <div class="cycles-meter">
+                <div class="cycles-value" id="cyclesValue">0</div>
+                <div class="cycles-label">Total Cycles</div>
+            </div>
+        </div>
+
+        <button id="backToDashboard2Btn" class="btn btn-secondary btn-full-width">Back to Dashboard</button>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script type="module" src="js/execute.js"></script>
+<script>
+    // This inline script should ALWAYS run
+    console.log('=== INLINE SCRIPT RUNNING ===');
+    console.log('URL:', window.location.href);
+    console.log('Pathname:', window.location.pathname);
+
+    // Check if we can access DOM elements
+    const programSelector = document.getElementById('programSelector');
+    console.log('Program selector element:', programSelector);
+
+    // Try to see if modules are loading
+    setTimeout(() => {
+        console.log('=== CHECKING AFTER 2 SECONDS ===');
+        console.log('Is module loaded?');
+    }, 2000);
+</script>
+
+<script type="module" src="js/execute.js"></script>
+</body>
+</html>

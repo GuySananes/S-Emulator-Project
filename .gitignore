@@ -1,5 +1,92 @@
-### IntelliJ IDEA ###
+# S-Emulator Project - Kiro IDE Setup
+
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+### Build Output ###
 out/
+target/
+build/
+dist/
+temp_war/
+
+### IDE Files ###
+# IntelliJ IDEA
 .idea/
 *.iml
-*.jpr
+*.ipr
+*.iws
+
+# VS Code / Kiro IDE
+.vscode/settings.json.bak
+.vscode/launch.json.bak
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.project
+.classpath
+
+### Tomcat ###
+lib/apache-tomcat-*/logs/
+lib/apache-tomcat-*/work/
+lib/apache-tomcat-*/temp/
+lib/apache-tomcat-*/webapps/ROOT/
+lib/apache-tomcat-*/webapps/docs/
+lib/apache-tomcat-*/webapps/examples/
+lib/apache-tomcat-*/webapps/host-manager/
+lib/apache-tomcat-*/webapps/manager/
+lib/apache-tomcat-*/webapps/chatWebApp_war_exploded/
+
+### Deployment Artifacts ###
+out/artifacts/
+*.exploded/
+
+### Temporary Files ###
+*.log
+*.tmp
+*.temp
+*~
+
+### OS Generated Files ###
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Linux
+*~
+.nfs*
+
+### Project Specific ###
+# Uploaded files and temp directories
+uploads/
+temp/
+*.upload
+
+# User-specific runtime files
+user-*.xml
+session-*.dat

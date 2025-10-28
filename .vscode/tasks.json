@@ -1,0 +1,78 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile All Modules",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-File", "build.ps1"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Client JAR",
+            "type": "shell",
+            "command": "jar",
+            "args": [
+                "cfm",
+                "run/client.jar",
+                "client/src/META-INF/MANIFEST.MF",
+                "-C", "out/production/client", "."
+            ],
+            "group": "build",
+            "dependsOn": "Compile All Modules"
+        },
+        {
+            "label": "Run JavaFX Client",
+            "type": "shell",
+            "command": "java",
+            "args": [
+                "--module-path", "lib/javafx-sdk-22.0.2/lib",
+                "--add-modules", "javafx.controls,javafx.fxml",
+                "-cp", "out/production/client;lib/gson-2.11.0.jar",
+                "javafxUI.Main"
+            ],
+            "group": "test",
+            "dependsOn": "Compile All Modules",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Build WAR for Tomcat",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-ExecutionPolicy", "Bypass",
+                "-File", "run/prepare_exploded_war.ps1"
+            ],
+            "group": "build",
+            "dependsOn": "Compile All Modules"
+        },
+        {
+            "label": "Start Tomcat Server",
+            "type": "shell",
+            "command": "run-server-dev.bat",
+            "args": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            }
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Emulator - Dashboard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="page-dashboard">
+<div class="topbar">
+    <div class="topbar-left">
+        <h1 class="app-title">S-Emulator</h1>
+        <span class="user-display">User: <span id="currentUser"></span></span>
+    </div>
+    <div class="topbar-right">
+        <div id="creditsDisplay" class="badge badge-credits">Available Credits: 0</div>
+        <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="controls-row">
+        <div class="control-group">
+            <input type="file" id="fileInput" accept=".xml" style="display:none">
+            <button id="loadFileBtn" class="btn btn-primary">Load File</button>
+            <input type="text" id="loadedFilePath" class="filepath-display" readonly placeholder="No file loaded">
+        </div>
+        <div class="control-group">
+            <button id="chargeCreditsBtn" class="btn btn-accent">Charge Credits</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="grid-left">
+            <div class="card">
+                <h3 class="card-title">Available Users</h3>
+                <div id="usersTableContainer" class="table-container">
+                    <div class="spinner" id="usersSpinner"></div>
+                </div>
+                <button id="unselectUserBtn" class="btn btn-secondary btn-full-width" disabled>Unselect User</button>
+            </div>
+        </div>
+
+        <div class="grid-right">
+            <div class="card">
+                <h3 class="card-title">Available Programs</h3>
+                <div id="programsTableContainer" class="table-container">
+                    <div class="empty-state">No programs loaded</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-row">
+        <div class="card">
+            <h3 class="card-title">History / Statistics</h3>
+            <div id="historyTableContainer" class="table-container">
+                <div class="empty-state">No history available</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title">Available Functions</h3>
+            <div id="functionsListContainer" class="list-container">
+                <div class="empty-state">Select a program to view functions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

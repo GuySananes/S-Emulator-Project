@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Emulator - Login</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="page-login">
+<div class="container-center">
+    <div class="card login-card">
+        <h1 class="app-title">S-Emulator</h1>
+        <h2>Welcome</h2>
+
+        <div id="loginStatus" class="hidden">
+            <p>Logged in as: <strong id="currentUser"></strong></p>
+            <p>Credits: <strong id="userCredits"></strong></p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required>
+            </div>
+            <div id="loginError" class="error-message hidden"></div>
+            <button type="submit" id="loginBtn" class="btn btn-primary btn-full-width">Login</button>
+        </form>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3 class="card-title">Live Users</h3>
+            <div id="usersTableContainer" class="table-container">
+                <div class="empty-state">Loading...</div>
+            </div>
+            <p class="text-muted">Last updated: <span id="lastUpdated">Never</span></p>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script type="module" src="js/login.js"></script>
+</body>
+</html>
