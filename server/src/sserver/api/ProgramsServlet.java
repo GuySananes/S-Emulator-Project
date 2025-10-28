@@ -18,53 +18,36 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "ProgramsServlet", urlPatterns = "/api/programs")
-public class ProgramsServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class ProgramsServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         resp.setContentType("application/json");
 
-        if (!isAuthorized(req)) {
-            sendUnauthorizedResponse(resp);
-            return;
-        }
-
-        List<ProgramSummary> programList = AppContext.programs().list();
-        List<Map<String, Object>> programs = convertToFrontendFormat(programList);
-        Map<String, Object> response = buildSuccessResponse(programs);
-
-        resp.getWriter().write(gson.toJson(response));
-    }
-
-    private boolean isAuthorized(HttpServletRequest req) {
-        // Get session ID from cookie (same way SessionServlet does it)
         String sessionId = getSessionIdFromCookie(req);
-        if (sessionId == null) {
-            return false;
-        }
+        String username = sessionId != null ? AppContext.sessions().getUserBySession(sessionId) : null;
 
-        // Check if session is valid
-        String username = AppContext.sessions().getUserBySession(sessionId);
-        return username != null;
-    }
-
-    private String getSessionIdFromCookie(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+        try {
+            // Check authentication using BaseServlet method
+            if (!checkAuthentication(req)) {
+                sendAuthenticationError(resp);
+                return;
             }
-        }
-        return null;
-    }
 
-    private void sendUnauthorizedResponse(HttpServletResponse resp) throws IOException {
-        resp.setStatus(401);
-        resp.getWriter().write(gson.toJson(Map.of("error", "unauthorized")));
+            logger.info(String.format("Retrieving program list | SessionID: %s | User: %s", sessionId, username));
+
+            List<ProgramSummary> programList = AppContext.programs().list();
+            List<Map<String, Object>> programs = convertToFrontendFormat(programList);
+            Map<String, Object> response = buildSuccessResponse(programs);
+
+            logger.info(String.format("Program list retrieved: %d programs | SessionID: %s | User: %s",
+                programs.size(), sessionId, username));
+
+            resp.getWriter().write(gson.toJson(response));
+        } catch (Exception e) {
+            sendExecutionError(req, resp, "Failed to retrieve programs", e.getMessage());
+        }
     }
 
     private List<Map<String, Object>> convertToFrontendFormat(List<ProgramSummary> programList) {

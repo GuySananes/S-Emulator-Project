@@ -1,15 +1,13 @@
 package sserver.api;
 
-import com.google.gson.Gson;
 import core.logic.engine.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import present.program.PresentProgramDTO;
 import sserver.ctx.AppContext;
+import sserver.registry.EngineRegistry;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @WebServlet(name = "ChooseFunctionServlet", urlPatterns = "/api/execution/choose-function")
-public class ChooseFunctionServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class ChooseFunctionServlet extends BaseServlet {
 
     static class ChooseFunctionRequest {
         String programName;
@@ -41,43 +38,43 @@ public class ChooseFunctionServlet extends HttpServlet {
         resp.setContentType("application/json");
 
         try {
-            // Check authentication
-            String sessionId = getSessionIdFromCookie(req);
-            if (sessionId == null) {
-                resp.setStatus(401);
-                resp.getWriter().write("{\"error\":\"unauthorized\"}");
+            // Check authentication using BaseServlet method
+            if (!checkAuthentication(req)) {
+                sendAuthenticationError(resp);
                 return;
             }
 
-            String username = AppContext.sessions().getUserBySession(sessionId);
-            if (username == null) {
-                resp.setStatus(401);
-                resp.getWriter().write("{\"error\":\"invalid_session\"}");
+            // Get session engine context
+            EngineRegistry.EngineContext engineContext = getSessionEngine(req);
+            if (engineContext == null) {
+                sendAuthenticationError(resp);
                 return;
             }
 
             ChooseFunctionRequest request = gson.fromJson(req.getReader(), ChooseFunctionRequest.class);
 
             if (request == null || request.functionName == null) {
-                resp.setStatus(400);
-                resp.getWriter().write("{\"error\":\"function_name_required\"}");
+                sendValidationError(resp, "function_name_required");
                 return;
             }
 
-            System.out.println("=== ChooseFunctionServlet ===");
-            System.out.println("Selecting function: " + request.functionName);
-            System.out.println("From program: " + request.programName);
+            String sessionId = getSessionIdFromCookie(req);
+            String username = AppContext.sessions().getUserBySession(sessionId);
+            
+            logger.info(String.format("Selecting function: %s from program: %s | SessionID: %s | User: %s", 
+                request.functionName, request.programName, sessionId, username));
 
-            // Use Engine to switch to the context program (function)
+            // Use session-specific Engine to switch to the context program (function)
             // This is equivalent to what JavaFX does with engine.chooseContextProgram()
-            Engine engine = Engine.getInstance();
+            Engine engine = engineContext.engine;
 
             try {
                 PresentProgramDTO presentDTO = engine.chooseContextProgram(request.functionName);
 
-                System.out.println("Function selected successfully: " + presentDTO.getProgramName());
-                System.out.println("Instructions count: " +
-                        (presentDTO.getInstructionList() != null ? presentDTO.getInstructionList().size() : 0));
+                logger.info(String.format("Function selected successfully: %s with %d instructions | SessionID: %s | User: %s",
+                    presentDTO.getProgramName(),
+                    presentDTO.getInstructionList() != null ? presentDTO.getInstructionList().size() : 0,
+                    sessionId, username));
 
                 // Build response
                 ChooseFunctionResponse response = new ChooseFunctionResponse();
@@ -91,44 +88,15 @@ public class ChooseFunctionServlet extends HttpServlet {
                 resp.getWriter().write(gson.toJson(response));
 
             } catch (Exception e) {
-                System.err.println("Failed to choose context program: " + e.getMessage());
-                e.printStackTrace();
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(Map.of(
-                        "error", "failed_to_choose_function: " + e.getMessage()
-                )));
+                sendExecutionError(req, resp, "Failed to choose function", e.getMessage());
             }
 
         } catch (Exception e) {
-            System.err.println("Failed to process choose-function request: " + e.getMessage());
-            e.printStackTrace();
-            resp.setStatus(500);
-            resp.getWriter().write(gson.toJson(Map.of(
-                    "error", "internal_error: " + e.getMessage()
-            )));
+            sendExecutionError(req, resp, "Request processing failed", e.getMessage());
         }
     }
 
-    private boolean isAuthorized(HttpServletRequest req) {
-        String sessionId = getSessionIdFromCookie(req);
-        if (sessionId == null) {
-            return false;
-        }
-        String username = AppContext.sessions().getUserBySession(sessionId);
-        return username != null;
-    }
 
-    private String getSessionIdFromCookie(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
 
     private List<Map<String, Object>> convertInstructions(PresentProgramDTO dto) {
         List<Map<String, Object>> instructions = new ArrayList<>();

@@ -7,8 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 
 @WebServlet(name="SessionServlet", urlPatterns="/api/session/me")
-public class SessionServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class SessionServlet extends BaseServlet {
 
     static class SessionResponse {
         String username;
@@ -24,37 +23,24 @@ public class SessionServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
 
-        String sessionId = getSessionIdFromCookie(req);
-
-        if (sessionId == null) {
-            resp.setStatus(401);
-            resp.getWriter().write("{\"error\":\"no_session\"}");
-            return;
-        }
-
-        String username = AppContext.sessions().getUserBySession(sessionId);
-
-        if (username == null) {
-            resp.setStatus(401);
-            resp.getWriter().write("{\"error\":\"invalid_session\"}");
-            return;
-        }
-
-        int credits = AppContext.users().getCredits(username);
-
-        SessionResponse response = new SessionResponse(username, credits);
-        resp.getWriter().write(gson.toJson(response));
-    }
-
-    private String getSessionIdFromCookie(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+        try {
+            // Check authentication using BaseServlet method
+            if (!checkAuthentication(req)) {
+                sendAuthenticationError(resp);
+                return;
             }
+
+            String sessionId = getSessionIdFromCookie(req);
+            String username = AppContext.sessions().getUserBySession(sessionId);
+            int credits = AppContext.users().getCredits(username);
+
+            logger.info(String.format("Session info retrieved | SessionID: %s | User: %s | Credits: %d",
+                sessionId, username, credits));
+
+            SessionResponse response = new SessionResponse(username, credits);
+            resp.getWriter().write(gson.toJson(response));
+        } catch (Exception e) {
+            sendExecutionError(req, resp, "Failed to retrieve session information", e.getMessage());
         }
-        return null;
     }
 }

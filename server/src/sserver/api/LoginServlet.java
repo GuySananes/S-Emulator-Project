@@ -8,8 +8,7 @@ import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 
 @WebServlet(name="LoginServlet", urlPatterns="/api/login")
-public class LoginServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class LoginServlet extends BaseServlet {
     static class LoginReq { String username; }
     static class LoginResp {
         boolean ok;
@@ -32,23 +31,22 @@ public class LoginServlet extends HttpServlet {
             LoginReq in = gson.fromJson(req.getReader(), LoginReq.class);
 
             if (in == null || in.username == null || in.username.trim().isEmpty()) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_required", null, 0)));
+                sendValidationError(resp, "username_required");
                 return;
             }
 
             String username = in.username.trim();
+            logger.info(String.format("Login attempt for user: %s", username));
 
             if (username.length() > 50) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_too_long", null, 0)));
+                sendValidationError(resp, "username_too_long");
                 return;
             }
 
             boolean added = AppContext.users().tryAdd(username);
             if (!added) {
-                resp.setStatus(409);
-                resp.getWriter().write(gson.toJson(new LoginResp(false, "username_taken", null, 0)));
+                logger.warning(String.format("Login failed - username already taken: %s", username));
+                sendError(resp, 409, "validation", "username_taken");
                 return;
             }
 
@@ -62,11 +60,11 @@ public class LoginServlet extends HttpServlet {
             resp.addCookie(sessionCookie);
 
             int credits = AppContext.users().getCredits(username);
+            logger.info(String.format("Login successful: %s | SessionID: %s | Credits: %d", username, sessionId, credits));
             resp.getWriter().write(gson.toJson(new LoginResp(true, null, username, credits)));
 
         } catch (Exception e) {
-            resp.setStatus(500);
-            resp.getWriter().write(gson.toJson(new LoginResp(false, "server_error", null, 0)));
+            sendExecutionError(req, resp, "Login failed", e.getMessage());
         }
     }
 }

@@ -74,6 +74,19 @@
         <servlet-name>ProgramsServlet</servlet-name>
         <url-pattern>/api/programs</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProgramsServlet</servlet-name>
+        <url-pattern>/api/programs/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FunctionsServlet</servlet-name>
+        <servlet-class>sserver.api.FunctionsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FunctionsServlet</servlet-name>
+        <url-pattern>/api/programs/*/functions</url-pattern>
+    </servlet-mapping>
 
     <servlet>
         <servlet-name>FileLoadServlet</servlet-name>

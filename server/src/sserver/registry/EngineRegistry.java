@@ -17,15 +17,46 @@ public class EngineRegistry {
         public String currentProgramName;
         public String currentProgramFilePath;
         public LoadProgramDTO loadedProgramDTO;
+        public int currentDegree;
         public long lastAccessTime;
 
         public EngineContext() {
             this.engine = new Engine();
+            this.currentDegree = 0; // Default degree
             this.lastAccessTime = System.currentTimeMillis();
         }
 
         public void updateAccess() {
             this.lastAccessTime = System.currentTimeMillis();
+        }
+
+        /**
+         * Check if a program is currently loaded in this context
+         */
+        public boolean isProgramLoaded() {
+            return loadedProgramDTO != null;
+        }
+
+        /**
+         * Get the current degree of the loaded program
+         */
+        public int getCurrentDegree() {
+            return currentDegree;
+        }
+
+        /**
+         * Update the current degree (used by expand/collapse operations)
+         */
+        public void setCurrentDegree(int degree) {
+            this.currentDegree = degree;
+        }
+
+        /**
+         * Set the loaded program and reset degree to default
+         */
+        public void setLoadedProgram(LoadProgramDTO programDTO) {
+            this.loadedProgramDTO = programDTO;
+            this.currentDegree = programDTO != null ? programDTO.getPresentProgramDTO().getCurrentProgramDegree() : 0;
         }
     }
 

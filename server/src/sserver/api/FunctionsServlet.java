@@ -7,19 +7,24 @@ import sserver.ctx.AppContext;
 import java.io.IOException;
 
 @WebServlet(name = "FunctionsServlet", urlPatterns = "/api/functions")
-public class FunctionsServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class FunctionsServlet extends BaseServlet {
 
     @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
 
-        String sessionId = req.getHeader("X-Session-Id");
-        if (!AppContext.sessions().isValidSession(sessionId)) {
-            resp.setStatus(401);
-            resp.getWriter().write("{\"error\":\"unauthorized\"}");
-            return;
-        }
+        try {
+            String sessionId = req.getHeader("X-Session-Id");
+            if (sessionId == null || !AppContext.sessions().isValidSession(sessionId)) {
+                sendAuthenticationError(resp);
+                return;
+            }
 
-        resp.getWriter().write(gson.toJson(new String[]{}));
+            String username = AppContext.sessions().getUserBySession(sessionId);
+            logger.info(String.format("Retrieving functions list | SessionID: %s | User: %s", sessionId, username));
+
+            resp.getWriter().write(gson.toJson(new String[]{}));
+        } catch (Exception e) {
+            sendExecutionError(resp, "Failed to retrieve functions", e.getMessage());
+        }
     }
 }

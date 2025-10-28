@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.util.Set;
 
 @WebServlet(name = "UsersServlet", urlPatterns = "/api/users/live")
-public class UsersServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class UsersServlet extends BaseServlet {
 
     static class UsersResponse {
         long ts;
@@ -44,17 +43,25 @@ public class UsersServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
 
-        // For now, we'll return all users without authentication
-        // You can add session validation if needed
-        Set<String> usernames = AppContext.users().list();
-        java.util.List<UserRow> userRows = new java.util.ArrayList<>();
+        try {
+            logger.info("Retrieving live users list");
+            
+            // Optional: Add authentication if needed
+            // For now, we'll return all users without authentication
+            Set<String> usernames = AppContext.users().list();
+            java.util.List<UserRow> userRows = new java.util.ArrayList<>();
 
-        for (String username : usernames) {
-            int credits = AppContext.users().getCredits(username);
-            userRows.add(new UserRow(username, credits));
+            for (String username : usernames) {
+                int credits = AppContext.users().getCredits(username);
+                userRows.add(new UserRow(username, credits));
+            }
+
+            logger.info(String.format("Live users list retrieved: %d users", userRows.size()));
+
+            UsersResponse response = new UsersResponse(System.currentTimeMillis(), userRows);
+            resp.getWriter().write(gson.toJson(response));
+        } catch (Exception e) {
+            sendExecutionError(resp, "Failed to retrieve users", e.getMessage());
         }
-
-        UsersResponse response = new UsersResponse(System.currentTimeMillis(), userRows);
-        resp.getWriter().write(gson.toJson(response));
     }
 }

@@ -1,86 +1,63 @@
 package sserver.api;
 
-import com.google.gson.Gson;
-import sserver.ctx.AppContext;
-import jakarta.servlet.http.*;
+import core.logic.engine.Engine;
+import exception.NoProgramException;
+import exception.ProgramNotExecutedYetException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import sserver.ctx.AppContext;
+import sserver.registry.EngineRegistry;
+import statistic.ProgramStatisticsDTO;
+
 import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
-@WebServlet(name="StatisticsServlet", urlPatterns="/api/statistics/history")
-public class StatisticsServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+@WebServlet(name="StatisticsServlet", urlPatterns="/api/execution/statistics")
+public class StatisticsServlet extends BaseServlet {
 
-    static class HistoryRow {
-        String time;
-        String user;
-        String program;
-        int runs;
-        int used;
-
-        HistoryRow(String time, String user, String program, int runs, int used) {
-            this.time = time;
-            this.user = user;
-            this.program = program;
-            this.runs = runs;
-            this.used = used;
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Check authentication
+        if (!checkAuthentication(req)) {
+            sendAuthenticationError(resp);
+            return;
         }
-    }
 
-    static class StatisticsResponse {
-        List<HistoryRow> rows;
+        // Get session engine
+        EngineRegistry.EngineContext engineCtx = getSessionEngine(req);
+        if (engineCtx == null) {
+            sendAuthenticationError(resp);
+            return;
+        }
 
-        StatisticsResponse(List<HistoryRow> rows) {
-            this.rows = rows;
+        String sessionId = getSessionIdFromCookie(req);
+        String username = AppContext.sessions().getUserBySession(sessionId);
+        Engine engine = engineCtx.engine;
+
+        try {
+            logger.info(String.format("Retrieving program statistics | SessionID: %s | User: %s", sessionId, username));
+
+            // Call presentProgramStats to get program statistics
+            ProgramStatisticsDTO statistics = engine.presentProgramStats();
+
+            logger.info(String.format("Program statistics retrieved successfully | SessionID: %s | User: %s", sessionId, username));
+
+            // Return the statistics
+            resp.setContentType("application/json");
+            resp.setStatus(200);
+            resp.getWriter().write(gson.toJson(statistics));
+
+        } catch (NoProgramException e) {
+            sendValidationError(req, resp, "No program loaded. Please select a program first.");
+        } catch (ProgramNotExecutedYetException e) {
+            sendValidationError(req, resp, "Program has not been executed yet. Please execute the program before viewing statistics.");
+        } catch (Exception e) {
+            sendExecutionError(req, resp, "Failed to retrieve program statistics", e.getMessage());
         }
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
-
-        try {
-            // Check authentication
-            String sessionId = getSessionIdFromCookie(req);
-            if (sessionId == null || !AppContext.sessions().isValidSession(sessionId)) {
-                resp.setStatus(401);
-                resp.getWriter().write("{\"error\":\"unauthorized\"}");
-                return;
-            }
-
-            // TODO: Get real statistics from your data store
-            // For now, return empty or mock data
-            List<HistoryRow> rows = new ArrayList<>();
-
-            // Mock data example (remove this when you have real data)
-            rows.add(new HistoryRow(
-                    Instant.now().toString(),
-                    "testuser",
-                    "TestProgram",
-                    5,
-                    100
-            ));
-
-            StatisticsResponse response = new StatisticsResponse(rows);
-            resp.getWriter().write(gson.toJson(response));
-
-        } catch (Exception e) {
-            resp.setStatus(500);
-            resp.getWriter().write("{\"error\":\"server_error\"}");
-        }
-    }
-
-    private String getSessionIdFromCookie(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        sendError(resp, 405, "validation", "Method not allowed. Use GET.");
     }
 }

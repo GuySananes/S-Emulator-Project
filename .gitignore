@@ -43,15 +43,7 @@ local.properties
 .classpath
 
 ### Tomcat ###
-lib/apache-tomcat-*/logs/
-lib/apache-tomcat-*/work/
-lib/apache-tomcat-*/temp/
-lib/apache-tomcat-*/webapps/ROOT/
-lib/apache-tomcat-*/webapps/docs/
-lib/apache-tomcat-*/webapps/examples/
-lib/apache-tomcat-*/webapps/host-manager/
-lib/apache-tomcat-*/webapps/manager/
-lib/apache-tomcat-*/webapps/chatWebApp_war_exploded/
+lib/apache-tomcat-*
 
 ### Deployment Artifacts ###
 out/artifacts/

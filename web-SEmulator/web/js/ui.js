@@ -1,116 +1,77 @@
-// UI helper functions
-export function showToast(type, message, duration = 3000) {
+// ui.js - UI utility functions
+
+/**
+ * Show a toast notification
+ */
+function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
-    if (!container) return;
+    if (!container) {
+        console.warn('Toast container not found');
+        return;
+    }
 
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 4px;">${type.toUpperCase()}</div>
-        <div>${message}</div>
-    `;
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
 
     container.appendChild(toast);
 
+    // Trigger animation
     setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
+        toast.classList.add('show');
+    }, 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            container.removeChild(toast);
+        }, 300);
+    }, 3000);
 }
 
-export function createTable(headers, rows, options = {}) {
-    const table = document.createElement('table');
-    table.className = 'table';
+/**
+ * Show a loading spinner
+ */
+function showLoading(element) {
+    if (!element) return;
 
-    // Create header
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    headers.forEach(header => {
-        const th = document.createElement('th');
-        th.textContent = header;
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    // Create body
-    const tbody = document.createElement('tbody');
-    rows.forEach((row, idx) => {
-        const tr = document.createElement('tr');
-        if (options.onRowClick) {
-            tr.style.cursor = 'pointer';
-            tr.addEventListener('click', (e) => {
-                // Don't trigger row click if clicking on a button or inside a button
-                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    return;
-                }
-                options.onRowClick(row, idx, tr);
-            });
-        }
-
-        row.forEach(cell => {
-            const td = document.createElement('td');
-            if (typeof cell === 'string' || typeof cell === 'number') {
-                td.textContent = cell;
-            } else if (cell instanceof HTMLElement) {
-                // If it's an HTML element (like a button), append it
-                td.appendChild(cell);
-            } else {
-                td.appendChild(cell);
-            }
-            tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-
-    return table;
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner';
+    element.innerHTML = '';
+    element.appendChild(spinner);
 }
 
-export function createButton(text, variant = 'primary', onClick) {
-    const btn = document.createElement('button');
-    btn.className = `btn btn-${variant}`;
-    btn.textContent = text;
-    if (onClick) btn.addEventListener('click', onClick);
-    return btn;
-}
+/**
+ * Hide loading spinner
+ */
+function hideLoading(element) {
+    if (!element) return;
 
-export function createBadge(text, type = 'credits') {
-    const badge = document.createElement('span');
-    badge.className = `badge badge-${type}`;
-    badge.textContent = text;
-    return badge;
-}
-
-export function showSpinner(container) {
-    container.innerHTML = '<div class="spinner"></div>';
-}
-
-export function hideSpinner(container) {
-    const spinner = container.querySelector('.spinner');
-    if (spinner) spinner.remove();
-}
-
-export function setButtonLoading(button, isLoading) {
-    if (isLoading) {
-        button.disabled = true;
-        button.classList.add('loading');
-    } else {
-        button.disabled = false;
-        button.classList.remove('loading');
+    const spinner = element.querySelector('.spinner');
+    if (spinner) {
+        spinner.remove();
     }
 }
 
-export function formatDateTime(isoString) {
-    if (!isoString) return 'Never';
-    const date = new Date(isoString);
-    return date.toLocaleString();
+/**
+ * Create an empty state message
+ */
+function createEmptyState(message) {
+    const div = document.createElement('div');
+    div.className = 'empty-state';
+    div.textContent = message;
+    return div;
 }
 
-export function updateCreditsDisplay(credits) {
-    const displays = document.querySelectorAll('#creditsDisplay');
-    displays.forEach(display => {
-        display.textContent = `Available Credits: ${credits}`;
-    });
+/**
+ * Create an error message
+ */
+function createErrorMessage(message) {
+    const div = document.createElement('div');
+    div.className = 'error-message';
+    div.textContent = message;
+    return div;
 }
+
+export { showToast, showLoading, hideLoading, createEmptyState, createErrorMessage };

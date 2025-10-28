@@ -112,7 +112,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>StatisticsServlet</servlet-name>
-        <url-pattern>/api/statistics/history</url-pattern>
+        <url-pattern>/api/execution/statistics</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -122,6 +122,33 @@
     <servlet-mapping>
         <servlet-name>ProgramSelectServlet</servlet-name>
         <url-pattern>/api/execution/select-program</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExpandServlet</servlet-name>
+        <servlet-class>sserver.api.ExpandServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExpandServlet</servlet-name>
+        <url-pattern>/api/execution/expand</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CollapseServlet</servlet-name>
+        <servlet-class>sserver.api.CollapseServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CollapseServlet</servlet-name>
+        <url-pattern>/api/execution/collapse</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>RerunServlet</servlet-name>
+        <servlet-class>sserver.api.RerunServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RerunServlet</servlet-name>
+        <url-pattern>/api/execution/rerun</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

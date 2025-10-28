@@ -1,40 +1,37 @@
+
 package sserver.api;
 
-import com.google.gson.Gson;
+import core.logic.execution.ResultCycle;
+import exception.NoProgramException;
+import exception.RunInputException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import load.LoadProgramDTO;
+import run.ExecuteProgramDTO;
+import run.RunProgramDTO;
 import sserver.ctx.AppContext;
+import sserver.registry.EngineRegistry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-@WebServlet(name="ExecuteServlet", urlPatterns="/api/execute/*")
-public class ExecuteServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+@WebServlet(name="ExecuteServlet", urlPatterns="/api/execution/regular")
+public class ExecuteServlet extends BaseServlet {
 
-    static class ExecuteReq {
-        String programName;
+    static class ExecuteRequest {
         List<Long> inputs;
     }
 
-    static class ExecuteResp {
-        boolean ok;
-        String error;
-        String executionId;
+    static class ExecuteResponse {
+        boolean success;
         Long result;
         Integer cycles;
-        ExecuteResp(boolean ok, String error, String execId, Long result, Integer cycles) {
-            this.ok = ok;
-            this.error = error;
-            this.executionId = execId;
+
+        ExecuteResponse(boolean success, Long result, Integer cycles) {
+            this.success = success;
             this.result = result;
             this.cycles = cycles;
         }
@@ -46,54 +43,70 @@ public class ExecuteServlet extends HttpServlet {
 
         resp.setContentType("application/json");
 
-        String sessionId = req.getHeader("X-Session-Id");
-        if (!AppContext.sessions().isValidSession(sessionId)) {
-            resp.setStatus(401);
-            resp.getWriter().write(gson.toJson(Map.of("error", "unauthorized")));
+        // Check authentication using BaseServlet method
+        if (!checkAuthentication(req)) {
+            sendAuthenticationError(resp);
             return;
         }
 
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || !pathInfo.equals("/start")) {
-            resp.setStatus(404);
-            resp.getWriter().write(gson.toJson(Map.of("error", "not found")));
+        // Get session engine
+        EngineRegistry.EngineContext engineCtx = getSessionEngine(req);
+        if (engineCtx == null) {
+            sendAuthenticationError(resp);
             return;
         }
+
+        String sessionId = getSessionIdFromCookie(req);
+        String username = AppContext.sessions().getUserBySession(sessionId);
+        logger.info(String.format("Starting program execution | SessionID: %s | User: %s", sessionId, username));
 
         try {
+            // Parse request body
             BufferedReader reader = req.getReader();
             String body = reader.lines().collect(Collectors.joining());
-            @SuppressWarnings("unchecked")
-            Map<String, Object> request = gson.fromJson(body, Map.class);
+            ExecuteRequest request = gson.fromJson(body, ExecuteRequest.class);
 
-            String programId = (String) request.get("programId");
-            String mode = (String) request.get("mode");
-
-            if (programId == null || programId.trim().isEmpty()) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(Map.of("error", "Program ID required")));
+            if (request == null) {
+                sendValidationError(resp, "Request body required");
                 return;
             }
 
-            // Get program data from registry
-            LoadProgramDTO programData = AppContext.programs().getProgramData(programId);
-            if (programData == null) {
-                resp.setStatus(404);
-                resp.getWriter().write(gson.toJson(Map.of("error", "Program not found")));
+            // Get ExecuteProgramDTO from session engine
+            ExecuteProgramDTO executeProgramDTO;
+            try {
+                executeProgramDTO = engineCtx.engine.executeProgram();
+            } catch (NoProgramException e) {
+                sendValidationError(resp, "No program loaded. Please select a program first.");
                 return;
             }
 
-            // Return program data for execution
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("programData", programData);
-            response.put("mode", mode != null ? mode : "normal");
+            // Get RunProgramDTO and set input values
+            RunProgramDTO runProgramDTO = executeProgramDTO.getRunProgramDTO();
 
+            // Set input values if provided
+            if (request.inputs != null) {
+                try {
+                    runProgramDTO.setInput(request.inputs);
+                } catch (RunInputException e) {
+                    sendValidationError(resp, "Invalid input values: " + e.getMessage());
+                    return;
+                }
+            }
+
+            // Execute the program
+            ResultCycle result = runProgramDTO.runProgram();
+
+            // Return result and cycle count
+            ExecuteResponse response = new ExecuteResponse(true, result.getResult(), result.getCycles());
+            logger.info(String.format("Program execution completed successfully: result=%d, cycles=%d | SessionID: %s | User: %s",
+                result.getResult(), result.getCycles(), sessionId, username));
             resp.getWriter().write(gson.toJson(response));
 
+
+        
         } catch (Exception e) {
-            resp.setStatus(500);
-            resp.getWriter().write(gson.toJson(Map.of("error", e.getMessage())));
+            // All other errors are execution errors
+            sendExecutionError(req, resp, "Program execution failed", e.getMessage());
         }
     }
 }

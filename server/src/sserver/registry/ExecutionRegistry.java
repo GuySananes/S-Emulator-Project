@@ -49,4 +49,26 @@ public class ExecutionRegistry {
     public void removeExecution(String execId) {
         executions.remove(execId);
     }
+
+    /**
+     * Remove all executions for a specific user (e.g., on logout)
+     */
+    public void removeExecutionsByUser(String username) {
+        if (username != null) {
+            executions.entrySet().removeIf(entry -> 
+                username.equals(entry.getValue().username)
+            );
+        }
+    }
+
+    /**
+     * Clean up old completed executions that haven't been accessed in a while
+     */
+    public void cleanupStaleExecutions(long maxIdleTimeMs) {
+        long currentTime = System.currentTimeMillis();
+        executions.entrySet().removeIf(entry -> {
+            ExecutionContext ctx = entry.getValue();
+            return ctx.completed && (currentTime - ctx.startTime) > maxIdleTimeMs;
+        });
+    }
 }

@@ -1,135 +1,180 @@
-import { api, contextPath } from './api.js';
-import { state } from './state.js';
-import { showToast, createTable, formatDateTime, updateCreditsDisplay } from './ui.js';
+// login.js - Login page controller
 
-let pollInterval = null;
+import { api } from './api.js';
+import { showToast } from './ui.js';
 
-// Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-    await checkExistingSession();
-    startLiveUsersPoll();
-    setupLoginForm();
-});
+let loginForm;
+let usernameInput;
+let loginBtn;
+let loginError;
+let usersTableContainer;
 
-async function checkExistingSession() {
+/**
+ * Initialize login page
+ */
+function init() {
+    console.log('Initializing login page...');
+
+    // Get DOM elements
+    loginForm = document.getElementById('loginForm');
+    usernameInput = document.getElementById('username');
+    loginBtn = document.getElementById('loginBtn');
+    loginError = document.getElementById('loginError');
+    usersTableContainer = document.getElementById('usersTableContainer');
+
+    // Setup event handlers
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Load live users
+    loadLiveUsers();
+
+    // Poll for live users every 5 seconds
+    setInterval(loadLiveUsers, 5000);
+}
+
+/**
+ * Handle login form submission
+ */
+async function handleLogin(event) {
+    event.preventDefault();
+
+    const username = usernameInput.value.trim();
+
+    if (!username) {
+        showError('Please enter a username');
+        return;
+    }
+
+    // Disable button during login
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Logging in...';
+    hideError();
+
     try {
-        const session = await api.getSession();
-        if (session && session.username) {
-            window.location.href = contextPath + '/dashboard.html';
-            return;
-        }
-    } catch (error) {
-        console.log('No existing session');
-    }
-}
+        console.log('Attempting login for:', username);
 
-function updateUI() {
-    const loginStatus = document.getElementById('loginStatus');
-    const currentUser = document.getElementById('currentUser');
-    const loginBtn = document.getElementById('loginBtn');
-    const userCredits = document.getElementById('userCredits');
+        const response = await api.login(username);
 
-    if (state.username) {
-        loginStatus.classList.remove('hidden');
-        currentUser.textContent = state.username;
-        loginBtn.disabled = true;
-        userCredits.textContent = state.credits;
-        updateCreditsDisplay(state.credits);
-    }
-}
+        console.log('Login response:', response);
 
-function setupLoginForm() {
-    const form = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('username');
-    const loginBtn = document.getElementById('loginBtn');
-    const errorDiv = document.getElementById('loginError');
+        // Check if login was successful
+        if (response.ok) {
+            showToast('Login successful!', 'success');
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorDiv.classList.add('hidden');
-
-        const username = usernameInput.value.trim();
-
-        if (!username) {
-            errorDiv.textContent = 'Username is required';
-            errorDiv.classList.remove('hidden');
-            return;
-        }
-
-        if (username.length > 20) {
-            errorDiv.textContent = 'Username must be 20 characters or less';
-            errorDiv.classList.remove('hidden');
-            return;
-        }
-
-        loginBtn.disabled = true;
-        loginBtn.textContent = 'Logging in...';
-
-        try {
-            const response = await api.login(username);
-
-            if (response.ok) {
-                state.setUser(response.username, response.credits);
-                showToast('success', `Welcome, ${response.username}!`);
-
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = contextPath + '/dashboard.html';
-                }, 500);
-            } else {
-                throw new Error(response.error || 'Login failed');
-            }
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.classList.remove('hidden');
+            // Redirect to dashboard
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 500);
+        } else {
+            // Login failed
+            const errorMessage = response.error || 'Login failed';
+            showError(errorMessage);
             loginBtn.disabled = false;
             loginBtn.textContent = 'Login';
-            showToast('error', error.message);
-        }
-    });
-}
-
-function startLiveUsersPoll() {
-    updateLiveUsers();
-    pollInterval = setInterval(updateLiveUsers, 3000);
-}
-
-async function updateLiveUsers() {
-    const container = document.getElementById('usersTableContainer');
-    const lastUpdatedSpan = document.getElementById('lastUpdated');
-
-    try {
-        const response = await api.getLiveUsers();
-
-        if (response.users && response.users.length > 0) {
-            const headers = ['Name', 'Mains', 'Funcs', 'Credits', 'Used', 'Runs'];
-            const rows = response.users.map(user => [
-                user.name,
-                user.mains || 0,
-                user.funcs || 0,
-                user.credits || 0,
-                user.used || 0,
-                user.runs || 0
-            ]);
-
-            const table = createTable(headers, rows);
-            container.innerHTML = '';
-            container.appendChild(table);
-        } else {
-            container.innerHTML = '<div class="empty-state">No live users</div>';
         }
 
-        if (response.lastUpdated) {
-            lastUpdatedSpan.textContent = formatDateTime(response.lastUpdated);
-            state.lastUpdated = response.lastUpdated;
-        }
     } catch (error) {
-        console.error('Failed to fetch live users:', error);
-        // Don't show toast on polling errors to avoid spam
+        console.error('Login error:', error);
+
+        // Check for specific error messages
+        let errorMessage = 'Login failed. Please try again.';
+
+        if (error.message.includes('username_taken')) {
+            errorMessage = 'Username is already taken. Please choose another.';
+        } else if (error.message.includes('username_required')) {
+            errorMessage = 'Username is required.';
+        } else if (error.message.includes('username_too_long')) {
+            errorMessage = 'Username is too long (max 50 characters).';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        showError(errorMessage);
+        showToast(errorMessage, 'error');
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
     }
 }
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-    if (pollInterval) clearInterval(pollInterval);
-});
+/**
+ * Load and display live users
+ */
+async function loadLiveUsers() {
+    try {
+        const response = await api.getUsers();
+
+        if (!response || !response.users) {
+            usersTableContainer.innerHTML = '<div class="empty-state">No users online</div>';
+            return;
+        }
+
+        // Create users table
+        const table = document.createElement('table');
+        table.className = 'data-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>Username</th>
+                <th>Credits</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        response.users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.credits}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        usersTableContainer.innerHTML = '';
+        usersTableContainer.appendChild(table);
+
+        // Update last updated time
+        const lastUpdated = document.getElementById('lastUpdated');
+        if (lastUpdated) {
+            lastUpdated.textContent = new Date().toLocaleTimeString();
+        }
+
+    } catch (error) {
+        console.error('Failed to load users:', error);
+        // Don't show error to user, just log it
+    }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    if (loginError) {
+        loginError.textContent = message;
+        loginError.classList.remove('hidden');
+    }
+}
+
+/**
+ * Hide error message
+ */
+function hideError() {
+    if (loginError) {
+        loginError.classList.add('hidden');
+        loginError.textContent = '';
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+export { init };

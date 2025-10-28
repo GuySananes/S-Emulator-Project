@@ -7,8 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import java.io.IOException;
 
 @WebServlet(name="CreditsServlet", urlPatterns="/api/credits/charge")
-public class CreditsServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class CreditsServlet extends BaseServlet {
 
     static class ChargeRequest {
         int amount;
@@ -27,44 +26,35 @@ public class CreditsServlet extends HttpServlet {
         resp.setContentType("application/json");
 
         try {
-            String sessionId = getSessionIdFromCookie(req);
-
-            if (sessionId == null || !AppContext.sessions().isValidSession(sessionId)) {
-                resp.setStatus(401);
-                resp.getWriter().write("{\"error\":\"unauthorized\"}");
+            // Check authentication using BaseServlet method
+            if (!checkAuthentication(req)) {
+                sendAuthenticationError(resp);
                 return;
             }
 
+            String sessionId = getSessionIdFromCookie(req);
             String username = AppContext.sessions().getUserBySession(sessionId);
 
             ChargeRequest request = gson.fromJson(req.getReader(), ChargeRequest.class);
 
             if (request == null || request.amount <= 0) {
-                resp.setStatus(400);
-                resp.getWriter().write("{\"error\":\"invalid_amount\"}");
+                sendValidationError(resp, "Invalid amount. Amount must be greater than 0.");
                 return;
             }
+
+            logger.info(String.format("Charging credits: %d | SessionID: %s | User: %s",
+                request.amount, sessionId, username));
 
             AppContext.users().addCredits(username, request.amount);
             int newCredits = AppContext.users().getCredits(username);
 
+            logger.info(String.format("Credits charged successfully: new balance=%d | SessionID: %s | User: %s",
+                newCredits, sessionId, username));
+
             resp.getWriter().write(gson.toJson(new CreditsResponse(newCredits)));
 
         } catch (Exception e) {
-            resp.setStatus(500);
-            resp.getWriter().write("{\"error\":\"server_error\"}");
+            sendExecutionError(req, resp, "Failed to charge credits", e.getMessage());
         }
-    }
-
-    private String getSessionIdFromCookie(HttpServletRequest req) {
-        Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JSESSIONID".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
     }
 }

@@ -1,19 +1,19 @@
 package sserver.api;
 
-import com.google.gson.Gson;
-import sserver.ctx.AppContext;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.WebServlet;
-import run.ExecuteProgramDTO;
-import run.DebugProgramDTO;
-import core.logic.execution.DebugResult;
 import core.logic.execution.DebugFinalResult;
+import core.logic.execution.DebugResult;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import run.ExecuteProgramDTO;
+import sserver.ctx.AppContext;
+import sserver.registry.EngineRegistry;
+
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet(name="DebugServlet", urlPatterns="/api/debug/*")
-public class DebugServlet extends HttpServlet {
-    private final Gson gson = new Gson();
+public class DebugServlet extends BaseServlet {
 
     static class DebugStartReq {
         String programName;
@@ -46,13 +46,23 @@ public class DebugServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Get session engine context from X-Session-Id header (DebugServlet uses header auth)
+     */
+    private EngineRegistry.EngineContext getSessionEngineFromHeader(HttpServletRequest req) {
+        String sessionId = req.getHeader("X-Session-Id");
+        if (sessionId == null || !AppContext.sessions().isValidSession(sessionId)) {
+            return null;
+        }
+        return AppContext.engines().getOrCreateEngine(sessionId);
+    }
+
     @Override protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
 
         String sessionId = req.getHeader("X-Session-Id");
         if (!AppContext.sessions().isValidSession(sessionId)) {
-            resp.setStatus(401);
-            resp.getWriter().write(gson.toJson(new DebugStartResp(false, "unauthorized", null)));
+            sendAuthenticationError(resp);
             return;
         }
 
@@ -70,30 +80,39 @@ public class DebugServlet extends HttpServlet {
                 } else if (parts.length == 2 && "resume".equals(parts[1])) {
                     handleResume(resp, parts[0]);
                 } else {
-                    resp.setStatus(404);
-                    resp.getWriter().write(gson.toJson(new StepResp(false, "invalid_path")));
+                    sendError(resp, 404, "validation", "Invalid debug path");
                 }
             } else {
-                resp.setStatus(404);
-                resp.getWriter().write(gson.toJson(new StepResp(false, "invalid_path")));
+                sendError(resp, 404, "validation", "Invalid debug path");
             }
         } else {
-            resp.setStatus(404);
-            resp.getWriter().write(gson.toJson(new StepResp(false, "invalid_path")));
+            sendError(resp, 404, "validation", "Invalid debug path");
         }
     }
 
     private void handleStartDebug(HttpServletRequest req, HttpServletResponse resp, String username) throws IOException {
+        String sessionId = req.getHeader("X-Session-Id");
+        
         try {
             DebugStartReq request = gson.fromJson(req.getReader(), DebugStartReq.class);
 
             if (request == null || request.programName == null || request.programName.trim().isEmpty()) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new DebugStartResp(false, "program_name_required", null)));
+                sendValidationError(resp, "program_name_required");
                 return;
             }
 
-            ExecuteProgramDTO execDto = AppContext.programs().getEngine().executeProgram();
+            logger.info(String.format("Starting debug session for program: %s | SessionID: %s | User: %s",
+                request.programName, sessionId, username));
+
+            // Get session-specific engine context
+            EngineRegistry.EngineContext engineContext = getSessionEngineFromHeader(req);
+            if (engineContext == null) {
+                sendAuthenticationError(resp);
+                return;
+            }
+
+            // Use session engine to create debug execution
+            ExecuteProgramDTO execDto = engineContext.engine.executeProgram();
 
             if (request.inputs != null && !request.inputs.isEmpty()) {
                 execDto.getDebugProgramDTO().setInput(request.inputs);
@@ -101,27 +120,29 @@ public class DebugServlet extends HttpServlet {
 
             String debugId = AppContext.executions().createExecution(request.programName, username, execDto);
 
+            logger.info(String.format("Debug session created successfully: %s | SessionID: %s | User: %s | DebugID: %s",
+                request.programName, sessionId, username, debugId));
+
             resp.getWriter().write(gson.toJson(new DebugStartResp(true, null, debugId)));
 
+
         } catch (Exception e) {
-            resp.setStatus(500);
-            String msg = e.getMessage();
-            resp.getWriter().write(gson.toJson(new DebugStartResp(false, msg != null ? msg : "debug_start_error", null)));
+            sendExecutionError(req, resp, "Debug start failed", e.getMessage());
         }
     }
 
     private void handleStep(HttpServletResponse resp, String debugId) throws IOException {
+        logger.info(String.format("Debug step requested | DebugID: %s", debugId));
+        
         try {
             var ctx = AppContext.executions().getExecution(debugId);
             if (ctx == null) {
-                resp.setStatus(404);
-                resp.getWriter().write(gson.toJson(new StepResp(false, "session_not_found")));
+                sendError(resp, 404, "validation", "Debug session not found");
                 return;
             }
 
             if (ctx.completed) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new StepResp(false, "already_completed")));
+                sendValidationError(resp, "Debug session already completed");
                 return;
             }
 
@@ -135,6 +156,8 @@ public class DebugServlet extends HttpServlet {
                 stepResp.finalResult = finalResult.getResult();
                 stepResp.cycles = finalResult.getCycles();
                 AppContext.executions().markCompleted(debugId, finalResult);
+                logger.info(String.format("Debug session completed: result=%d, cycles=%d | DebugID: %s",
+                    finalResult.getResult(), finalResult.getCycles(), debugId));
             } else {
                 stepResp.completed = false;
                 stepResp.nextIndex = result.getNextIndex();
@@ -143,29 +166,29 @@ public class DebugServlet extends HttpServlet {
                     stepResp.changedVariable = result.getChangedVariable().getVariable().getRepresentation();
                     stepResp.newValue = result.getChangedVariable().getNewValue();
                 }
+                logger.fine(String.format("Debug step executed: nextIndex=%d, cycles=%d | DebugID: %s",
+                    result.getNextIndex(), result.getCycles(), debugId));
             }
 
             resp.getWriter().write(gson.toJson(stepResp));
 
         } catch (Exception e) {
-            resp.setStatus(500);
-            String msg = e.getMessage();
-            resp.getWriter().write(gson.toJson(new StepResp(false, msg != null ? msg : "step_error")));
+            sendExecutionError(resp, "Debug step failed", e.getMessage());
         }
     }
 
     private void handleResume(HttpServletResponse resp, String debugId) throws IOException {
+        logger.info(String.format("Debug resume requested | DebugID: %s", debugId));
+        
         try {
             var ctx = AppContext.executions().getExecution(debugId);
             if (ctx == null) {
-                resp.setStatus(404);
-                resp.getWriter().write(gson.toJson(new StepResp(false, "session_not_found")));
+                sendError(resp, 404, "validation", "Debug session not found");
                 return;
             }
 
             if (ctx.completed) {
-                resp.setStatus(400);
-                resp.getWriter().write(gson.toJson(new StepResp(false, "already_completed")));
+                sendValidationError(resp, "Debug session already completed");
                 return;
             }
 
@@ -178,12 +201,13 @@ public class DebugServlet extends HttpServlet {
 
             AppContext.executions().markCompleted(debugId, finalResult);
 
+            logger.info(String.format("Debug session resumed to completion: result=%d, cycles=%d | DebugID: %s",
+                finalResult.getResult(), finalResult.getCycles(), debugId));
+
             resp.getWriter().write(gson.toJson(stepResp));
 
         } catch (Exception e) {
-            resp.setStatus(500);
-            String msg = e.getMessage();
-            resp.getWriter().write(gson.toJson(new StepResp(false, msg != null ? msg : "resume_error")));
+            sendExecutionError(resp, "Debug resume failed", e.getMessage());
         }
     }
 }

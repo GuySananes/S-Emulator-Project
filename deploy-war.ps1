@@ -55,4 +55,26 @@ foreach ($jar in $requiredJars) {
     }
 }
 
-Write-Host "WAR deployment prepared at: $warDir" -ForegroundColor Green
+# Deploy to local Tomcat
+$localTomcat = "lib\apache-tomcat-10.1.26"
+$tomcatWebapps = "$localTomcat\webapps\web_SEmulator_Web_exploded"
+
+if (Test-Path $localTomcat) {
+    Write-Host "Deploying to Tomcat webapps..." -ForegroundColor Yellow
+    
+    # Remove existing deployment
+    if (Test-Path $tomcatWebapps) {
+        Remove-Item -Recurse -Force $tomcatWebapps
+        Write-Host "  Removed existing deployment" -ForegroundColor Gray
+    }
+    
+    # Copy exploded WAR to Tomcat webapps
+    Copy-Item -Recurse $warDir $tomcatWebapps -Force
+    Write-Host "  Deployed to: $tomcatWebapps" -ForegroundColor Green
+    
+    Write-Host "WAR deployment complete!" -ForegroundColor Green
+    Write-Host "Access at: http://localhost:8080/web_SEmulator_Web_exploded" -ForegroundColor Cyan
+} else {
+    Write-Host "WARNING: Local Tomcat not found at $localTomcat" -ForegroundColor Red
+    Write-Host "WAR prepared at: $warDir (manual deployment required)" -ForegroundColor Yellow
+}
