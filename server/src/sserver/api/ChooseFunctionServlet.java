@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import present.program.PresentProgramDTO;
+import run.ExecuteProgramDTO;
 import sserver.ctx.AppContext;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "ChooseFunctionServlet", urlPatterns = "/api/execution/choose-function")
+@WebServlet(name = "ChooseFunctionServlet", urlPatterns = "/api/execute/choose-function")
 public class ChooseFunctionServlet extends HttpServlet {
     private final Gson gson = new Gson();
 
@@ -33,6 +34,7 @@ public class ChooseFunctionServlet extends HttpServlet {
         int currentDegree;
         List<Map<String, Object>> instructions;
         List<Map<String, Object>> variables;
+        List<String> inputVariables; // ADD THIS FIELD
     }
 
     @Override
@@ -69,7 +71,6 @@ public class ChooseFunctionServlet extends HttpServlet {
             System.out.println("From program: " + request.programName);
 
             // Use Engine to switch to the context program (function)
-            // This is equivalent to what JavaFX does with engine.chooseContextProgram()
             Engine engine = Engine.getInstance();
 
             try {
@@ -87,6 +88,10 @@ public class ChooseFunctionServlet extends HttpServlet {
                 response.currentDegree = presentDTO.getCurrentProgramDegree();
                 response.instructions = convertInstructions(presentDTO);
                 response.variables = convertVariables(presentDTO);
+
+                // ADD THIS: Get input variables from ExecuteProgramDTO
+                ExecuteProgramDTO executeDTO = engine.executeProgram();
+                response.inputVariables = extractInputVariables(executeDTO.getRunProgramDTO());
 
                 resp.getWriter().write(gson.toJson(response));
 
@@ -107,15 +112,6 @@ public class ChooseFunctionServlet extends HttpServlet {
                     "error", "internal_error: " + e.getMessage()
             )));
         }
-    }
-
-    private boolean isAuthorized(HttpServletRequest req) {
-        String sessionId = getSessionIdFromCookie(req);
-        if (sessionId == null) {
-            return false;
-        }
-        String username = AppContext.sessions().getUserBySession(sessionId);
-        return username != null;
     }
 
     private String getSessionIdFromCookie(HttpServletRequest req) {
@@ -162,5 +158,21 @@ public class ChooseFunctionServlet extends HttpServlet {
         }
 
         return variables;
+    }
+
+    // ADD THIS NEW METHOD - Same as in ProgramSelectServlet
+    private List<String> extractInputVariables(run.RunProgramDTO runDTO) {
+        List<String> inputVars = new ArrayList<>();
+
+        // Use getOrderedInputVariables() - this matches what JavaFX uses
+        java.util.Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
+
+        if (requiredInputs != null) {
+            for (core.logic.variable.Variable variable : requiredInputs) {
+                inputVars.add(variable.getRepresentation());
+            }
+        }
+
+        return inputVars;
     }
 }

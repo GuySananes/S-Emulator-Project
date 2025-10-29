@@ -327,3 +327,59 @@ select.dropdown:focus {
 .toggle-label {
     font-size: 0.9rem;
 }
+
+/* Instruction highlighting */
+#instructionsTableContainer tbody tr.highlighted {
+    background-color: #fff3cd !important;
+    border-left: 3px solid #ffc107;
+    font-weight: 600;
+}
+
+/* Execution status badges */
+.badge-running {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-idle {
+    background-color: #6c757d;
+    color: white;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Input form styling */
+.inputs-form {
+    padding: 10px;
+}
+
+.inputs-form label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.inputs-form input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.inputs-form input[type="number"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.inputs-form .empty-state {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}

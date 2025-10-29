@@ -2,12 +2,16 @@ package sserver.api;
 
 import com.google.gson.Gson;
 import core.logic.engine.Engine;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import load.LoadProgramDTO;
 import present.program.PresentProgramDTO;
+import run.ExecuteProgramDTO;
 import sserver.ctx.AppContext;
 import sserver.registry.ProgramsRegistry;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.WebServlet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet(name="ProgramSelectServlet", urlPatterns="/api/execution/select-program")
+@WebServlet(name="ProgramSelectServlet", urlPatterns="/api/execute/select-program")
 public class ProgramSelectServlet extends HttpServlet {
     private final Gson gson = new Gson();
 
@@ -30,6 +34,7 @@ public class ProgramSelectServlet extends HttpServlet {
         int currentDegree;
         List<Map<String, Object>> instructions;
         List<Map<String, Object>> variables;
+        List<String> inputVariables;
     }
 
     @Override
@@ -79,12 +84,15 @@ public class ProgramSelectServlet extends HttpServlet {
             // Build response
             SelectProgramResponse response = new SelectProgramResponse();
             response.programName = presentDTO.getProgramName();
-            // Convert Set<String> to List<String>
             response.contextPrograms = new ArrayList<>(loadDTO.getContextProgramsNames());
             response.maxDegree = presentDTO.getOriginMaxDegree();
             response.currentDegree = presentDTO.getCurrentProgramDegree();
             response.instructions = convertInstructions(presentDTO);
             response.variables = convertVariables(presentDTO);
+
+            // Get input variables from ExecuteProgramDTO
+            ExecuteProgramDTO executeDTO = engine.executeProgram();
+            response.inputVariables = extractInputVariables(executeDTO.getRunProgramDTO());
 
             resp.getWriter().write(gson.toJson(response));
 
@@ -142,5 +150,20 @@ public class ProgramSelectServlet extends HttpServlet {
             }
         }
         return null;
+    }
+
+    private List<String> extractInputVariables(run.RunProgramDTO runDTO) {
+        List<String> inputVars = new ArrayList<>();
+
+        // Use getOrderedInputVariables() - this matches what JavaFX uses
+        java.util.Set<core.logic.variable.Variable> requiredInputs = runDTO.getOrderedInputVariables();
+
+        if (requiredInputs != null) {
+            for (core.logic.variable.Variable variable : requiredInputs) {
+                inputVars.add(variable.getRepresentation());
+            }
+        }
+
+        return inputVars;
     }
 }

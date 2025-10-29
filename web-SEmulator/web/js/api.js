@@ -116,38 +116,51 @@ export const api = {
     },
 
     // Execution
-    async startExecution(programId, mode, inputs = {}) {
+    async startExecution(programId, mode, inputs = {}, functionName = null) {
+        const body = {
+            programId,
+            mode,
+            inputs
+        };
+
+        // Add functionName if provided
+        if (functionName) {
+            body.functionName = functionName;
+        }
+
         return apiCall('/execute/start', {
             method: 'POST',
-            body: JSON.stringify({ programId, mode, inputs })
+            body: JSON.stringify(body)
         });
     },
 
-    async getExecutionStatus(runId) {
-        return apiCall(`/execute/status?runId=${runId}`);
-    },
-
-    async sendExecutionCommand(runId, cmd) {
-        return apiCall('/execute/cmd', {
+    async stepExecution(executionId) {
+        return apiCall('/execute/step', {
             method: 'POST',
-            body: JSON.stringify({ runId, cmd })
+            body: JSON.stringify({ executionId })
         });
     },
 
-    async getVariables(runId) {
-        return apiCall(`/execute/variables?runId=${runId}`);
+    async resumeExecution(executionId) {
+        return apiCall('/execute/resume', {
+            method: 'POST',
+            body: JSON.stringify({ executionId })
+        });
     },
 
-    async getInputs(runId) {
-        return apiCall(`/execute/inputs?runId=${runId}`);
+    async stopExecution(executionId) {
+        return apiCall('/execute/stop', {
+            method: 'POST',
+            body: JSON.stringify({ executionId })
+        });
     },
 
-    async getInstructions(runId) {
-        return apiCall(`/execute/instructions?runId=${runId}`);
+    async getExecutionStatus(executionId) {
+        return apiCall(`/execute/status?executionId=${executionId}`);
     },
 
-    async getHistory(runId, idx) {
-        return apiCall(`/execute/history?runId=${runId}&idx=${idx}`);
+    async getVariables(executionId) {
+        return apiCall(`/execute/variables?executionId=${executionId}`);
     },
 
     // Statistics

@@ -113,23 +113,6 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
-<script type="module" src="js/execute.js"></script>
-<script>
-    // This inline script should ALWAYS run
-    console.log('=== INLINE SCRIPT RUNNING ===');
-    console.log('URL:', window.location.href);
-    console.log('Pathname:', window.location.pathname);
-
-    // Check if we can access DOM elements
-    const programSelector = document.getElementById('programSelector');
-    console.log('Program selector element:', programSelector);
-
-    // Try to see if modules are loading
-    setTimeout(() => {
-        console.log('=== CHECKING AFTER 2 SECONDS ===');
-        console.log('Is module loaded?');
-    }, 2000);
-</script>
 
 <script type="module" src="js/execute.js"></script>
 </body>

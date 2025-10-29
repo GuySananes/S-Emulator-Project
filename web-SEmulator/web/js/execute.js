@@ -1,9 +1,8 @@
-
 console.log('=== EXECUTE.JS FILE LOADING ===');
 
 import { api, contextPath } from './api.js';
 import { state } from './state.js';
-import { showToast, createTable, updateCreditsDisplay, setButtonLoading } from './ui.js';
+import { showToast, createTable, updateCreditsDisplay } from './ui.js';
 
 console.log('=== IMPORTS COMPLETED ===');
 
@@ -12,7 +11,11 @@ let currentStep = 0;
 let collapseLevel = 0;
 let highlightEnabled = false;
 let selectedProgramName = null;
+let selectedFunctionName = null;
 let availableFunctions = [];
+let currentExecutionId = null;
+let executionMode = null; // 'regular' or 'debug'
+let currentInputVariables = []; // ADD THIS LINE
 
 console.log('=== ADDING DOM LOADED LISTENER ===');
 
@@ -61,7 +64,7 @@ async function checkAuth() {
 
 async function initializePage() {
     const params = new URLSearchParams(window.location.search);
-    const programId = params.get('programId');  // This is actually the program name
+    const programId = params.get('programId');
     const functionId = params.get('functionId');
 
     console.log('Initializing execution page with programId:', programId, 'functionId:', functionId);
@@ -72,15 +75,12 @@ async function initializePage() {
         return;
     }
 
-    // Load all programs first
     await loadProgramsDropdown();
 
-    // Select the program from URL
     if (programId) {
         await selectProgram(programId);
     }
 
-    // If function was specified, select it
     if (functionId && availableFunctions.length > 0) {
         const functionSelector = document.getElementById('functionSelector');
         functionSelector.value = functionId;
@@ -96,8 +96,6 @@ async function loadProgramsDropdown() {
     try {
         const response = await api.getPrograms();
         console.log('Programs API response:', response);
-        console.log('Programs array:', response.programs);
-        console.log('Programs length:', response.programs ? response.programs.length : 0);
 
         programSelector.innerHTML = '<option value="">Select program...</option>';
 
@@ -132,10 +130,9 @@ async function selectProgram(programName) {
     console.log('Dropdown value set to:', programSelector.value);
 
     try {
-        console.log('Calling /api/execution/select-program with:', programName);
+        console.log('Calling /api/execute/select-program with:', programName);
 
-        // Call the backend to load the program (like Engine.loadProgram)
-        const response = await fetch(`${contextPath}/api/execution/select-program`, {
+        const response = await fetch(`${contextPath}/api/execute/select-program`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -143,7 +140,6 @@ async function selectProgram(programName) {
         });
 
         console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -154,23 +150,22 @@ async function selectProgram(programName) {
         const data = await response.json();
         console.log('Program selected successfully!');
         console.log('Full response data:', data);
-        console.log('Context programs:', data.contextPrograms);
-        console.log('Instructions count:', data.instructions ? data.instructions.length : 0);
-        console.log('Variables count:', data.variables ? data.variables.length : 0);
 
-        // Load the context programs (functions) into the function selector
+        // Store required input variables
+        currentInputVariables = data.inputVariables || [];
+        console.log('Required inputs:', currentInputVariables);
+
+        // Display the input form
+        displayInputsForm(currentInputVariables);
+
         await loadFunctionsDropdown(data.contextPrograms || []);
-
-        // Display instructions and variables
         displayInstructions(data.instructions || []);
         displayVariables(data.variables || []);
 
         showToast('success', `Loaded program: ${programName}`);
 
     } catch (error) {
-        console.error('=== SELECT PROGRAM ERROR ===');
-        console.error('Error:', error);
-        console.error('Stack:', error.stack);
+        console.error('=== SELECT PROGRAM ERROR ===', error);
         showToast('error', `Failed to load program: ${error.message}`);
     }
 
@@ -196,12 +191,38 @@ async function loadFunctionsDropdown(contextPrograms) {
     }
 }
 
+function displayInputsForm(inputVariables) {
+    const container = document.getElementById('inputsForm');
+
+    if (!inputVariables || inputVariables.length === 0) {
+        container.innerHTML = '<div class="empty-state">No inputs required</div>';
+        return;
+    }
+
+    // Just show info about required inputs
+    container.innerHTML = `
+        <div style="padding: 16px; background: #f0f7ff; border-radius: 8px; border: 2px solid #2196F3;">
+            <div style="font-weight: 600; color: #1976D2; margin-bottom: 8px;">
+                📝 Required Inputs: ${inputVariables.length}
+            </div>
+            <div style="color: #555; font-size: 14px;">
+                ${inputVariables.map(v => `<span style="display: inline-block; padding: 4px 8px; background: white; border-radius: 4px; margin: 2px; font-family: monospace;">${v}</span>`).join('')}
+            </div>
+            <div style="margin-top: 12px; font-size: 13px; color: #666; font-style: italic;">
+                Click "Start Regular" or "Start Debug" to enter values
+            </div>
+        </div>
+    `;
+}
+
 async function selectFunction(functionName) {
     console.log('Selecting function:', functionName);
 
+    // ADD THIS LINE - Track the selected function
+    selectedFunctionName = functionName;
+
     try {
-        // Call engine.chooseContextProgram (like JavaFX does)
-        const response = await fetch(`${contextPath}/api/execution/choose-function`, {
+        const response = await fetch(`${contextPath}/api/execute/choose-function`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -215,7 +236,10 @@ async function selectFunction(functionName) {
         const data = await response.json();
         console.log('Function selected:', data);
 
-        // Display instructions and variables for the selected function
+        // ADD THESE LINES - Store and display input variables for the function
+        currentInputVariables = data.inputVariables || [];
+        displayInputsForm(currentInputVariables);
+
         displayInstructions(data.instructions || []);
         displayVariables(data.variables || []);
 
@@ -281,7 +305,6 @@ function displayVariables(variables) {
 }
 
 function setupControls() {
-    // Program selector
     const programSelector = document.getElementById('programSelector');
     programSelector.addEventListener('change', (e) => {
         if (e.target.value) {
@@ -289,7 +312,6 @@ function setupControls() {
         }
     });
 
-    // Function selector
     const functionSelector = document.getElementById('functionSelector');
     functionSelector.addEventListener('change', (e) => {
         if (e.target.value) {
@@ -297,11 +319,9 @@ function setupControls() {
         }
     });
 
-    // Back buttons
     document.getElementById('backToDashboardBtn').addEventListener('click', goToDashboard);
     document.getElementById('backToDashboard2Btn').addEventListener('click', goToDashboard);
 
-    // Execution controls
     document.getElementById('startRegularBtn').addEventListener('click', () => startExecution('regular'));
     document.getElementById('startDebugBtn').addEventListener('click', () => startExecution('debug'));
     document.getElementById('stopBtn').addEventListener('click', () => sendCommand('stop'));
@@ -309,7 +329,6 @@ function setupControls() {
     document.getElementById('stepForwardBtn').addEventListener('click', () => sendCommand('stepForward'));
     document.getElementById('stepBackwardBtn').addEventListener('click', () => sendCommand('stepBack'));
 
-    // View controls
     document.getElementById('collapseBtn').addEventListener('click', () => {
         collapseLevel++;
         applyCollapse();
@@ -331,14 +350,498 @@ function goToDashboard() {
     window.location.href = contextPath + '/dashboard.html';
 }
 
+
 async function startExecution(mode) {
+    console.log('=== START EXECUTION CALLED - MODE:', mode, '===');
     console.log('Starting execution in', mode, 'mode');
-    showToast('info', 'Execution feature coming soon');
+
+    if (!selectedProgramName) {
+        showToast('error', 'No program selected');
+        return;
+    }
+
+    executionMode = mode;
+
+    // Show input dialog if inputs are required
+    let inputs = {};
+
+    if (currentInputVariables && currentInputVariables.length > 0) {
+        const inputValues = await showInputDialog(currentInputVariables);
+
+        if (inputValues === null) {
+            showToast('info', 'Execution cancelled');
+            return;
+        }
+
+        // Convert array to map with variable names
+        currentInputVariables.forEach((varName, index) => {
+            inputs[varName] = inputValues[index];
+        });
+    }
+
+    console.log('Collected inputs:', inputs);
+    console.log('Selected function:', selectedFunctionName); // ADD THIS LOG
+
+    try {
+        // MODIFY THIS: Send function name along with program name
+        const executionRequest = {
+            programId: selectedProgramName,
+            functionName: selectedFunctionName, // ADD THIS LINE
+            mode: mode,
+            inputs: inputs
+        };
+
+        const response = await api.startExecution(executionRequest.programId, mode, inputs, selectedFunctionName);
+        console.log('Execution started:', response);
+
+        currentExecutionId = response.executionId;
+        state.setRunId(currentExecutionId);
+
+        if (response.status === 'completed') {
+            displayExecutionResult(response.data);
+            updateUIState('completed');
+            showToast('success', `Execution completed! Result: ${response.data.result}, Cycles: ${response.data.cycles}`);
+        } else if (response.status === 'ready') {
+            updateUIState('debug-ready');
+            displayVariablesObj(response.data.variables);
+            updateCyclesDisplay(response.data.cycles || 0);
+            showToast('success', 'Debug mode ready - use Step Forward to execute');
+        }
+
+    } catch (error) {
+        console.error('Failed to start execution:', error);
+        showToast('error', `Execution failed: ${error.message}`);
+        updateUIState('idle');
+    }
+}
+
+// NEW FUNCTION: Show modal input dialog
+function showInputDialog(inputVariables) {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'inputDialogOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-in;
+        `;
+
+        // Create dialog box
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            min-width: 450px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        `;
+
+        // Dialog header
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 24px;
+            border-bottom: none;
+        `;
+        header.innerHTML = `
+            <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Enter Input Values</h2>
+            <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Please provide values for ${inputVariables.length} input variable${inputVariables.length > 1 ? 's' : ''}
+            </p>
+        `;
+
+        // Dialog content
+        const content = document.createElement('div');
+        content.style.cssText = `
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        `;
+
+        // Create input fields
+        const inputFields = [];
+        inputVariables.forEach((varName, index) => {
+            const inputGroup = document.createElement('div');
+            inputGroup.style.cssText = `
+                margin-bottom: 20px;
+            `;
+
+            const label = document.createElement('label');
+            label.textContent = `${varName}:`;
+            label.style.cssText = `
+                display: block;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #333;
+                font-size: 15px;
+            `;
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.value = '0';
+            input.placeholder = `Enter value for ${varName}`;
+            input.style.cssText = `
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                font-size: 16px;
+                box-sizing: border-box;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            `;
+
+            // Focus styling
+            input.addEventListener('focus', () => {
+                input.style.borderColor = '#667eea';
+                input.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+            });
+
+            input.addEventListener('blur', () => {
+                input.style.borderColor = '#e0e0e0';
+                input.style.boxShadow = 'none';
+            });
+
+            inputGroup.appendChild(label);
+            inputGroup.appendChild(input);
+            content.appendChild(inputGroup);
+            inputFields.push(input);
+
+            // Focus first input after a short delay
+            if (index === 0) {
+                setTimeout(() => input.focus(), 100);
+            }
+        });
+
+        // Dialog footer
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            background: #f8f9fa;
+        `;
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = `
+            padding: 10px 24px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #666;
+        `;
+        cancelBtn.addEventListener('mouseover', () => {
+            cancelBtn.style.background = '#f5f5f5';
+            cancelBtn.style.borderColor = '#bbb';
+        });
+        cancelBtn.addEventListener('mouseout', () => {
+            cancelBtn.style.background = 'white';
+            cancelBtn.style.borderColor = '#ddd';
+        });
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.style.cssText = `
+            padding: 10px 24px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        `;
+        confirmBtn.addEventListener('mouseover', () => {
+            confirmBtn.style.transform = 'translateY(-1px)';
+            confirmBtn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+        });
+        confirmBtn.addEventListener('mouseout', () => {
+            confirmBtn.style.transform = 'translateY(0)';
+            confirmBtn.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+        });
+
+        footer.appendChild(cancelBtn);
+        footer.appendChild(confirmBtn);
+
+        // Assemble dialog
+        dialog.appendChild(header);
+        dialog.appendChild(content);
+        dialog.appendChild(footer);
+        overlay.appendChild(dialog);
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { 
+                    transform: translateY(-30px);
+                    opacity: 0;
+                }
+                to { 
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Event handlers
+        cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+            resolve(null);
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            const values = [];
+            let isValid = true;
+
+            for (let i = 0; i < inputFields.length; i++) {
+                const input = inputFields[i];
+                const value = parseInt(input.value);
+
+                if (isNaN(value) || value < 0) {
+                    input.style.borderColor = '#f44336';
+                    input.style.boxShadow = '0 0 0 3px rgba(244, 67, 54, 0.1)';
+                    showToast('error', `Invalid value for ${inputVariables[i]}. Must be non-negative.`);
+                    isValid = false;
+                    input.focus();
+                    break;
+                }
+
+                values.push(value);
+            }
+
+            if (isValid) {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+                resolve(values);
+            }
+        });
+
+        // Enter key support
+        inputFields.forEach((input, index) => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    if (index < inputFields.length - 1) {
+                        inputFields[index + 1].focus();
+                    } else {
+                        confirmBtn.click();
+                    }
+                }
+            });
+        });
+
+        // Escape key to cancel
+        overlay.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cancelBtn.click();
+            }
+        });
+
+        // Add to page
+        document.body.appendChild(overlay);
+    });
 }
 
 async function sendCommand(command) {
     console.log('Sending command:', command);
-    showToast('info', 'Command feature coming soon');
+
+    if (!currentExecutionId) {
+        showToast('error', 'No active execution');
+        return;
+    }
+
+    try {
+        let response;
+
+        switch (command) {
+            case 'stepForward':
+                response = await fetch(`${contextPath}/api/execute/step`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ executionId: currentExecutionId })
+                });
+                break;
+
+            case 'resume':
+                response = await fetch(`${contextPath}/api/execute/resume`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ executionId: currentExecutionId })
+                });
+                break;
+
+            case 'stop':
+                response = await fetch(`${contextPath}/api/execute/stop`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ executionId: currentExecutionId })
+                });
+                if (response.ok) {
+                    currentExecutionId = null;
+                    updateUIState('idle');
+                    showToast('info', 'Execution stopped');
+                }
+                return;
+
+            default:
+                showToast('error', 'Unknown command');
+                return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Command failed');
+        }
+
+        const data = await response.json();
+        console.log('Command response:', data);
+
+        if (data.status === 'execution_finished') {
+            displayExecutionResult({ result: data.result, cycles: data.totalCycles, variables: data.variables });
+            updateUIState('completed');
+            showToast('success', `Execution finished! Result: ${data.result}, Cycles: ${data.totalCycles}`);
+            currentExecutionId = null;
+        } else if (data.status === 'step_completed') {
+            displayVariablesObj(data.variables);
+            updateCyclesDisplay(data.totalCycles);
+            highlightInstruction(data.nextIndex);
+
+            if (data.changedVariable) {
+                showToast('info', `${data.changedVariable} = ${data.changedValue}`, 2000);
+            }
+        }
+
+    } catch (error) {
+        console.error('Command failed:', error);
+        showToast('error', `Command failed: ${error.message}`);
+    }
+}
+
+function displayExecutionResult(data) {
+    if (data.variables) {
+        displayVariablesObj(data.variables);
+    }
+    if (data.cycles !== undefined) {
+        updateCyclesDisplay(data.cycles);
+    }
+
+    const summaryText = document.getElementById('summaryText');
+    if (summaryText) {
+        summaryText.textContent = `Result: ${data.result}, Cycles: ${data.cycles}`;
+    }
+}
+
+function displayVariablesObj(variablesObj) {
+    const container = document.getElementById('variablesTableContainer');
+
+    if (!variablesObj || Object.keys(variablesObj).length === 0) {
+        container.innerHTML = '<div class="empty-state">No variables</div>';
+        return;
+    }
+
+    const headers = ['Name', 'Value'];
+    const rows = Object.entries(variablesObj).map(([name, value]) => [name, value]);
+
+    const table = createTable(headers, rows);
+    container.innerHTML = '';
+    container.appendChild(table);
+}
+
+function updateCyclesDisplay(cycles) {
+    const cyclesValue = document.getElementById('cyclesValue');
+    if (cyclesValue) {
+        cyclesValue.textContent = cycles;
+    }
+}
+
+function highlightInstruction(index) {
+    const allRows = document.querySelectorAll('#instructionsTableContainer tbody tr');
+    allRows.forEach(row => row.classList.remove('highlighted'));
+
+    if (index >= 0 && index < allRows.length) {
+        allRows[index].classList.add('highlighted');
+        allRows[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function updateUIState(status) {
+    const statusBadge = document.getElementById('executionStatus');
+
+    const startRegularBtn = document.getElementById('startRegularBtn');
+    const startDebugBtn = document.getElementById('startDebugBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const stepForwardBtn = document.getElementById('stepForwardBtn');
+
+    switch (status) {
+        case 'idle':
+            statusBadge.textContent = 'idle';
+            statusBadge.className = 'badge badge-idle';
+            startRegularBtn.disabled = false;
+            startDebugBtn.disabled = false;
+            stopBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepForwardBtn.disabled = true;
+            break;
+
+        case 'debug-ready':
+        case 'debug-running':
+            statusBadge.textContent = 'debugging';
+            statusBadge.className = 'badge badge-running';
+            startRegularBtn.disabled = true;
+            startDebugBtn.disabled = true;
+            stopBtn.disabled = false;
+            resumeBtn.disabled = false;
+            stepForwardBtn.disabled = false;
+            break;
+
+        case 'completed':
+            statusBadge.textContent = 'completed';
+            statusBadge.className = 'badge badge-success';
+            startRegularBtn.disabled = false;
+            startDebugBtn.disabled = false;
+            stopBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stepForwardBtn.disabled = true;
+            break;
+    }
+
+    state.updateExecutionStatus(status);
 }
 
 function applyCollapse() {
