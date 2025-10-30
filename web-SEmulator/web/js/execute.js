@@ -155,8 +155,8 @@ async function selectProgram(programName) {
         currentInputVariables = data.inputVariables || [];
         console.log('Required inputs:', currentInputVariables);
 
-        // Display the input form
-        displayInputsForm(currentInputVariables);
+        // Display the input form WITH estimated cycles
+        displayInputsForm(currentInputVariables, data.estimatedCycles);
 
         await loadFunctionsDropdown(data.contextPrograms || []);
         displayInstructions(data.instructions || []);
@@ -191,7 +191,7 @@ async function loadFunctionsDropdown(contextPrograms) {
     }
 }
 
-function displayInputsForm(inputVariables) {
+function displayInputsForm(inputVariables, estimatedCycles) {
     const container = document.getElementById('inputsForm');
 
     if (!inputVariables || inputVariables.length === 0) {
@@ -199,15 +199,29 @@ function displayInputsForm(inputVariables) {
         return;
     }
 
-    // Just show info about required inputs
+    // Determine if user has enough credits
+    const hasEnoughCredits = estimatedCycles ? state.credits >= estimatedCycles : true;
+    const warningColor = hasEnoughCredits ? '#2196F3' : '#f44336';
+    const warningText = hasEnoughCredits
+        ? `✓ You have enough credits (${state.credits} available)`
+        : `⚠ Insufficient credits! Need ${estimatedCycles}, have ${state.credits}`;
+
     container.innerHTML = `
-        <div style="padding: 16px; background: #f0f7ff; border-radius: 8px; border: 2px solid #2196F3;">
+        <div style="padding: 16px; background: #f0f7ff; border-radius: 8px; border: 2px solid ${warningColor};">
             <div style="font-weight: 600; color: #1976D2; margin-bottom: 8px;">
                 📝 Required Inputs: ${inputVariables.length}
             </div>
             <div style="color: #555; font-size: 14px;">
                 ${inputVariables.map(v => `<span style="display: inline-block; padding: 4px 8px; background: white; border-radius: 4px; margin: 2px; font-family: monospace;">${v}</span>`).join('')}
             </div>
+            ${estimatedCycles ? `
+                <div style="margin-top: 12px; padding: 8px; background: white; border-radius: 4px; border: 1px solid #ddd;">
+                    <strong>Estimated Credits Required:</strong> ${estimatedCycles}
+                </div>
+                <div style="margin-top: 8px; font-size: 13px; color: ${hasEnoughCredits ? '#2e7d32' : '#c62828'}; font-weight: 600;">
+                    ${warningText}
+                </div>
+            ` : ''}
             <div style="margin-top: 12px; font-size: 13px; color: #666; font-style: italic;">
                 Click "Start Regular" or "Start Debug" to enter values
             </div>
@@ -360,6 +374,11 @@ async function startExecution(mode) {
         return;
     }
 
+    if (state.credits <= 0) {
+        showToast('error', 'Insufficient credits to run program');
+        return;
+    }
+
     executionMode = mode;
 
     // Show input dialog if inputs are required
@@ -399,17 +418,66 @@ async function startExecution(mode) {
 
         if (response.status === 'completed') {
             displayExecutionResult(response.data);
+
+            //Update credits after execution
+            if (response.data.creditsRemaining !== undefined) {
+                state.updateCredits(response.data.creditsRemaining);
+                updateCreditsDisplay(response.data.creditsRemaining);
+            }
+
             updateUIState('completed');
-            showToast('success', `Execution completed! Result: ${response.data.result}, Cycles: ${response.data.cycles}`);
+
+            // ✅ MODIFY THIS LINE - Show credits consumed
+            const creditsUsed = response.data.creditsConsumed || response.data.cycles || 0;
+            showToast('success', `Execution completed! Result: ${response.data.result}, Cycles: ${response.data.cycles}, Credits used: ${creditsUsed}`);
         } else if (response.status === 'ready') {
             updateUIState('debug-ready');
             displayVariablesObj(response.data.variables);
             updateCyclesDisplay(response.data.cycles || 0);
+
+            //Update credits display
+            if (response.data.creditsRemaining !== undefined) {
+                state.updateCredits(response.data.creditsRemaining);
+                updateCreditsDisplay(response.data.creditsRemaining);
+            }
+
             showToast('success', 'Debug mode ready - use Step Forward to execute');
         }
 
+
     } catch (error) {
-        console.error('Failed to start execution:', error);
+        console.error('=== EXECUTION ERROR ===');
+        console.error('Error object:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error data:', error.data);
+
+        // ✅ CHECK FOR INSUFFICIENT CREDITS - Use error.data
+        if (error.name === 'InsufficientCreditsError' && error.data) {
+            const creditsRequired = error.data.creditsRequired || null;
+            const creditsAvailable = error.data.creditsAvailable || state.credits;
+            const creditsToCharge = creditsRequired ? creditsRequired - creditsAvailable : null;
+
+            console.log('Showing insufficient credits dialog:', {
+                creditsRequired,
+                creditsAvailable,
+                creditsToCharge
+            });
+
+            showInsufficientCreditsDialog(creditsRequired, creditsAvailable, creditsToCharge);
+            updateUIState('idle');
+            return;
+        }
+
+        // Fallback: Check if error message contains insufficient_credits
+        if (error.message && error.message.includes('insufficient_credits')) {
+            console.log('Detected insufficient_credits in message');
+            showInsufficientCreditsDialog(null, state.credits, null);
+            updateUIState('idle');
+            return;
+        }
+
+        // Other errors
         showToast('error', `Execution failed: ${error.message}`);
         updateUIState('idle');
     }
@@ -674,6 +742,224 @@ function showInputDialog(inputVariables) {
     });
 }
 
+// NEW FUNCTION: Show insufficient credits dialog
+function showInsufficientCreditsDialog(creditsRequired, creditsAvailable, creditsToCharge) {
+    console.log('showInsufficientCreditsDialog called with:', { creditsRequired, creditsAvailable, creditsToCharge });
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'insufficientCreditsOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.2s ease-in;
+    `;
+
+    // Create dialog box
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        min-width: 450px;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease-out;
+        overflow: hidden;
+    `;
+
+    // Dialog header (red gradient for error)
+    const header = document.createElement('div');
+    header.style.cssText = `
+        background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+        color: white;
+        padding: 24px;
+        text-align: center;
+    `;
+    header.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 8px;">⚠️</div>
+        <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Insufficient Credits</h2>
+    `;
+
+    // Dialog content
+    const content = document.createElement('div');
+    content.style.cssText = `
+        padding: 32px 24px;
+        text-align: center;
+    `;
+
+    let messageHTML = `
+        <div style="font-size: 16px; color: #333; margin-bottom: 24px; line-height: 1.6;">
+            You don't have enough credits to run this program.
+        </div>
+    `;
+
+    if (creditsRequired !== null && creditsToCharge !== null) {
+        messageHTML += `
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="color: #666; font-weight: 500;">Required Credits:</span>
+                    <span style="color: #f44336; font-weight: 700; font-size: 18px;">${creditsRequired}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="color: #666; font-weight: 500;">Your Credits:</span>
+                    <span style="color: #666; font-weight: 600; font-size: 18px;">${creditsAvailable}</span>
+                </div>
+                <div style="border-top: 2px solid #ddd; margin: 12px 0; padding-top: 12px;"></div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #333; font-weight: 600;">Need to Charge:</span>
+                    <span style="color: #4caf50; font-weight: 700; font-size: 20px;">+${creditsToCharge}</span>
+                </div>
+            </div>
+        `;
+    } else {
+        messageHTML += `
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                <div style="color: #666; font-size: 15px;">
+                    Your current credits: <strong>${creditsAvailable}</strong>
+                </div>
+            </div>
+        `;
+    }
+
+    messageHTML += `
+        <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
+            💡 Go to the Dashboard to charge more credits
+        </div>
+    `;
+
+    content.innerHTML = messageHTML;
+
+    // Dialog footer with buttons
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        background: #f8f9fa;
+    `;
+
+    const stayBtn = document.createElement('button');
+    stayBtn.textContent = 'Stay Here';
+    stayBtn.style.cssText = `
+        padding: 12px 24px;
+        border: 2px solid #ddd;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        transition: all 0.2s;
+        color: #666;
+        min-width: 140px;
+    `;
+    stayBtn.addEventListener('mouseover', () => {
+        stayBtn.style.background = '#f5f5f5';
+        stayBtn.style.borderColor = '#bbb';
+    });
+    stayBtn.addEventListener('mouseout', () => {
+        stayBtn.style.background = 'white';
+        stayBtn.style.borderColor = '#ddd';
+    });
+
+    const dashboardBtn = document.createElement('button');
+    dashboardBtn.textContent = 'Go to Dashboard';
+    dashboardBtn.style.cssText = `
+        padding: 12px 24px;
+        border: none;
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        min-width: 140px;
+    `;
+    dashboardBtn.addEventListener('mouseover', () => {
+        dashboardBtn.style.transform = 'translateY(-2px)';
+        dashboardBtn.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.4)';
+    });
+    dashboardBtn.addEventListener('mouseout', () => {
+        dashboardBtn.style.transform = 'translateY(0)';
+        dashboardBtn.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
+    });
+
+    footer.appendChild(stayBtn);
+    footer.appendChild(dashboardBtn);
+
+    // Assemble dialog
+    dialog.appendChild(header);
+    dialog.appendChild(content);
+    dialog.appendChild(footer);
+    overlay.appendChild(dialog);
+
+    // Event handlers
+    stayBtn.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+    });
+
+    dashboardBtn.addEventListener('click', () => {
+        window.location.href = contextPath + '/dashboard.html';
+    });
+
+    // Escape key to close
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.body.removeChild(overlay);
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+
+    // Add to page
+    document.body.appendChild(overlay);
+    console.log('Dialog added to page');
+}
+
+async function apiCall(endpoint, options = {}) {
+    const defaultOptions = {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    };
+
+    try {
+        const response = await fetch(`${BASE_URL}${endpoint}`, { ...defaultOptions, ...options });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+            // ✅ If it's an insufficient_credits error, include full details in error message
+            if (errorData.error === 'insufficient_credits') {
+                const error = new Error(JSON.stringify(errorData));
+                error.name = 'InsufficientCreditsError';
+                throw error;
+            }
+
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(`API call failed: ${endpoint}`, error);
+        throw error;
+    }
+}
+
 async function sendCommand(command) {
     console.log('Sending command:', command);
 
@@ -731,11 +1017,21 @@ async function sendCommand(command) {
         const data = await response.json();
         console.log('Command response:', data);
 
+// ✅ ADD THIS BLOCK - Update credits after each step/resume
+        if (data.creditsRemaining !== undefined) {
+            state.updateCredits(data.creditsRemaining);
+            updateCreditsDisplay(data.creditsRemaining);
+        }
+
         if (data.status === 'execution_finished') {
             displayExecutionResult({ result: data.result, cycles: data.totalCycles, variables: data.variables });
             updateUIState('completed');
-            showToast('success', `Execution finished! Result: ${data.result}, Cycles: ${data.totalCycles}`);
+
+            //Show credits consumed
+            const creditsUsed = data.creditsConsumed || data.totalCycles || 0;
+            showToast('success', `Execution finished! Result: ${data.result}, Cycles: ${data.totalCycles}, Credits used: ${creditsUsed}`);
             currentExecutionId = null;
+
         } else if (data.status === 'step_completed') {
             displayVariablesObj(data.variables);
             updateCyclesDisplay(data.totalCycles);
@@ -748,6 +1044,15 @@ async function sendCommand(command) {
 
     } catch (error) {
         console.error('Command failed:', error);
+
+        //Handle insufficient credits during execution
+        if (error.message && error.message.includes('insufficient_credits')) {
+            showToast('error', 'Out of credits! Returning to dashboard...');
+            updateUIState('idle');
+            setTimeout(() => window.location.href = contextPath + '/dashboard.html', 3000);
+            return;
+        }
+
         showToast('error', `Command failed: ${error.message}`);
     }
 }
@@ -808,12 +1113,15 @@ function updateUIState(status) {
     const resumeBtn = document.getElementById('resumeBtn');
     const stepForwardBtn = document.getElementById('stepForwardBtn');
 
+    //Check if user has credits
+    const hasCredits = state.credits > 0;
+
     switch (status) {
         case 'idle':
             statusBadge.textContent = 'idle';
             statusBadge.className = 'badge badge-idle';
-            startRegularBtn.disabled = false;
-            startDebugBtn.disabled = false;
+            startRegularBtn.disabled = !hasCredits;
+            startDebugBtn.disabled = !hasCredits;
             stopBtn.disabled = true;
             resumeBtn.disabled = true;
             stepForwardBtn.disabled = true;

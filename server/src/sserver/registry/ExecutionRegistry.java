@@ -17,6 +17,7 @@ public class ExecutionRegistry {
         public long startTime;
         public boolean completed;
         public Object result;
+        private int creditsConsumed = 0;
 
         public ExecutionContext(String programName, String username, ExecuteProgramDTO dto) {
             this.programName = programName;
@@ -25,6 +26,15 @@ public class ExecutionRegistry {
             this.debugDto = dto.getDebugProgramDTO();
             this.startTime = System.currentTimeMillis();
             this.completed = false;
+        }
+
+
+        public int getCreditsConsumed() {
+            return creditsConsumed;
+        }
+
+        public void addCreditsConsumed(int amount) {
+            this.creditsConsumed += amount;
         }
     }
 

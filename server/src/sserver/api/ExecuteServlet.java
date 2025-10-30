@@ -59,13 +59,15 @@ public class ExecuteServlet extends HttpServlet {
 
     static class StepResponse {
         boolean success;
-        String status; // "step_completed", "execution_finished"
+        String status;
         int nextIndex;
         int totalCycles;
         String changedVariable;
         Long changedValue;
         Map<String, Long> variables;
-        Long result; // only if finished
+        Long result;
+        int creditsConsumed;    // ← ADD THIS LINE
+        int creditsRemaining;   // ← ADD THIS LINE
     }
 
     static class VariablesResponse {
@@ -163,6 +165,7 @@ public class ExecuteServlet extends HttpServlet {
         String body = req.getReader().lines().collect(Collectors.joining());
         StartExecutionRequest request = gson.fromJson(body, StartExecutionRequest.class);
 
+        //program ID verification
         if (request.programId == null || request.programId.trim().isEmpty()) {
             resp.setStatus(400);
             resp.getWriter().write(gson.toJson(Map.of("error", "Program ID required")));
@@ -172,6 +175,33 @@ public class ExecuteServlet extends HttpServlet {
         try {
             // Create execution DTO using Engine - this already has the program loaded
             ExecuteProgramDTO executeDTO = AppContext.programs().getEngine().executeProgram();
+
+            // ✅ ESTIMATE PROGRAM CYCLES
+            int estimatedCycles = estimateProgramCycles(executeDTO);
+            int currentCredits = AppContext.users().getCredits(username);
+
+            System.out.println("=== CREDIT CHECK ===");
+            System.out.println("User: " + username);
+            System.out.println("Current credits: " + currentCredits);
+            System.out.println("Estimated cycles: " + estimatedCycles);
+            System.out.println("Has enough? " + (currentCredits >= estimatedCycles));
+
+            // ✅ CHECK IF USER HAS ENOUGH CREDITS FOR ESTIMATED CYCLES
+            if (currentCredits < estimatedCycles) {
+                System.out.println("❌ BLOCKING EXECUTION - Insufficient credits");
+                resp.setStatus(403);
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "insufficient_credits");
+                errorResponse.put("creditsAvailable", currentCredits);
+                errorResponse.put("creditsRequired", estimatedCycles);
+                errorResponse.put("message",
+                        String.format("This program requires approximately %d credits, but you only have %d",
+                                estimatedCycles, currentCredits));
+                resp.getWriter().write(gson.toJson(errorResponse));
+                return;
+            }
+
+            System.out.println("✅ Credit check passed - proceeding with execution");
 
             // Set inputs if provided
             if (request.inputs != null && !request.inputs.isEmpty()) {
@@ -194,19 +224,29 @@ public class ExecuteServlet extends HttpServlet {
                 RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
                 ResultCycle result = runDTO.runProgram();
 
+                //Deduct credits based on actual cycles used
+                int cyclesUsed = result.getCycles();
+                deductCredits(username, cyclesUsed);
+                int remainingCredits = AppContext.users().getCredits(username);
+
                 AppContext.executions().markCompleted(execId, result);
 
                 ExecutionResponse response = new ExecutionResponse(execId, "completed");
                 response.data.put("result", result.getResult());
                 response.data.put("cycles", result.getCycles());
+                response.data.put("creditsConsumed", cyclesUsed);
+                response.data.put("creditsRemaining", remainingCredits);
                 response.data.put("variables", getVariablesMap(runDTO));
 
                 resp.getWriter().write(gson.toJson(response));
+
             } else {
                 // Debug mode - return ready status
                 ExecutionResponse response = new ExecutionResponse(execId, "ready");
                 response.data.put("variables", getVariablesMap(executeDTO.getDebugProgramDTO()));
                 response.data.put("cycles", 0);
+                response.data.put("creditsRemaining", currentCredits);
+                response.data.put("estimatedCycles", estimatedCycles);
 
                 resp.getWriter().write(gson.toJson(response));
             }
@@ -230,9 +270,22 @@ public class ExecuteServlet extends HttpServlet {
             return;
         }
 
+        //check if completed
         if (ctx.completed) {
             resp.setStatus(400);
             resp.getWriter().write(gson.toJson(Map.of("error", "Execution already completed")));
+            return;
+        }
+
+        //Check credits before step
+        int currentCredits = AppContext.users().getCredits(username);
+        if (currentCredits <= 0) {
+            resp.setStatus(403);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "insufficient_credits");
+            errorResponse.put("message", "Ran out of credits during execution");
+            errorResponse.put("creditsRemaining", 0);
+            resp.getWriter().write(gson.toJson(errorResponse));
             return;
         }
 
@@ -246,17 +299,30 @@ public class ExecuteServlet extends HttpServlet {
             if (debugResult instanceof DebugFinalResult) {
                 // Execution finished
                 DebugFinalResult finalResult = (DebugFinalResult) debugResult;
+
+                int totalCycles = finalResult.getCycles();
+                int creditsUsed = totalCycles - ctx.getCreditsConsumed();
+                deductCredits(username, creditsUsed);
+                ctx.addCreditsConsumed(creditsUsed);
+
                 AppContext.executions().markCompleted(request.executionId, finalResult);
 
                 response.status = "execution_finished";
                 response.result = finalResult.getResult();
                 response.totalCycles = finalResult.getCycles();
+                response.creditsConsumed = ctx.getCreditsConsumed();
+                response.creditsRemaining = AppContext.users().getCredits(username);
                 response.variables = getVariablesMap(debugDTO);
             } else {
-                // Step completed
+                // Deduct 1 credit per step
+                deductCredits(username, 1);
+                ctx.addCreditsConsumed(1);
+
                 response.status = "step_completed";
                 response.nextIndex = debugResult.getNextIndex();
                 response.totalCycles = debugResult.getCycles();
+                response.creditsConsumed = ctx.getCreditsConsumed();
+                response.creditsRemaining = AppContext.users().getCredits(username);
                 response.variables = getVariablesMap(debugDTO);
 
                 ChangedVariable changed = debugResult.getChangedVariable();
@@ -293,9 +359,27 @@ public class ExecuteServlet extends HttpServlet {
             return;
         }
 
+        //Check credits before resume
+        int currentCredits = AppContext.users().getCredits(username);
+        if (currentCredits <= 0) {
+            resp.setStatus(403);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "insufficient_credits");
+            errorResponse.put("message", "Cannot resume: insufficient credits");
+            errorResponse.put("creditsRemaining", 0);
+            resp.getWriter().write(gson.toJson(errorResponse));
+            return;
+        }
+
         try {
             DebugProgramDTO debugDTO = ctx.debugDto;
             DebugFinalResult finalResult = debugDTO.runUntilEnd();
+
+            //Deduct remaining credits
+            int totalCycles = finalResult.getCycles();
+            int creditsUsed = totalCycles - ctx.getCreditsConsumed();
+            deductCredits(username, creditsUsed);
+            ctx.addCreditsConsumed(creditsUsed);
 
             AppContext.executions().markCompleted(request.executionId, finalResult);
 
@@ -304,6 +388,8 @@ public class ExecuteServlet extends HttpServlet {
             response.status = "execution_finished";
             response.result = finalResult.getResult();
             response.totalCycles = finalResult.getCycles();
+            response.creditsConsumed = ctx.getCreditsConsumed();
+            response.creditsRemaining = AppContext.users().getCredits(username);
             response.variables = getVariablesMap(debugDTO);
 
             resp.getWriter().write(gson.toJson(response));
@@ -397,5 +483,95 @@ public class ExecuteServlet extends HttpServlet {
             }
         }
         return null;
+    }
+
+    /**
+     * Check if user has at least 1 credit to start execution
+     */
+    private boolean hasCreditsForExecution(String username) {
+        return AppContext.users().getCredits(username) > 0;
+    }
+
+
+    /**
+     * Safely deduct credits from a user (never goes below 0)
+     */
+    private synchronized void deductCredits(String username, int credits) {
+        if (credits <= 0) return;
+
+        int currentCredits = AppContext.users().getCredits(username);
+        int newCredits = Math.max(0, currentCredits - credits);
+
+        AppContext.users().setCredits(username, newCredits);
+
+        System.out.println("Credits deducted for user " + username +
+                ": " + credits + " credits. Remaining: " + newCredits);
+    }
+
+    /**
+     * Estimate the total cycles required for the program.
+     * This returns the sum of all instruction cycles (worst-case scenario).
+     */
+    private int estimateProgramCycles(ExecuteProgramDTO executeDTO) {
+        try {
+            // Try to get presentation DTO from Engine
+            present.program.PresentProgramDTO presentDTO =
+                    AppContext.programs().getEngine().presentProgram();
+
+            if (presentDTO == null || presentDTO.getInstructionList() == null) {
+                System.out.println("⚠️ PresentDTO is null or has no instructions, estimating minimum cycles");
+                return 1; // Minimum estimate if we can't get instructions
+            }
+
+            int totalCycles = 0;
+            int instructionCount = 0;
+
+            for (var instr : presentDTO.getInstructionList()) {
+                instructionCount++;
+
+                if (instr.getInstructionData() != null) {
+                    String cycleStr = instr.getInstructionData().getCycleRepresentation();
+
+                    // Handle different cycle representations
+                    if (cycleStr != null && !cycleStr.isEmpty()) {
+                        // Try to parse as integer
+                        try {
+                            int cycles = Integer.parseInt(cycleStr.trim());
+                            totalCycles += cycles;
+                            continue;
+                        } catch (NumberFormatException e1) {
+                            // Not a simple number, might be "n+1" or similar
+                            // Extract numeric part
+                            try {
+                                // Remove non-numeric characters and try to parse
+                                String numericPart = cycleStr.replaceAll("[^0-9]", "");
+                                if (!numericPart.isEmpty()) {
+                                    totalCycles += Integer.parseInt(numericPart);
+                                    continue;
+                                }
+                            } catch (NumberFormatException e2) {
+                                // If still fails, assume 1 cycle
+                            }
+                        }
+                    }
+                }
+
+                // Default: assume 1 cycle if we couldn't parse
+                totalCycles += 1;
+            }
+
+            System.out.println("✅ Cycle estimation:");
+            System.out.println("   - Instructions: " + instructionCount);
+            System.out.println("   - Estimated cycles: " + totalCycles);
+
+            // Safety: ensure we return at least 1 if program has instructions
+            return Math.max(1, totalCycles);
+
+        } catch (Exception e) {
+            System.err.println("❌ Failed to estimate cycles: " + e.getMessage());
+            e.printStackTrace();
+            // Return a conservative estimate if estimation fails
+            return 10; // Assume at least 10 cycles if we can't estimate
+        }
     }
 }

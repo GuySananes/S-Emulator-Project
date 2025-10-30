@@ -21,9 +21,28 @@ async function apiCall(endpoint, options = {}) {
     try {
         const response = await fetch(`${BASE_URL}${endpoint}`, { ...defaultOptions, ...options });
 
+        // ✅ Handle non-OK responses
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(errorData.error || `HTTP ${response.status}`);
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: `HTTP ${response.status}` };
+            }
+
+            console.log('API Error Response:', errorData);
+
+            // ✅ Create custom error with full data
+            const error = new Error(errorData.error || `HTTP ${response.status}`);
+            error.status = response.status;
+            error.data = errorData; // Store full error data
+
+            // Mark insufficient credits errors specially
+            if (errorData.error === 'insufficient_credits') {
+                error.name = 'InsufficientCreditsError';
+            }
+
+            throw error;
         }
 
         return await response.json();
@@ -128,6 +147,7 @@ export const api = {
             body.functionName = functionName;
         }
 
+        // Just let apiCall throw the error - it will be caught in execute.js
         return apiCall('/execute/start', {
             method: 'POST',
             body: JSON.stringify(body)
