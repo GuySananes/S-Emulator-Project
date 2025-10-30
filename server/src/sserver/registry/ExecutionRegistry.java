@@ -18,6 +18,7 @@ public class ExecutionRegistry {
         public boolean completed;
         public Object result;
         private int creditsConsumed = 0;
+        private int currentDegree = 0;
 
         public ExecutionContext(String programName, String username, ExecuteProgramDTO dto) {
             this.programName = programName;
@@ -35,6 +36,14 @@ public class ExecutionRegistry {
 
         public void addCreditsConsumed(int amount) {
             this.creditsConsumed += amount;
+        }
+
+        public int getCurrentDegree() {
+            return currentDegree;
+        }
+
+        public void setCurrentDegree(int degree) {
+            this.currentDegree = degree;
         }
     }
 

@@ -188,3 +188,29 @@ export const api = {
         return apiCall('/statistics/history');
     }
 };
+
+/**
+ * Expand or collapse program to a specific degree
+ */
+export async function expandProgram(degree) {
+    const response = await fetch(`${contextPath}/api/execute/expand`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ degree })
+    });
+
+    if (!response.ok) {
+        let errorData;
+        try {
+            errorData = await response.json();
+        } catch (e) {
+            errorData = { error: `HTTP ${response.status}` };
+        }
+        throw new Error(errorData.error || 'Failed to expand program');
+    }
+
+    return await response.json();
+}

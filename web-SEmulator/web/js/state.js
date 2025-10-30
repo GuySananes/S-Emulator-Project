@@ -8,6 +8,10 @@ export const state = {
     lastUpdated: null,
     runId: null,
     executionStatus: 'idle',
+    currentDegree: 0,
+    maxDegree: 0,
+    minDegree: 1,
+
 
     // Update methods
     setUser(username, credits) {

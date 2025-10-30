@@ -400,3 +400,37 @@ select.dropdown:focus {
         opacity: 1;
     }
 }
+
+/* ... existing code ... */
+
+/* Degree Display */
+.degree-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    margin: 0 0.5rem;
+}
+
+.degree-label {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.degree-value {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    font-family: 'Courier New', monospace;
+}
+
+/* Button disabled states for expand/collapse */
+.btn-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: var(--color-hover);
+}

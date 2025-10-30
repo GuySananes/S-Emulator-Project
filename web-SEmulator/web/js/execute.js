@@ -3,12 +3,12 @@ console.log('=== EXECUTE.JS FILE LOADING ===');
 import { api, contextPath } from './api.js';
 import { state } from './state.js';
 import { showToast, createTable, updateCreditsDisplay } from './ui.js';
+import { expandProgram } from './api.js';
 
 console.log('=== IMPORTS COMPLETED ===');
 
 let pollInterval = null;
 let currentStep = 0;
-let collapseLevel = 0;
 let highlightEnabled = false;
 let selectedProgramName = null;
 let selectedFunctionName = null;
@@ -155,6 +155,18 @@ async function selectProgram(programName) {
         currentInputVariables = data.inputVariables || [];
         console.log('Required inputs:', currentInputVariables);
 
+        // Initialize degree state
+        state.currentDegree = data.currentDegree || 0;
+        state.maxDegree = data.maxDegree || 0;
+        state.minDegree = 1;
+        state.selectedProgram = programName;
+
+        // Update degree display
+        updateDegreeDisplay(data.currentDegree || 0, data.maxDegree || 0);
+
+        // Update button states
+        updateExpandCollapseButtons(data.currentDegree || 0, 1, data.maxDegree || 0);
+
         // Display the input form WITH estimated cycles
         displayInputsForm(currentInputVariables, data.estimatedCycles);
 
@@ -250,9 +262,20 @@ async function selectFunction(functionName) {
         const data = await response.json();
         console.log('Function selected:', data);
 
-        // ADD THESE LINES - Store and display input variables for the function
+        //Store and display input variables for the function
         currentInputVariables = data.inputVariables || [];
         displayInputsForm(currentInputVariables);
+
+        // Update degree state for the function
+        state.currentDegree = data.currentDegree || 0;
+        state.maxDegree = data.maxDegree || 0;
+        state.minDegree = 1;
+
+        // Update degree display
+        updateDegreeDisplay(data.currentDegree || 0, data.maxDegree || 0);
+
+        // Update button states
+        updateExpandCollapseButtons(data.currentDegree || 0, 1, data.maxDegree || 0);
 
         displayInstructions(data.instructions || []);
         displayVariables(data.variables || []);
@@ -343,15 +366,8 @@ function setupControls() {
     document.getElementById('stepForwardBtn').addEventListener('click', () => sendCommand('stepForward'));
     document.getElementById('stepBackwardBtn').addEventListener('click', () => sendCommand('stepBack'));
 
-    document.getElementById('collapseBtn').addEventListener('click', () => {
-        collapseLevel++;
-        applyCollapse();
-    });
-
-    document.getElementById('expandBtn').addEventListener('click', () => {
-        if (collapseLevel > 0) collapseLevel--;
-        applyCollapse();
-    });
+    document.getElementById('collapseBtn').addEventListener('click', handleCollapse);
+    document.getElementById('expandBtn').addEventListener('click', handleExpand);
 
     document.getElementById('highlightToggle').addEventListener('change', (e) => {
         highlightEnabled = e.target.checked;
@@ -1152,10 +1168,135 @@ function updateUIState(status) {
     state.updateExecutionStatus(status);
 }
 
-function applyCollapse() {
-    console.log('Collapse level:', collapseLevel);
-    // TODO: Implement collapse logic
+/**
+ * Handle expand button click
+ */
+/**
+ * Handle expand button click
+ */
+async function handleExpand() {
+    if (!state.selectedProgram) {
+        showToast('error', 'Please select a program first');
+        return;
+    }
+
+    const currentDegree = state.currentDegree || 0;
+    const maxDegree = state.maxDegree || 0;
+
+    if (currentDegree >= maxDegree) {
+        showToast('info', 'Already at maximum expansion degree');
+        return;
+    }
+
+    const newDegree = currentDegree + 1;
+
+    try {
+        const response = await expandProgram(newDegree);
+
+        if (response.success) {
+            // Update instructions table
+            displayInstructions(response.instructions);
+
+            // Update variables table
+            displayVariables(response.variables);
+
+            // Update state
+            state.currentDegree = response.currentDegree;
+            state.maxDegree = response.maxDegree;
+            state.minDegree = response.minDegree;
+
+            // Update degree display
+            updateDegreeDisplay(response.currentDegree, response.maxDegree);
+
+            // Update button states
+            updateExpandCollapseButtons(response.currentDegree, response.minDegree, response.maxDegree);
+
+            showToast('success', `Expanded to degree ${response.currentDegree}`);
+        } else {
+            showToast('error', response.error || 'Failed to expand');
+        }
+    } catch (error) {
+        console.error('Expand error:', error);
+        showToast('error', 'Failed to expand: ' + error.message);
+    }
 }
+
+/**
+ * Handle collapse button click
+ */
+async function handleCollapse() {
+    if (!state.selectedProgram) {
+        showToast('error', 'Please select a program first');
+        return;
+    }
+
+    const currentDegree = state.currentDegree || 0;
+    const minDegree = state.minDegree || 1;
+
+    if (currentDegree <= minDegree) {
+        showToast('info', 'Already at minimum expansion degree');
+        return;
+    }
+
+    const newDegree = currentDegree - 1;
+
+    try {
+        const response = await expandProgram(newDegree);
+
+        if (response.success) {
+            // Update instructions table
+            displayInstructions(response.instructions);
+
+            // Update variables table
+            displayVariables(response.variables);
+
+            // Update state
+            state.currentDegree = response.currentDegree;
+            state.maxDegree = response.maxDegree;
+            state.minDegree = response.minDegree;
+
+            // Update degree display
+            updateDegreeDisplay(response.currentDegree, response.maxDegree);
+
+            // Update button states
+            updateExpandCollapseButtons(response.currentDegree, response.minDegree, response.maxDegree);
+
+            showToast('success', `Collapsed to degree ${response.currentDegree}`);
+        } else {
+            showToast('error', response.error || 'Failed to collapse');
+        }
+    } catch (error) {
+        console.error('Collapse error:', error);
+        showToast('error', 'Failed to collapse: ' + error.message);
+    }
+}
+
+/**
+ * Update degree display in UI
+ */
+function updateDegreeDisplay(currentDegree, maxDegree) {
+    const degreeValueElement = document.getElementById('degreeValue');
+    if (degreeValueElement) {
+        degreeValueElement.textContent = `${currentDegree} / ${maxDegree}`;
+    }
+}
+
+/**
+ * Enable/disable expand and collapse buttons based on current degree
+ */
+function updateExpandCollapseButtons(currentDegree, minDegree, maxDegree) {
+    const expandBtn = document.getElementById('expandBtn');
+    const collapseBtn = document.getElementById('collapseBtn');
+
+    if (expandBtn) {
+        expandBtn.disabled = (currentDegree >= maxDegree);
+    }
+
+    if (collapseBtn) {
+        collapseBtn.disabled = (currentDegree <= minDegree);
+    }
+}
+
 
 function applyHighlight() {
     console.log('Highlight enabled:', highlightEnabled);
