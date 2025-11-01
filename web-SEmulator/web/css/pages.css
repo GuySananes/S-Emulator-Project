@@ -218,3 +218,63 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================
+   STATISTICS TABLE STYLES
+   ============================================ */
+
+.statistics-info {
+    padding: 0.75rem 1rem;
+    background: var(--color-card, #2a2a2a);
+    border-radius: var(--border-radius, 8px);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--color-text-light, #b0b0b0);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#statisticsTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-card, #1e1e1e);
+}
+
+#statisticsTable th {
+    background: var(--color-card, #2a2a2a);
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text, #ffffff);
+    border-bottom: 2px solid var(--color-border, #3a3a3a);
+}
+
+#statisticsTable th:first-child {
+    width: 70px;
+}
+
+#statisticsTable th:nth-child(2) {
+    width: 100px;
+}
+
+#statisticsTable td {
+    padding: 0.75rem;
+    color: var(--color-text, #ffffff);
+    border-bottom: 1px solid var(--color-border, #3a3a3a);
+}
+
+#statisticsTable tbody tr:hover {
+    background: var(--color-hover, #2a2a2a);
+}
+
+#statisticsTable .badge {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.6rem;
+}
+
+#statisticsEmptyState {
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-text-light, #b0b0b0);
+}

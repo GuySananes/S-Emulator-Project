@@ -68,11 +68,15 @@ public class ProgramExecutor {
         long result = context.getVariableValue(Variable.RESULT);
         statisticManager.incrementRunCount(originalProgram.getName());
         statisticManager.addRunStatistic(originalProgram.getName(),
-                new SingleRunStatisticImpl
-                        (statisticManager.getRunCount(originalProgram.getName()),
-                        originalProgram.getDegree() - program.getDegree(),
-                                input, result, cycles));
-
+                new SingleRunStatisticImpl(
+                        statisticManager.getRunCount(originalProgram.getName()),
+                        true,
+                        originalProgram.getName(),
+                        "default",
+                        program.getDegree(),
+                        input,
+                        result,
+                        cycles));
         return new ResultCycle(result, cycles);
     }
 

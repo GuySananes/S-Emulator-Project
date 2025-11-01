@@ -11,6 +11,8 @@ public class ExecutionRegistry {
 
     public static class ExecutionContext {
         public String programName;
+        public String actualExecutionName;  // stores function name if executing function
+        public boolean isMainProgram;        // true if main, false if function
         public String username;
         public ExecuteProgramDTO dto;
         public DebugProgramDTO debugDto;
@@ -22,6 +24,8 @@ public class ExecutionRegistry {
 
         public ExecutionContext(String programName, String username, ExecuteProgramDTO dto) {
             this.programName = programName;
+            this.actualExecutionName = programName;  // Default to program name
+            this.isMainProgram = true;                // Default to main program
             this.username = username;
             this.dto = dto;
             this.debugDto = dto.getDebugProgramDTO();
@@ -44,6 +48,20 @@ public class ExecutionRegistry {
 
         public void setCurrentDegree(int degree) {
             this.currentDegree = degree;
+        }
+
+
+        public void setFunctionExecution(String functionName) {
+            this.actualExecutionName = functionName;
+            this.isMainProgram = false;
+        }
+
+        public String getActualExecutionName() {
+            return actualExecutionName;
+        }
+
+        public boolean isMainProgram() {
+            return isMainProgram;
         }
     }
 

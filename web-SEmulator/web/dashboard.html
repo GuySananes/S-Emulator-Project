@@ -55,9 +55,27 @@
 
     <div class="bottom-row">
         <div class="card">
-            <h3 class="card-title">History / Statistics</h3>
-            <div id="historyTableContainer" class="table-container">
-                <div class="empty-state">No history available</div>
+            <h3 class="card-title">User Statistics</h3>
+            <div class="statistics-info">
+                Viewing statistics for: <span id="statisticsUsername" class="badge badge-accent">yourself</span>
+            </div>
+            <div id="statisticsTableContainer" class="table-container">
+                <table id="statisticsTable" class="data-table" style="display:none;">
+                    <thead>
+                    <tr>
+                        <th>Run #</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Architecture</th>
+                        <th>Degree</th>
+                        <th>Final Y</th>
+                        <th>Cycles</th>
+                    </tr>
+                    </thead>
+                    <tbody id="statisticsTableBody">
+                    </tbody>
+                </table>
+                <div class="empty-state" id="statisticsEmptyState">Loading statistics...</div>
             </div>
         </div>
 

@@ -51,9 +51,16 @@ public class Debug{
             statisticManager.incrementRunCount(originalProgram.getName());
             statisticManager.addRunStatistic(
                     originalProgram.getName(),
-                    new SingleRunStatisticImpl(statisticManager.getRunCount(originalProgram.getName()),
-                            originalProgram.getDegree() - program.getDegree(),
-                            input, result, totalCycles));
+                    new SingleRunStatisticImpl(
+                            statisticManager.getRunCount(originalProgram.getName()),
+                            true,
+                            originalProgram.getName(),
+                            "default",
+                            program.getDegree(),
+                            input,
+                            result,
+                            totalCycles)
+            );
             return new DebugFinalResult(result, totalCycles);
         }
 
@@ -73,8 +80,13 @@ public class Debug{
                         originalProgram.getName(),
                         new SingleRunStatisticImpl(
                                 statisticManager.getRunCount(originalProgram.getName()),
-                                originalProgram.getDegree() - program.getDegree(),
-                                input, result, totalCycles
+                                true,
+                                originalProgram.getName(),
+                                "default",
+                                program.getDegree(),
+                                input,
+                                result,
+                                totalCycles
                         )
                 );
                 return new DebugFinalResult(result, totalCycles);
@@ -97,8 +109,13 @@ public class Debug{
                     originalProgram.getName(),
                     new SingleRunStatisticImpl(
                             statisticManager.getRunCount(originalProgram.getName()),
-                            originalProgram.getDegree() - program.getDegree(),
-                            input, result, totalCycles
+                            true,
+                            originalProgram.getName(),
+                            "default",
+                            program.getDegree(),
+                            input,
+                            result,
+                            totalCycles
                     )
             );
             return new DebugFinalResult(result, totalCycles);

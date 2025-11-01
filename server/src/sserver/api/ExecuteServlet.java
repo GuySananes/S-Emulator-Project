@@ -39,6 +39,7 @@ public class ExecuteServlet extends HttpServlet {
         String functionName;
         String mode; // "regular" or "debug"
         Map<String, Long> inputs;
+        Integer currentDegree;  // the expansion degree from frontend
     }
 
     static class ExecutionResponse {
@@ -218,6 +219,44 @@ public class ExecuteServlet extends HttpServlet {
 
             // Create execution context
             String execId = AppContext.executions().createExecution(request.programId, username, executeDTO);
+            ExecutionRegistry.ExecutionContext execCtx = AppContext.executions().getExecution(execId);
+
+            // Check if we're executing a function (from request or from presented program)
+            try {
+                present.program.PresentProgramDTO presentDTO = AppContext.programs().getEngine().presentProgram();
+                if (presentDTO instanceof present.program.PresentFunctionDTO) {
+                    // This is a function execution
+                    present.program.PresentFunctionDTO funcDTO = (present.program.PresentFunctionDTO) presentDTO;
+                    execCtx.setFunctionExecution(funcDTO.getUserName());
+                } else if (request.functionName != null && !request.functionName.trim().isEmpty()) {
+                    // Fallback to request parameter
+                    execCtx.setFunctionExecution(request.functionName);
+                }
+            } catch (Exception e) {
+                System.err.println("Could not determine if function execution: " + e.getMessage());
+            }
+
+            // Store the run degree - use the value from request if available
+            int runDegree = 0;
+            if (request.currentDegree != null) {
+                // Use the degree from the frontend (expansion level)
+                runDegree = request.currentDegree;
+                System.out.println("✅ Using run degree from request: " + runDegree);
+            } else {
+                // Fallback: try to get from PresentDTO
+                try {
+                    present.program.PresentProgramDTO presentDTO = AppContext.programs().getEngine().presentProgram();
+                    if (presentDTO != null) {
+                        runDegree = presentDTO.getCurrentProgramDegree();
+                        System.out.println("⚠️ Using run degree from PresentDTO: " + runDegree);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Could not get run degree: " + e.getMessage());
+                }
+            }
+
+            execCtx.setCurrentDegree(runDegree);
+            System.out.println("=== DEGREE STORED: " + runDegree + " ===");
 
             // If regular mode, execute immediately
             if ("regular".equalsIgnoreCase(request.mode)) {
@@ -229,7 +268,11 @@ public class ExecuteServlet extends HttpServlet {
                 deductCredits(username, cyclesUsed);
                 int remainingCredits = AppContext.users().getCredits(username);
 
+                ExecutionRegistry.ExecutionContext ctx = AppContext.executions().getExecution(execId);
                 AppContext.executions().markCompleted(execId, result);
+
+                // Record user statistics
+                recordUserStatistic(username, ctx.getActualExecutionName(), ctx, result, ctx.isMainProgram());
 
                 ExecutionResponse response = new ExecutionResponse(execId, "completed");
                 response.data.put("result", result.getResult());
@@ -307,6 +350,9 @@ public class ExecuteServlet extends HttpServlet {
 
                 AppContext.executions().markCompleted(request.executionId, finalResult);
 
+                // Record user statistics
+                recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
+
                 response.status = "execution_finished";
                 response.result = finalResult.getResult();
                 response.totalCycles = finalResult.getCycles();
@@ -382,6 +428,9 @@ public class ExecuteServlet extends HttpServlet {
             ctx.addCreditsConsumed(creditsUsed);
 
             AppContext.executions().markCompleted(request.executionId, finalResult);
+
+            // Record user statistics
+            recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
 
             StepResponse response = new StepResponse();
             response.success = true;
@@ -572,6 +621,77 @@ public class ExecuteServlet extends HttpServlet {
             e.printStackTrace();
             // Return a conservative estimate if estimation fails
             return 10; // Assume at least 10 cycles if we can't estimate
+        }
+    }
+
+    /**
+     * Records a completed execution in the user's statistics
+     */
+    private void recordUserStatistic(String username, String programName,
+                                     ExecutionRegistry.ExecutionContext ctx,
+                                     Object result, boolean isMainProgram) {
+        try {
+            statistic.StatisticManager statManager = statistic.StatisticManager.getInstance();
+
+            // Increment user run count
+            statManager.incrementUserRunCount(username);
+            int runNumber = statManager.getUserRunCount(username);
+
+            // Extract result value and cycles
+            long resultValue = 0;
+            long cycles = 0;
+
+            if (result instanceof core.logic.execution.ResultCycle) {
+                core.logic.execution.ResultCycle rc = (core.logic.execution.ResultCycle) result;
+                resultValue = rc.getResult();
+                cycles = rc.getCycles();
+            } else if (result instanceof core.logic.execution.DebugFinalResult) {
+                core.logic.execution.DebugFinalResult dfr = (core.logic.execution.DebugFinalResult) result;
+                resultValue = dfr.getResult();
+                cycles = dfr.getCycles();
+            }
+
+            // Get architecture type (default if not set)
+            String architectureType = "default"; // You may want to get this from ctx if available
+
+            // Get input values
+            java.util.List<Long> inputValues = new java.util.ArrayList<>();
+            if (ctx.dto != null && ctx.dto.getRunProgramDTO() != null) {
+                try {
+                    // Get ordered input values from the run DTO
+                    java.util.Set<core.logic.variable.Variable> inputVars = ctx.dto.getRunProgramDTO().getOrderedInputVariables();
+                    if (inputVars != null) {
+                        for (core.logic.variable.Variable var : inputVars) {
+                            inputValues.add((long) var.getNumber());
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Could not retrieve input values: " + e.getMessage());
+                }
+            }
+
+            // Create statistic record
+            statistic.SingleRunStatistic stat = new statistic.SingleRunStatisticImpl(
+                    runNumber,
+                    isMainProgram,
+                    programName,
+                    architectureType,
+                    ctx.getCurrentDegree(),
+                    inputValues,
+                    resultValue,
+                    cycles
+            );
+
+            // Store in StatisticManager
+            statManager.addUserRunStatistic(username, stat);
+
+            System.out.println("✅ Recorded statistics for user: " + username +
+                    ", run #" + runNumber + ", program: " + programName);
+
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to record user statistic: " + e.getMessage());
+            e.printStackTrace();
+            // Don't fail the execution if statistics recording fails
         }
     }
 }

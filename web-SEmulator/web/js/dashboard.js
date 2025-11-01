@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     setupControls();
     startPolling();
-    await loadPrograms();
-    await loadHistory();
+    await loadPrograms();h
+    await loadUserStatistics(null);
 });
 
 async function checkAuth() {
@@ -103,6 +103,7 @@ function setupControls() {
         state.unselectUser();
         unselectUserBtn.disabled = true;
         updateUsersTable();
+        loadUserStatistics(null);  // ← ADD THIS LINE
     });
 
     // Logout
@@ -149,6 +150,7 @@ async function updateLiveUsers() {
                     state.selectUser(rowData[0]);
                     document.getElementById('unselectUserBtn').disabled = false;
                     updateUsersTable();
+                    loadUserStatistics(rowData[0]);
                 }
             });
 
@@ -278,31 +280,115 @@ async function loadFunctionsForProgram(programName) {
     }
 }
 
-async function loadHistory() {
-    const container = document.getElementById('historyTableContainer');
+async function loadUserStatistics(username = null) {
+    const container = document.getElementById('statisticsTableContainer');
+    const table = document.getElementById('statisticsTable');
+    const tbody = document.getElementById('statisticsTableBody');
+    const emptyState = document.getElementById('statisticsEmptyState');
+    const usernameDisplay = document.getElementById('statisticsUsername');
+
+    // Show loading state
+    if (table) table.style.display = 'none';
+    if (emptyState) {
+        emptyState.textContent = 'Loading statistics...';
+        emptyState.style.display = 'block';
+    }
 
     try {
-        const response = await api.getStatisticsHistory();
+        const data = await api.getUserStatistics(username);
 
-        if (response.rows && response.rows.length > 0) {
-            const headers = ['Time', 'User', 'Program', 'Runs', 'Used'];
-            const rows = response.rows.map(row => [
-                formatDateTime(row.time),
-                row.user,
-                row.program,
-                row.runs || 0,
-                row.used || 0
-            ]);
-
-            const table = createTable(headers, rows);
-            container.innerHTML = '';
-            container.appendChild(table);
-        } else {
-            container.innerHTML = '<div class="empty-state">No history available</div>';
+        // ADD THIS DEBUG CODE
+        console.log('=== User Statistics Response ===');
+        console.log('Full data:', data);
+        if (data.statistics && data.statistics.length > 0) {
+            console.log('First statistic:', data.statistics[0]);
+            console.log('Fields:', Object.keys(data.statistics[0]));
         }
+        // END DEBUG CODE
+
+        // Update username display
+        if (usernameDisplay) {
+            usernameDisplay.textContent = username || 'yourself';
+        }
+
+        if (!data.statistics || data.statistics.length === 0) {
+            // No statistics available
+            if (table) table.style.display = 'none';
+            if (emptyState) {
+                emptyState.textContent = `No execution history for ${username || 'you'}`;
+                emptyState.style.display = 'block';
+            }
+            return;
+        }
+
+        // Render statistics table
+        renderStatisticsTable(data.statistics);
+
+        // Show table, hide empty state
+        if (table) table.style.display = 'table';
+        if (emptyState) emptyState.style.display = 'none';
+
     } catch (error) {
-        console.error('Failed to fetch history:', error);
+        console.error('Failed to load user statistics:', error);
+        showToast('error', 'Failed to load statistics');
+
+        if (table) table.style.display = 'none';
+        if (emptyState) {
+            emptyState.textContent = 'Failed to load statistics';
+            emptyState.style.display = 'block';
+        }
     }
+}
+
+function renderStatisticsTable(statistics) {
+    const tbody = document.getElementById('statisticsTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = ''; // Clear existing rows
+
+    statistics.forEach(stat => {
+        const row = document.createElement('tr');
+
+        // Run number (Run #)
+        const runNumCell = document.createElement('td');
+        runNumCell.textContent = stat.runNumber;
+        row.appendChild(runNumCell);
+
+        // Type (Main Program / Function)
+        const typeCell = document.createElement('td');
+        const typeBadge = document.createElement('span');
+        typeBadge.className = stat.isMainProgram ? 'badge badge-primary' : 'badge badge-secondary';
+        typeBadge.textContent = stat.isMainProgram ? 'Main' : 'Function';
+        typeCell.appendChild(typeBadge);
+        row.appendChild(typeCell);
+
+        // Program/Function name
+        const nameCell = document.createElement('td');
+        nameCell.textContent = stat.programName;
+        row.appendChild(nameCell);
+
+        // Architecture
+        const archCell = document.createElement('td');
+        archCell.textContent = stat.architectureType;
+        row.appendChild(archCell);
+
+        // Degree (this is the run degree)
+        const degreeCell = document.createElement('td');
+        degreeCell.textContent = stat.runDegree !== undefined ? stat.runDegree : 0;
+        row.appendChild(degreeCell);
+
+        // Final Y value
+        const yValueCell = document.createElement('td');
+        yValueCell.textContent = stat.finalYValue;
+        row.appendChild(yValueCell);
+
+        // Cycles consumed
+        const cyclesCell = document.createElement('td');
+        cyclesCell.textContent = stat.cyclesConsumed;
+        row.appendChild(cyclesCell);
+
+        tbody.appendChild(row);
+    });
 }
 
 window.addEventListener('beforeunload', () => {

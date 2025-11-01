@@ -54,6 +54,7 @@ async function apiCall(endpoint, options = {}) {
 
 // Export context path helper
 export const contextPath = getContextPath();
+
 export const api = {
     // Session
     async getSession() {
@@ -135,7 +136,7 @@ export const api = {
     },
 
     // Execution
-    async startExecution(programId, mode, inputs = {}, functionName = null) {
+    async startExecution(programId, mode, inputs = {}, functionName = null, currentDegree = null) {
         const body = {
             programId,
             mode,
@@ -147,7 +148,11 @@ export const api = {
             body.functionName = functionName;
         }
 
-        // Just let apiCall throw the error - it will be caught in execute.js
+        // Add currentDegree if provided
+        if (currentDegree !== null) {
+            body.currentDegree = currentDegree;
+        }
+
         return apiCall('/execute/start', {
             method: 'POST',
             body: JSON.stringify(body)
@@ -183,9 +188,24 @@ export const api = {
         return apiCall(`/execute/variables?executionId=${executionId}`);
     },
 
-    // Statistics
-    async getStatisticsHistory() {
-        return apiCall('/statistics/history');
+    getUserStatistics: async (username = null) => {
+        const url = username
+            ? `${contextPath}/api/user-statistics?username=${encodeURIComponent(username)}`
+            : `${contextPath}/api/user-statistics`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            if (response.status === 404 || response.status === 401) {
+                return { username: username || 'unknown', statistics: [] };
+            }
+            throw new Error(`Failed to fetch user statistics: ${response.statusText}`);
+        }
+
+        return response.json();
     }
 };
 
@@ -213,4 +233,29 @@ export async function expandProgram(degree) {
     }
 
     return await response.json();
+}
+
+
+/**
+ * Fetch user statistics
+ * @param {string|null} username - Username to fetch stats for (null = current user)
+ * @returns {Promise<{username: string, statistics: Array}>}
+ */
+export async function fetchUserStatistics(username = null) {
+    const url = username
+        ? `/api/user-statistics?username=${encodeURIComponent(username)}`
+        : '/api/user-statistics';
+
+    const response = await fetch(url, {
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        if (response.status === 404 || response.status === 401) {
+            return { username: username || 'unknown', statistics: [] };
+        }
+        throw new Error(`Failed to fetch user statistics: ${response.statusText}`);
+    }
+
+    return response.json();
 }

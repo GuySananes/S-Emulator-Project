@@ -418,15 +418,23 @@ async function startExecution(mode) {
     console.log('Selected function:', selectedFunctionName); // ADD THIS LOG
 
     try {
-        // MODIFY THIS: Send function name along with program name
+        // Send function name along with program name
         const executionRequest = {
             programId: selectedProgramName,
-            functionName: selectedFunctionName, // ADD THIS LINE
+            functionName: selectedFunctionName,
             mode: mode,
-            inputs: inputs
+            inputs: inputs,
+            currentDegree: state.currentDegree  //send the expansion degree
         };
 
-        const response = await api.startExecution(executionRequest.programId, mode, inputs, selectedFunctionName);
+        // Pass the currentDegree as a 5th parameter
+        const response = await api.startExecution(
+            executionRequest.programId,
+            mode,
+            inputs,
+            selectedFunctionName,
+            state.currentDegree
+        );
         console.log('Execution started:', response);
 
         currentExecutionId = response.executionId;
