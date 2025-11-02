@@ -1,9 +1,11 @@
+
 package core.logic.instruction.quoteInstructions;
 
 import core.logic.variable.Variable;
 import core.logic.execution.ExecutionContext;
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ResultCycle;
+import core.logic.program.ContextPrograms;  // ADD THIS IMPORT
 import core.logic.program.SFunction;
 import core.logic.program.SProgram;
 import expansion.ExpansionContext;
@@ -11,18 +13,45 @@ import expansion.ExpansionContext;
 import java.util.*;
 
 public class FunctionArgument implements Argument {
-    private final SProgram program;
+    private SProgram program;  // Remove 'final' keyword
+    private final String functionName;  //Store function name
+    private boolean isSystemFunction;  //Track if it's a system function
     private final List<Argument> arguments;
 
+    // CONSTRUCTOR: For local functions
     public FunctionArgument(SProgram program, List<Argument> arguments) {
+        if (program == null) {
+            throw new IllegalArgumentException("Program cannot be null for local functions");
+        }
         this.program = program;
-        this.arguments = arguments;
+        this.functionName = program.getName();
+        this.isSystemFunction = false;
+        this.arguments = new ArrayList<>(arguments);
     }
 
+    //COPY CONSTRUCTOR
     public FunctionArgument(FunctionArgument other) {
         this.program = other.program;
+        this.functionName = other.functionName;
+        this.isSystemFunction = other.isSystemFunction;
         this.arguments = new ArrayList<>();
-        this.arguments.addAll(other.arguments);
+        for (Argument arg : other.arguments) {
+            if (arg instanceof Variable) {
+                this.arguments.add(((Variable) arg).deepCopy());  // FIXED: Use deepCopy for Variables
+            } else if (arg instanceof FunctionArgument) {
+                this.arguments.add(new FunctionArgument((FunctionArgument) arg));  // FIXED: Use copy constructor
+            } else {
+                this.arguments.add(arg);
+            }
+        }
+    }
+
+    //For system functions
+    public FunctionArgument(String functionName, List<Argument> arguments) {
+        this.functionName = functionName;
+        this.program = null;  // Will be resolved later
+        this.isSystemFunction = true;
+        this.arguments = new ArrayList<>(arguments);
     }
 
     public void setArgumentsThatAreVariable(Map<Variable, Variable> xyzToz, ExpansionContext context) {
@@ -46,7 +75,14 @@ public class FunctionArgument implements Argument {
 
 
 
+    //Add validation for unresolved system functions
     public SProgram getProgram() {
+        if (isSystemFunction && program == null) {
+            throw new IllegalStateException(
+                    "System function '" + functionName + "' has not been resolved yet. " +
+                            "Call resolveSystemFunctions() on the SProgram after loading."
+            );
+        }
         return program;
     }
 
@@ -85,6 +121,13 @@ public class FunctionArgument implements Argument {
     }
 
     public int getDegree() {
+        if (program == null) {
+            throw new IllegalStateException(
+                    "Cannot get degree of function '" + functionName + "': " +
+                            "Function has not been resolved yet. isSystemFunction=" + isSystemFunction
+            );
+        }
+
         int maxDegree = 0;
         for (Argument argument : arguments) {
             if(argument instanceof FunctionArgument fa) {
@@ -126,5 +169,54 @@ public class FunctionArgument implements Argument {
     @Override
     public FunctionArgument clone() {
         return new FunctionArgument(this);
+    }
+
+    // NEW: Check if this is a system function that needs resolution
+    public boolean isSystemFunction() {
+        return isSystemFunction;
+    }
+
+    // NEW: Get the function name (useful for debugging and resolution)
+    public String getFunctionName() {
+        return functionName;
+    }
+
+    public void resolveSystemFunction(ContextPrograms contextPrograms) {
+        if (!isSystemFunction) {
+            return;  // Already a local function, nothing to do
+        }
+
+        if (program != null) {
+            return;  // Already resolved
+        }
+
+        // Look up the function in the system
+        Map<String, SProgram> nameToProgram = contextPrograms.getNameToProgram();
+        SProgram resolvedProgram = nameToProgram.get(functionName);
+
+        if (resolvedProgram == null) {
+            throw new RuntimeException(
+                    "System function '" + functionName + "' not found in ContextPrograms. " +
+                            "Available functions: " + nameToProgram.keySet()
+            );
+        }
+
+        System.out.println("DEBUG FunctionArgument: Resolved '" + functionName + "' to program: " + resolvedProgram.getName());
+        this.program = resolvedProgram;
+        this.isSystemFunction = false;  // MARK AS RESOLVED - no longer a system function
+    }
+
+    public void resolveSystemFunctionsRecursively(ContextPrograms contextPrograms) {
+        System.out.println("DEBUG FunctionArgument: Resolving '" + functionName + "' (isSystem=" + isSystemFunction + ", program=" + (program != null ? program.getName() : "null") + ")");
+
+        // Resolve this function if needed
+        resolveSystemFunction(contextPrograms);
+
+        // Recursively resolve nested function arguments
+        for (Argument arg : arguments) {
+            if (arg instanceof FunctionArgument funcArg) {
+                funcArg.resolveSystemFunctionsRecursively(contextPrograms);
+            }
+        }
     }
 }

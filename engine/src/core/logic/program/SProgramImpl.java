@@ -6,6 +6,8 @@ import core.logic.label.Label;
 import core.logic.label.LabelComparator;
 import core.logic.variable.Variable;
 import core.logic.variable.VariableType;
+import core.logic.instruction.quoteInstructions.FunctionArgument;
+import core.logic.instruction.quoteInstructions.Quotable;
 
 import java.util.*;
 
@@ -24,12 +26,31 @@ public class SProgramImpl implements SProgram{
     protected int numOfStaticInstructions = 0;
     protected static final int MIN_DEGREE = 0;
 
+    // NEW: Store local functions defined in this program
+    protected Map<String, SFunction> localFunctions = new HashMap<>();
+
 
     public SProgramImpl(String name, SProgram originalProgram, List<SInstruction> instructions) {
         this.originalProgram = Objects.requireNonNullElse(originalProgram, this);
         this.name = name;
         addInstructions(instructions);
         contextPrograms = new ContextPrograms(this);
+    }
+
+    // Method to set local functions after construction
+    public void setLocalFunctions(Map<String, SFunction> functions) {
+        this.localFunctions = functions;
+        // DON'T recreate ContextPrograms here - wait until after resolution
+    }
+
+    // NEW: Method to recreate ContextPrograms after resolution
+    public void recreateContextPrograms() {
+        this.contextPrograms = new ContextPrograms(this);
+    }
+
+    // NEW: Method to get local functions
+    public Map<String, SFunction> getLocalFunctions() {
+        return Collections.unmodifiableMap(localFunctions);
     }
 
     protected List<SInstruction> cloneInstructions() {
@@ -250,8 +271,46 @@ public class SProgramImpl implements SProgram{
     }
 
 
+    // Resolve all system function references in this program
+    public void resolveSystemFunctions() {
+        resolveSystemFunctions(new HashSet<>());
+    }
 
+    // Helper method with visited set to prevent infinite recursion
+    protected void resolveSystemFunctions(Set<String> visited) {
+        if (contextPrograms == null) {
+            throw new IllegalStateException("ContextPrograms not initialized");
+        }
 
+        // Prevent infinite recursion - if we've already visited this program, skip it
+        if (visited.contains(this.name)) {
+            System.out.println("DEBUG: Skipping already visited program: " + this.name);
+            return;
+        }
 
+        visited.add(this.name);
+        System.out.println("DEBUG: Resolving system functions for program: " + this.name);
 
+        // Resolve in main program instructions
+        for (SInstruction instruction : instructionList) {
+            resolveSystemFunctionsInInstruction(instruction);
+        }
+
+        // MODIFIED: Also resolve in local functions (but skip ones we've already visited)
+        for (SFunction function : localFunctions.values()) {
+            if (!visited.contains(function.getName())) {
+                function.resolveSystemFunctions(visited);
+            }
+        }
+    }
+
+    // Helper method to resolve system functions in a single instruction
+    private void resolveSystemFunctionsInInstruction(SInstruction instruction) {
+        if (instruction instanceof Quotable) {
+            Quotable quotable = (Quotable) instruction;
+            FunctionArgument functionArgument = quotable.getFunctionArgument();
+
+            functionArgument.resolveSystemFunctionsRecursively(contextPrograms);
+        }
+    }
 }
