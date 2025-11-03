@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     setupControls();
     startPolling();
-    await loadPrograms();h
+    await loadPrograms();
+    await loadAllFunctions();  // ADD THIS LINE
     await loadUserStatistics(null);
 });
 
@@ -205,7 +206,17 @@ async function loadPrograms() {
         if (response.programs && response.programs.length > 0) {
             console.log('Creating table with programs:', response.programs);
 
-            const headers = ['Name', 'Owner', 'Functions', 'Action'];
+            // Updated headers with all required columns
+            const headers = [
+                'Program Name',
+                'Uploaded By',
+                'Instructions (deg 0)',
+                'Max Degree',
+                'Times Run',
+                'Avg Credit Cost',
+                'Action'
+            ];
+
             const rows = response.programs.map(program => {
                 console.log('Creating row for program:', program);
                 const executeBtn = createButton('Execute', 'primary', (e) => {
@@ -213,21 +224,39 @@ async function loadPrograms() {
                     state.selectProgram(program);
                     window.location.href = contextPath + `/execution.html?programId=${encodeURIComponent(program.name)}`;
                 });
+
+                // Format avg credit cost to 2 decimal places
+                const avgCreditCost = program.avgCreditCost !== undefined
+                    ? program.avgCreditCost.toFixed(2)
+                    : '0.00';
+
                 return [
                     program.name,
                     program.owner || 'Unknown',
-                    program.functions || 0,
+                    program.instructionCount || 0,
+                    program.maxDegree !== undefined ? program.maxDegree : 'N/A',
+                    program.executionCount || 0,
+                    avgCreditCost,
                     executeBtn
                 ];
             });
 
-            const table = createTable(headers, rows, {
-                onRowClick: (rowData, idx) => {
+            const table = createTable(headers, rows);
+
+            // Add custom class for programs table styling
+            table.classList.add('programs-table');
+
+            // Add 'never-run' class to rows that haven't been executed
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.querySelectorAll('tr').forEach((tr, idx) => {
                     const program = response.programs[idx];
-                    selectedProgramForFunctions = program;
-                    loadFunctionsForProgram(program.name);
-                }
-            });
+                    if (program.executionCount === 0) {
+                        tr.classList.add('never-run');
+                    }
+                });
+            }
+
             container.innerHTML = '';
             container.appendChild(table);
             console.log('Table created and appended');
@@ -249,33 +278,58 @@ async function loadPrograms() {
     }
 }
 
-async function loadFunctionsForProgram(programName) {
-    const container = document.getElementById('functionsListContainer');
+async function loadAllFunctions() {
+    const container = document.getElementById('functionsTableContainer');
+
+    console.log('Loading all functions...');
 
     try {
-        const response = await api.getFunctions(programName);
+        const response = await api.getAllFunctions();
+
+        console.log('Functions API response:', response);
 
         if (response.functions && response.functions.length > 0) {
-            const headers = ['Function Name', 'Action'];
+            console.log('Creating table with', response.functions.length, 'functions');
+
+            const headers = [
+                'Function Name',
+                'Parent Program',
+                'Uploaded By',
+                'Instructions (deg 0)',
+                'Max Degree',
+                'Action'
+            ];
+
             const rows = response.functions.map(func => {
                 const executeBtn = createButton('Execute', 'primary', (e) => {
                     e.stopPropagation();
-                    window.location.href = contextPath + `/execution.html?programId=${encodeURIComponent(programName)}&functionId=${encodeURIComponent(func.name)}`;
+                    window.location.href = contextPath +
+                        `/execution.html?programId=${encodeURIComponent(func.parentProgramName)}&functionId=${encodeURIComponent(func.functionName)}`;
                 });
+
                 return [
-                    func.name,
+                    func.functionName,
+                    func.parentProgramName,
+                    func.owner || 'Unknown',
+                    func.instructionCount || 0,
+                    func.maxDegree !== undefined ? func.maxDegree : 'N/A',
                     executeBtn
                 ];
             });
 
             const table = createTable(headers, rows);
+            table.classList.add('functions-table');
+
             container.innerHTML = '';
             container.appendChild(table);
+            console.log('Functions table created');
         } else {
+            console.log('No functions found');
             container.innerHTML = '<div class="empty-state">No functions available</div>';
         }
     } catch (error) {
         console.error('Failed to fetch functions:', error);
+        showToast('error', 'Failed to load functions');
         container.innerHTML = '<div class="empty-state">Failed to load functions</div>';
     }
 }
@@ -393,4 +447,75 @@ function renderStatisticsTable(statistics) {
 
 window.addEventListener('beforeunload', () => {
     if (pollInterval) clearInterval(pollInterval);
+});
+
+
+let programsRefreshInterval = null;
+
+function startProgramsAutoRefresh() {
+    // Clear any existing interval
+    if (programsRefreshInterval) {
+        clearInterval(programsRefreshInterval);
+    }
+
+    // Refresh every 5 seconds if the page is visible
+    programsRefreshInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            loadPrograms();
+        }
+    }, 5000);
+
+    console.log('Auto-refresh enabled for programs table (every 5 seconds)');
+}
+
+function stopProgramsAutoRefresh() {
+    if (programsRefreshInterval) {
+        clearInterval(programsRefreshInterval);
+        programsRefreshInterval = null;
+        console.log('Auto-refresh disabled for programs table');
+    }
+}
+
+let functionsRefreshInterval = null;
+
+function startFunctionsAutoRefresh() {
+    if (functionsRefreshInterval) {
+        clearInterval(functionsRefreshInterval);
+    }
+
+    functionsRefreshInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            loadAllFunctions();
+        }
+    }, 5000);
+
+    console.log('Auto-refresh enabled for functions table (every 5 seconds)');
+}
+
+function stopFunctionsAutoRefresh() {
+    if (functionsRefreshInterval) {
+        clearInterval(functionsRefreshInterval);
+        functionsRefreshInterval = null;
+        console.log('Auto-refresh disabled for functions table');
+    }
+}
+
+// Initialize auto-refresh when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Start auto-refresh for programs
+    startProgramsAutoRefresh();
+
+    // Start auto-refresh for functions
+    startFunctionsAutoRefresh();
+
+    // Stop refresh when user leaves the page
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            stopProgramsAutoRefresh();
+            stopFunctionsAutoRefresh();  // ADD THIS
+        } else {
+            startProgramsAutoRefresh();
+            startFunctionsAutoRefresh();  // ADD THIS
+        }
+    });
 });

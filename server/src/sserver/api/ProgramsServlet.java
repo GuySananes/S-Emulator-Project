@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @WebServlet(name = "ProgramsServlet", urlPatterns = "/api/programs")
 public class ProgramsServlet extends HttpServlet {
@@ -26,28 +25,26 @@ public class ProgramsServlet extends HttpServlet {
             throws ServletException, IOException {
         resp.setContentType("application/json");
 
-        if (!isAuthorized(req)) {
-            sendUnauthorizedResponse(resp);
-            return;
+        try {
+            List<ProgramSummary> programsList = AppContext.programs().list();
+
+            // Convert to frontend-friendly format
+            List<Map<String, Object>> programsData = new java.util.ArrayList<>();
+            for (ProgramSummary program : programsList) {
+                programsData.add(mapProgramToFrontendFormat(program));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("programs", programsData);
+
+            resp.getWriter().write(gson.toJson(response));
+
+        } catch (Exception e) {
+            System.err.println("Failed to get programs: " + e.getMessage());
+            e.printStackTrace();
+            resp.setStatus(500);
+            resp.getWriter().write(gson.toJson(Map.of("error", "failed_to_get_programs")));
         }
-
-        List<ProgramSummary> programList = AppContext.programs().list();
-        List<Map<String, Object>> programs = convertToFrontendFormat(programList);
-        Map<String, Object> response = buildSuccessResponse(programs);
-
-        resp.getWriter().write(gson.toJson(response));
-    }
-
-    private boolean isAuthorized(HttpServletRequest req) {
-        // Get session ID from cookie (same way SessionServlet does it)
-        String sessionId = getSessionIdFromCookie(req);
-        if (sessionId == null) {
-            return false;
-        }
-
-        // Check if session is valid
-        String username = AppContext.sessions().getUserBySession(sessionId);
-        return username != null;
     }
 
     private String getSessionIdFromCookie(HttpServletRequest req) {
@@ -62,33 +59,18 @@ public class ProgramsServlet extends HttpServlet {
         return null;
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse resp) throws IOException {
-        resp.setStatus(401);
-        resp.getWriter().write(gson.toJson(Map.of("error", "unauthorized")));
-    }
-
-    private List<Map<String, Object>> convertToFrontendFormat(List<ProgramSummary> programList) {
-        return programList.stream()
-                .map(this::mapProgramToFrontendFormat)
-                .collect(Collectors.toList());
-    }
-
+    /**
+     * Maps ProgramSummary to frontend format with all required fields
+     */
     private Map<String, Object> mapProgramToFrontendFormat(ProgramSummary program) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", program.getId());
         map.put("name", program.getName());
         map.put("owner", program.getOwner());
-        map.put("functions", program.getInstructionCount());
-        map.put("grade", program.getGrade());
+        map.put("instructionCount", program.getInstructionCount());
+        map.put("maxDegree", program.getMaxDegree());
         map.put("executionCount", program.getExecutionCount());
-        map.put("avgExecutionTime", program.getAvgExecutionTime());
+        map.put("avgCreditCost", program.getAvgCreditCost());
         return map;
-    }
-
-    private Map<String, Object> buildSuccessResponse(List<Map<String, Object>> programs) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("programs", programs);
-        response.put("loadedFilePath", "");
-        return response;
     }
 }

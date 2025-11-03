@@ -2,6 +2,7 @@ package sserver.registry;
 
 import core.logic.engine.Engine;
 import load.LoadProgramDTO;
+import present.program.FunctionSummary;
 import present.program.ProgramSummary;
 
 import java.io.IOException;
@@ -19,6 +20,104 @@ public class ProgramsRegistry {
     private final Map<String, LoadProgramDTO> programData = new ConcurrentHashMap<>();
     private final Path uploadDir;
     private final Map<String, String> programFilePaths = new ConcurrentHashMap<>();
+    private final CopyOnWriteArrayList<FunctionSummary> functions = new CopyOnWriteArrayList<>();
+    private final Map<String, String> functionToParentProgram = new ConcurrentHashMap<>();
+
+    // New: Track execution statistics
+    private final Map<String, ProgramStats> programStats = new ConcurrentHashMap<>();
+
+    // Inner class to track program statistics
+    private static class ProgramStats {
+        int executionCount = 0;
+        long totalCreditsConsumed = 0;
+
+        synchronized void recordExecution(int creditsConsumed) {
+            executionCount++;
+            totalCreditsConsumed += creditsConsumed;
+        }
+
+        synchronized double getAvgCreditCost() {
+            return executionCount > 0 ? (double) totalCreditsConsumed / executionCount : 0.0;
+        }
+
+        synchronized int getExecutionCount() {
+            return executionCount;
+        }
+    }
+
+    // ======= METHODS MOVED HERE (OUTSIDE THE INNER CLASS) =======
+
+    /**
+     * Returns list of all functions across all programs
+     */
+    public List<FunctionSummary> listAllFunctions() {
+        return functions;
+    }
+
+    /**
+     * Extract and register all functions from a loaded program
+     */
+    private void extractAndRegisterFunctions(LoadProgramDTO dto, String programName, String owner) {
+        // Remove old functions from this program (in case of re-upload)
+        functions.removeIf(f -> f.getParentProgramName().equals(programName));
+        functionToParentProgram.entrySet().removeIf(e -> e.getValue().equals(programName));
+
+        // Get function names from context programs
+        java.util.Set<String> contextPrograms = dto.getContextProgramsNames();
+
+        if (contextPrograms == null || contextPrograms.isEmpty()) {
+            System.out.println("No functions found in program: " + programName);
+            return;
+        }
+
+        System.out.println("Extracting " + contextPrograms.size() + " functions from program: " + programName);
+
+        // Remember current program context
+        String originalProgramName = programName;
+
+        for (String funcName : contextPrograms) {
+            try {
+                System.out.println("  Processing function: " + funcName);
+
+                // Switch to function context
+                present.program.PresentProgramDTO funcDTO = engine.chooseContextProgram(funcName);
+
+                // Extract function details
+                int instrCount = funcDTO.getInstructionList() != null ?
+                        funcDTO.getInstructionList().size() : 0;
+                int maxDeg = funcDTO.getOriginMaxDegree();
+
+                // Create FunctionSummary
+                FunctionSummary funcSummary = new FunctionSummary(
+                        java.util.UUID.randomUUID().toString(),
+                        funcName,
+                        originalProgramName,
+                        owner,
+                        instrCount,
+                        maxDeg
+                );
+
+                // Store it
+                functions.add(funcSummary);
+                functionToParentProgram.put(funcName, originalProgramName);
+
+                System.out.println("    ✓ Registered function: " + funcName +
+                        " (instructions: " + instrCount + ", maxDegree: " + maxDeg + ")");
+
+            } catch (Exception e) {
+                System.err.println("    ✗ Failed to extract function " + funcName + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // Switch back to main program
+        try {
+            engine.chooseContextProgram(originalProgramName);
+            System.out.println("Switched back to main program: " + originalProgramName);
+        } catch (Exception e) {
+            System.err.println("Warning: Could not switch back to main program: " + e.getMessage());
+        }
+    }
 
 
     public ProgramsRegistry(Engine engine) {
@@ -42,12 +141,6 @@ public class ProgramsRegistry {
         return programData.get(programId);
     }
 
-    public void seedDummy() {
-        String id = UUID.randomUUID().toString();
-        ProgramSummary dummy = new ProgramSummary(id, "Demo", "system", 12, "I", 0, 0.0);
-        programs.add(dummy);
-    }
-
     public String getFilePath(String programName) {
         return programFilePaths.get(programName);
     }
@@ -61,6 +154,59 @@ public class ProgramsRegistry {
         return null;
     }
 
+    /**
+     * Records execution completion for statistics tracking
+     */
+    public void recordExecution(String programName, int creditsConsumed) {
+        ProgramStats stats = programStats.computeIfAbsent(programName, k -> new ProgramStats());
+        stats.recordExecution(creditsConsumed);
+
+        // Update the summary with new statistics
+        updateProgramSummary(programName);
+    }
+
+    /**
+     * Get current execution statistics for a program
+     */
+    public int getExecutionCount(String programName) {
+        ProgramStats stats = programStats.get(programName);
+        return stats != null ? stats.getExecutionCount() : 0;
+    }
+
+    /**
+     * Get average credit cost for a program
+     */
+    public double getAvgCreditCost(String programName) {
+        ProgramStats stats = programStats.get(programName);
+        return stats != null ? stats.getAvgCreditCost() : 0.0;
+    }
+
+    /**
+     * Updates a program summary with current statistics
+     */
+    private void updateProgramSummary(String programName) {
+        for (int i = 0; i < programs.size(); i++) {
+            ProgramSummary oldSummary = programs.get(i);
+            if (oldSummary.getName().equals(programName)) {
+                ProgramStats stats = programStats.get(programName);
+                int execCount = stats != null ? stats.getExecutionCount() : 0;
+                double avgCost = stats != null ? stats.getAvgCreditCost() : 0.0;
+
+                ProgramSummary newSummary = new ProgramSummary(
+                        oldSummary.getId(),
+                        oldSummary.getName(),
+                        oldSummary.getOwner(),
+                        oldSummary.getInstructionCount(),
+                        oldSummary.getMaxDegree(),
+                        execCount,
+                        avgCost
+                );
+
+                programs.set(i, newSummary);
+                break;
+            }
+        }
+    }
 
     public LoadProgramDTO loadProgram(String xmlContent, String filename, String owner)
             throws Exception {
@@ -81,17 +227,21 @@ public class ProgramsRegistry {
 
             String programName = dto.getPresentProgramDTO().getProgramName();
             int instructionCount = dto.getPresentProgramDTO().getInstructionList().size();
-            String grade = "I";
+            int maxDegree = dto.getPresentProgramDTO().getOriginMaxDegree();
             String programId = UUID.randomUUID().toString();
+
+            // Get existing statistics if re-uploading
+            int executionCount = getExecutionCount(programName);
+            double avgCreditCost = getAvgCreditCost(programName);
 
             ProgramSummary summary = new ProgramSummary(
                     programId,
                     programName,
                     owner != null ? owner : "unknown",
                     instructionCount,
-                    grade,
-                    0,
-                    0.0
+                    maxDegree,
+                    executionCount,
+                    avgCreditCost
             );
 
             // Remove old program with same name and add new one
@@ -103,6 +253,9 @@ public class ProgramsRegistry {
 
             // Store the file path
             programFilePaths.put(programName, tempFile.toString());
+
+            // NEW: Extract and register functions
+            extractAndRegisterFunctions(dto, programName, owner);
 
             return dto;
 

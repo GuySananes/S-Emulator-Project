@@ -335,6 +335,66 @@ select.dropdown:focus {
     font-weight: 600;
 }
 
+/* Numeric table columns - right align */
+.table td.numeric,
+.table th.numeric {
+    text-align: right;
+}
+
+/* Programs table specific styles */
+.table.programs-table td:nth-child(3),  /* Instructions (deg 0) */
+.table.programs-table td:nth-child(4),  /* Max Degree */
+.table.programs-table td:nth-child(5),  /* Times Run */
+.table.programs-table td:nth-child(6),  /* Avg Credit Cost */
+.table.programs-table th:nth-child(3),
+.table.programs-table th:nth-child(4),
+.table.programs-table th:nth-child(5),
+.table.programs-table th:nth-child(6) {
+    text-align: right;
+}
+
+/* Highlight programs that have never been run */
+.table tbody tr.never-run td {
+    opacity: 0.7;
+}
+
+.table tbody tr.never-run td:first-child::before {
+    content: '⚪ ';
+    color: var(--color-text-light);
+    margin-right: 4px;
+}
+
+/* Badge for run count */
+.badge-runs {
+    background-color: var(--color-success);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+/* Badge for high credit cost */
+.badge-high-cost {
+    background-color: var(--color-danger);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* Badge for low credit cost */
+.badge-low-cost {
+    background-color: var(--color-success);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
 /* Execution status badges */
 .badge-running {
     background-color: #17a2b8;
@@ -401,8 +461,6 @@ select.dropdown:focus {
     }
 }
 
-/* ... existing code ... */
-
 /* Degree Display */
 .degree-display {
     display: inline-flex;
@@ -433,4 +491,22 @@ select.dropdown:focus {
     opacity: 0.4;
     cursor: not-allowed;
     background-color: var(--color-hover);
+}
+
+/* Functions table specific styles */
+.table.functions-table td:nth-child(4),  /* Instructions (deg 0) */
+.table.functions-table td:nth-child(5),  /* Max Degree */
+.table.functions-table th:nth-child(4),
+.table.functions-table th:nth-child(5) {
+    text-align: right;
+}
+
+/* Badge for function indicator */
+.badge-function {
+    background-color: var(--color-accent);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
 }

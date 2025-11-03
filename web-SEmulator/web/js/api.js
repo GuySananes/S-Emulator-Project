@@ -86,6 +86,13 @@ export const api = {
         return result;
     },
 
+    async getAllFunctions() {
+        console.log('API: Calling /functions endpoint');
+        const result = await apiCall('/functions');
+        console.log('API: /functions response:', result);
+        return result;
+    },
+
     async getFunctions(programName) {
         console.log('API: Calling functions for program:', programName);
         const response = await fetch(`${contextPath}/api/programs/functions/${encodeURIComponent(programName)}`, {

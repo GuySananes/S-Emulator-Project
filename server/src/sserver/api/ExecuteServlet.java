@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @WebServlet(name="ExecuteServlet", urlPatterns={
         "/api/execute/start",
         "/api/execute/step",
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 })
 public class ExecuteServlet extends HttpServlet {
     private final Gson gson = new Gson();
+
 
     static class StartExecutionRequest {
         String programId;
@@ -120,6 +122,9 @@ public class ExecuteServlet extends HttpServlet {
                     resp.setStatus(404);
                     resp.getWriter().write(gson.toJson(Map.of("error", "not found")));
             }
+
+            // REMOVED THE MISPLACED CODE FROM HERE
+
         } catch (Exception e) {
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
@@ -271,6 +276,9 @@ public class ExecuteServlet extends HttpServlet {
                 ExecutionRegistry.ExecutionContext ctx = AppContext.executions().getExecution(execId);
                 AppContext.executions().markCompleted(execId, result);
 
+                // ✅ RECORD EXECUTION STATISTICS HERE (in regular mode)
+                recordProgramExecution(ctx.programName, cyclesUsed);
+
                 // Record user statistics
                 recordUserStatistic(username, ctx.getActualExecutionName(), ctx, result, ctx.isMainProgram());
 
@@ -350,6 +358,9 @@ public class ExecuteServlet extends HttpServlet {
 
                 AppContext.executions().markCompleted(request.executionId, finalResult);
 
+                // ✅ RECORD EXECUTION STATISTICS HERE (debug mode completed)
+                recordProgramExecution(ctx.programName, ctx.getCreditsConsumed());
+
                 // Record user statistics
                 recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
 
@@ -428,6 +439,9 @@ public class ExecuteServlet extends HttpServlet {
             ctx.addCreditsConsumed(creditsUsed);
 
             AppContext.executions().markCompleted(request.executionId, finalResult);
+
+            // ✅ RECORD EXECUTION STATISTICS HERE (debug mode resumed to end)
+            recordProgramExecution(ctx.programName, ctx.getCreditsConsumed());
 
             // Record user statistics
             recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
@@ -541,6 +555,20 @@ public class ExecuteServlet extends HttpServlet {
         return AppContext.users().getCredits(username) > 0;
     }
 
+    /**
+     * Records a program execution for statistics tracking
+     */
+    private void recordProgramExecution(String programName, int creditsConsumed) {
+        try {
+            AppContext.programs().recordExecution(programName, creditsConsumed);
+            System.out.println("✅ Recorded execution for program: " + programName +
+                    ", credits consumed: " + creditsConsumed);
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to record program execution: " + e.getMessage());
+            e.printStackTrace();
+            // Don't fail the execution if recording fails
+        }
+    }
 
     /**
      * Safely deduct credits from a user (never goes below 0)
