@@ -130,15 +130,18 @@ public class ChooseFunctionServlet extends HttpServlet {
         List<Map<String, Object>> instructions = new ArrayList<>();
 
         if (dto.getInstructionList() != null) {
+            int lineNumber = 1; // Start numbering from 1
             for (var instr : dto.getInstructionList()) {
                 Map<String, Object> instrMap = new HashMap<>();
-                instrMap.put("index", instr.getIndex());
+                // Use lineNumber instead of getIndex() which might be -1
+                instrMap.put("index", lineNumber);
                 instrMap.put("representation", instr.getRepresentation());
                 instrMap.put("type", instr.getInstructionData() != null ?
                         instr.getInstructionData().getInstructionType() : "B");
                 instrMap.put("cycles", instr.getInstructionData() != null ?
                         instr.getInstructionData().getCycleRepresentation() : "1");
                 instructions.add(instrMap);
+                lineNumber++; // Increment for next instruction
             }
         }
 
