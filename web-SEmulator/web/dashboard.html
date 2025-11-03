@@ -7,59 +7,81 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/chat.css">
 </head>
 <body class="page-dashboard">
+
+<!-- Header -->
 <div class="topbar">
     <div class="topbar-left">
-        <h1 class="app-title">S-Emulator</h1>
-        <span class="user-display">User: <span id="currentUser"></span></span>
+        <h1 class="app-title">🚀 S-Emulator Dashboard</h1>
+        <span class="user-display">Logged in as: <strong id="currentUser"></strong></span>
     </div>
     <div class="topbar-right">
-        <div id="creditsDisplay" class="badge badge-credits">Available Credits: 0</div>
-        <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+        <div id="creditsDisplay" class="badge badge-credits">💰 Credits: 0</div>
+        <button id="chargeCreditsBtn" class="btn btn-accent">⚡ Charge Credits</button>
+        <button id="logoutBtn" class="btn btn-secondary btn-small">🚪 Logout</button>
     </div>
 </div>
 
 <div class="container">
+
+    <!-- Quick Actions Section -->
     <div class="controls-row">
-        <div class="control-group">
-            <input type="file" id="fileInput" accept=".xml" style="display:none">
-            <button id="loadFileBtn" class="btn btn-primary">Load File</button>
-            <input type="text" id="loadedFilePath" class="filepath-display" readonly placeholder="No file loaded">
-        </div>
-        <div class="control-group">
-            <button id="chargeCreditsBtn" class="btn btn-accent">Charge Credits</button>
+        <div class="control-group" style="flex: 1;">
+            <h3 style="margin: 0 0 10px 0; color: var(--color-primary);">📂 Load Program File</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" id="fileInput" accept=".xml" style="display:none">
+                <button id="loadFileBtn" class="btn btn-primary">Choose File</button>
+                <input type="text" id="loadedFilePath" class="filepath-display" readonly placeholder="No file loaded" style="flex: 1;">
+            </div>
         </div>
     </div>
 
+    <!-- Main 2-Column Layout: Users & Programs -->
     <div class="main-grid">
         <div class="grid-left">
             <div class="card">
-                <h3 class="card-title">Available Users</h3>
+                <h3 class="card-title">👥 Available Users</h3>
+                <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
+                    Select a user to view their statistics
+                </p>
                 <div id="usersTableContainer" class="table-container">
                     <div class="spinner" id="usersSpinner"></div>
                 </div>
-                <button id="unselectUserBtn" class="btn btn-secondary btn-full-width" disabled>Unselect User</button>
+                <button id="unselectUserBtn" class="btn btn-secondary btn-full-width" disabled>Clear Selection</button>
             </div>
         </div>
 
         <div class="grid-right">
             <div class="card">
-                <h3 class="card-title">Available Programs</h3>
+                <h3 class="card-title">📋 Your Programs</h3>
+                <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
+                    Load a file or click a program to execute
+                </p>
                 <div id="programsTableContainer" class="table-container">
-                    <div class="empty-state">No programs loaded</div>
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📁</div>
+                        <div>No programs loaded yet</div>
+                        <div style="font-size: 0.85rem; color: var(--color-text-light); margin-top: 8px;">
+                            Click "Choose File" above to load a program
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bottom-row">
+    <!-- Bottom 3-Column Layout: Statistics, Chat, Functions -->
+    <div style="display: grid; grid-template-columns: 1fr 400px 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+
+        <!-- User Statistics -->
         <div class="card">
-            <h3 class="card-title">User Statistics</h3>
-            <div class="statistics-info">
-                Viewing statistics for: <span id="statisticsUsername" class="badge badge-accent">yourself</span>
+            <h3 class="card-title">📊 Execution Statistics</h3>
+            <div class="statistics-info" style="margin-bottom: 12px; padding: 8px; background: #f0f7ff; border-radius: 6px;">
+                <strong>Viewing:</strong> <span id="statisticsUsername" class="badge badge-accent">yourself</span>
             </div>
-            <div id="statisticsTableContainer" class="table-container">
+            <div id="statisticsTableContainer" class="table-container" style="max-height: 400px;">
                 <table id="statisticsTable" class="data-table" style="display:none;">
                     <thead>
                     <tr>
@@ -68,28 +90,65 @@
                         <th>Name</th>
                         <th>Architecture</th>
                         <th>Degree</th>
-                        <th>Final Y</th>
+                        <th>Result</th>
                         <th>Cycles</th>
                     </tr>
                     </thead>
-                    <tbody id="statisticsTableBody">
-                    </tbody>
+                    <tbody id="statisticsTableBody"></tbody>
                 </table>
-                <div class="empty-state" id="statisticsEmptyState">Loading statistics...</div>
+                <div class="empty-state" id="statisticsEmptyState">
+                    <div style="font-size: 2.5rem; margin-bottom: 10px;">📈</div>
+                    <div>No execution history yet</div>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <h3 class="card-title">All Available Functions</h3>
-            <div id="functionsTableContainer" class="table-container">
-                <!-- All functions in system -->
+        <!-- Chat Room -->
+        <div class="chat-container" style="margin: 0;">
+            <div class="chat-header">
+                <h3>💬 Chat Room</h3>
+                <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;">
+                    Chat with other users in real-time
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state" style="padding: 40px 20px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">💭</div>
+                    <div style="color: #999;">No messages yet</div>
+                    <div style="font-size: 0.85rem; color: #bbb; margin-top: 8px;">
+                        Be the first to say hello!
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Type your message..." maxlength="500">
+                <button id="sendButton" onclick="sendMessage()">📤 Send</button>
             </div>
         </div>
+
+        <!-- All Functions -->
+        <div class="card">
+            <h3 class="card-title">⚙️ Available Functions</h3>
+            <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
+                All functions available in the system
+            </p>
+            <div id="functionsTableContainer" class="table-container" style="max-height: 400px;">
+                <div class="empty-state">
+                    <div style="font-size: 2.5rem; margin-bottom: 10px;">🔧</div>
+                    <div>No functions available</div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-light); margin-top: 8px;">
+                        Load a program to see available functions
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <div id="toastContainer" class="toast-container"></div>
 
+<script src="js/chat.js"></script>
 <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>
