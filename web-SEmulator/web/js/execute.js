@@ -16,6 +16,7 @@ let availableFunctions = [];
 let currentExecutionId = null;
 let executionMode = null; // 'regular' or 'debug'
 let currentInputVariables = []; // ADD THIS LINE
+let highlightedVariable = null; // ADD THIS LINE for variable highlighting
 
 console.log('=== ADDING DOM LOADED LISTENER ===');
 
@@ -420,33 +421,82 @@ async function handleCollapse() {
     }
 }
 
-function displayInstructions(instructions) {
-    console.log('=== DISPLAY INSTRUCTIONS ===');
-    console.log('Instructions to display:', instructions.length);
 
+function displayInstructions(instructions) {
     const container = document.getElementById('instructionsTableContainer');
 
-    if (instructions.length === 0) {
-        console.log('No instructions to display');
-        container.innerHTML = '<div class="empty-state">No instructions</div>';
+    if (!instructions || instructions.length === 0) {
+        container.innerHTML = '<div class="empty-state">No instructions to display</div>';
         return;
     }
 
-    console.log('First instruction:', instructions[0]);
+    // Create table structure
+    const table = document.createElement('table');
+    table.className = 'table';
 
-    const headers = ['#', 'B/S', 'Cycles', 'Instruction'];
-    const rows = instructions.map(instr => [
-        instr.index,
-        instr.type,
-        instr.cycles,
-        instr.representation
-    ]);
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th style="width: 60px;">#</th>
+            <th style="width: 250px;">Instruction</th>
+            <th style="width: 100px;">Type</th>
+            <th>Cycles</th>
+        </tr>
+    `;
+    table.appendChild(thead);
 
-    console.log('Creating table with', rows.length, 'rows');
-    const table = createTable(headers, rows);
+    const tbody = document.createElement('tbody');
+
+    instructions.forEach((inst, idx) => {
+        const row = document.createElement('tr');
+        row.className = 'instruction-row';
+
+        // Store instruction data for highlighting (create a simple object with the instruction text)
+        row._instructionData = {
+            instruction: inst.representation || '',
+            type: inst.type || 'B',
+            cycles: inst.cycles || '1',
+            index: inst.index || (idx + 1)
+        };
+
+        // Apply variable highlighting if needed
+        if (shouldHighlightInstruction(row._instructionData)) {
+            row.classList.add('variable-highlighted');
+        }
+
+        row.innerHTML = `
+            <td>${inst.index || (idx + 1)}</td>
+            <td class="instruction-text">${inst.representation || ''}</td>
+            <td>${inst.type || 'B'}</td>
+            <td>${inst.cycles || '1'}</td>
+        `;
+
+        // Add click handler for history (if you have history functionality)
+        row.addEventListener('click', () => {
+            if (highlightEnabled) {
+                highlightRow(row);
+            }
+            // If you have displayHistoryChain function, uncomment this:
+            // displayHistoryChain(inst.historyChain || []);
+        });
+
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
     container.innerHTML = '';
     container.appendChild(table);
-    console.log('Table appended to container');
+
+    updateSummary(instructions.length);
+}
+
+function highlightRow(row) {
+    // Remove previous highlight from other rows
+    const allRows = document.querySelectorAll('.instruction-row');
+    allRows.forEach(r => r.classList.remove('debug-highlighted'));
+
+    // Add highlight to clicked row
+    row.classList.add('debug-highlighted');
 }
 
 function displayVariables(variables) {
@@ -472,6 +522,7 @@ function displayVariables(variables) {
     container.appendChild(table);
     console.log('Table appended to container');
 }
+
 
 function setupControls() {
     const programSelector = document.getElementById('programSelector');
@@ -506,6 +557,33 @@ function setupControls() {
         applyHighlight();
     });
 
+    // Variable highlighting controls - ADD THIS SECTION
+    const highlightVariableBtn = document.getElementById('highlightVariableBtn');
+    const clearHighlightBtn = document.getElementById('clearHighlightBtn');
+    const variableHighlightInput = document.getElementById('variableHighlightInput');
+
+    if (highlightVariableBtn && clearHighlightBtn && variableHighlightInput) {
+        highlightVariableBtn.addEventListener('click', () => {
+            const variableName = variableHighlightInput.value.trim();
+            if (variableName) {
+                highlightVariable(variableName);
+            } else {
+                showToast('warning', 'Please enter a variable name');
+            }
+        });
+
+        clearHighlightBtn.addEventListener('click', () => {
+            clearVariableHighlight();
+        });
+
+        // Allow highlighting with Enter key
+        variableHighlightInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                highlightVariableBtn.click();
+            }
+        });
+    }
 }
 
 function goToDashboard() {
@@ -548,7 +626,7 @@ async function startExecution(mode) {
     }
 
     console.log('Collected inputs:', inputs);
-    console.log('Selected function:', selectedFunctionName); // ADD THIS LOG
+    console.log('Selected function:', selectedFunctionName);
 
     try {
         // Send function name along with program name
@@ -557,7 +635,7 @@ async function startExecution(mode) {
             functionName: selectedFunctionName,
             mode: mode,
             inputs: inputs,
-            currentDegree: state.currentDegree  //send the expansion degree
+            currentDegree: state.currentDegree
         };
 
         // Pass the currentDegree as a 5th parameter
@@ -576,7 +654,7 @@ async function startExecution(mode) {
         if (response.status === 'completed') {
             displayExecutionResult(response.data);
 
-            //Update credits after execution
+            // Update credits after execution
             if (response.data.creditsRemaining !== undefined) {
                 state.updateCredits(response.data.creditsRemaining);
                 updateCreditsDisplay(response.data.creditsRemaining);
@@ -584,7 +662,7 @@ async function startExecution(mode) {
 
             updateUIState('completed');
 
-            // ✅ MODIFY THIS LINE - Show credits consumed
+            // Show credits consumed
             const creditsUsed = response.data.creditsConsumed || response.data.cycles || 0;
             showToast('success', `Execution completed! Result: ${response.data.result}, Cycles: ${response.data.cycles}, Credits used: ${creditsUsed}`);
         } else if (response.status === 'ready') {
@@ -592,7 +670,7 @@ async function startExecution(mode) {
             displayVariablesObj(response.data.variables);
             updateCyclesDisplay(response.data.cycles || 0);
 
-            //Update credits display
+            // Update credits display
             if (response.data.creditsRemaining !== undefined) {
                 state.updateCredits(response.data.creditsRemaining);
                 updateCreditsDisplay(response.data.creditsRemaining);
@@ -601,7 +679,6 @@ async function startExecution(mode) {
             showToast('success', 'Debug mode ready - use Step Forward to execute');
         }
 
-
     } catch (error) {
         console.error('=== EXECUTION ERROR ===');
         console.error('Error object:', error);
@@ -609,7 +686,7 @@ async function startExecution(mode) {
         console.error('Error message:', error.message);
         console.error('Error data:', error.data);
 
-        // ✅ CHECK FOR INSUFFICIENT CREDITS - Use error.data
+        // Check for insufficient credits - Use error.data
         if (error.name === 'InsufficientCreditsError' && error.data) {
             const creditsRequired = error.data.creditsRequired || null;
             const creditsAvailable = error.data.creditsAvailable || state.credits;
@@ -638,6 +715,71 @@ async function startExecution(mode) {
         showToast('error', `Execution failed: ${error.message}`);
         updateUIState('idle');
     }
+}
+
+// Add these new functions for variable highlighting
+
+function highlightVariable(variableName) {
+    if (!variableName) {
+        clearVariableHighlight();
+        return;
+    }
+
+    highlightedVariable = variableName.trim();
+
+    // Update UI to show clear button
+    document.getElementById('clearHighlightBtn').style.display = 'inline-block';
+    document.getElementById('variableHighlightInput').value = highlightedVariable;
+
+    // Refresh the instructions table to apply highlighting
+    refreshInstructionsTable();
+
+    showToast('info', `Highlighting variable: ${highlightedVariable}`);
+}
+
+function clearVariableHighlight() {
+    highlightedVariable = null;
+
+    // Update UI
+    document.getElementById('clearHighlightBtn').style.display = 'none';
+    document.getElementById('variableHighlightInput').value = '';
+
+    // Refresh the instructions table to remove highlighting
+    refreshInstructionsTable();
+
+    showToast('info', 'Variable highlighting cleared');
+}
+
+function shouldHighlightInstruction(instruction) {
+    if (!highlightedVariable) {
+        return false;
+    }
+
+    // Check if the instruction contains the highlighted variable
+    const instructionText = instruction.instruction || '';
+
+    // Match the variable as a whole word (not as part of another variable)
+    const regex = new RegExp(`\\b${highlightedVariable}\\b`, 'i');
+    return regex.test(instructionText);
+}
+
+function refreshInstructionsTable() {
+    // Re-render the instructions table with current highlighting
+    const instructionsContainer = document.getElementById('instructionsTableContainer');
+    if (!instructionsContainer) return;
+
+    const rows = instructionsContainer.querySelectorAll('.instruction-row');
+    rows.forEach((row, index) => {
+        const instructionData = row._instructionData; // Store this when creating rows
+
+        // Remove variable highlight class
+        row.classList.remove('variable-highlighted');
+
+        // Add variable highlight if needed
+        if (instructionData && shouldHighlightInstruction(instructionData)) {
+            row.classList.add('variable-highlighted');
+        }
+    });
 }
 
 // NEW FUNCTION: Show modal input dialog

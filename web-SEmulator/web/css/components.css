@@ -510,3 +510,41 @@ select.dropdown:focus {
     border-radius: 3px;
     font-weight: 600;
 }
+
+/* Variable Highlight Controls */
+.variable-highlight-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: 16px;
+}
+
+.variable-highlight-controls .input-field {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.variable-highlight-controls .input-field:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+/* Variable highlight color (different from debug highlight) */
+.instruction-row.variable-highlighted {
+    background-color: #FFF9C4 !important; /* Light yellow */
+    border-left: 4px solid #FBC02D; /* Darker yellow border */
+}
+
+/* Debug highlight (keep existing) */
+.instruction-row.debug-highlighted {
+    background-color: #E3F2FD !important; /* Light blue */
+    border-left: 4px solid #2196F3; /* Blue border */
+}
+
+/* When both highlights are active, prioritize debug */
+.instruction-row.debug-highlighted.variable-highlighted {
+    background-color: #E3F2FD !important;
+    border-left: 4px solid #2196F3 !important;
+}
