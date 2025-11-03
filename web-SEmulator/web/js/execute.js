@@ -155,17 +155,19 @@ async function selectProgram(programName) {
         currentInputVariables = data.inputVariables || [];
         console.log('Required inputs:', currentInputVariables);
 
-        // Initialize degree state
-        state.currentDegree = data.currentDegree || 0;
-        state.maxDegree = data.maxDegree || 0;
+        // Initialize degree state (convert from backend 1-based to display 0-based)
+        const displayCurrentDegree = (data.currentDegree || 1) - 1;  // Backend sends 1-based
+        const displayMaxDegree = (data.maxDegree || 1) - 1;  // Backend sends 1-based
+
+        state.setDegreeInfo(displayCurrentDegree, 0, displayMaxDegree);
         state.minDegree = 1;
         state.selectedProgram = programName;
 
         // Update degree display
-        updateDegreeDisplay(data.currentDegree || 0, data.maxDegree || 0);
+        updateDegreeDisplay(displayCurrentDegree, displayMaxDegree);
 
-        // Update button states
-        updateExpandCollapseButtons(data.currentDegree || 0, 1, data.maxDegree || 0);
+// Update button states
+        updateExpandCollapseButtons(displayCurrentDegree, 0, displayMaxDegree);
 
         // Display the input form WITH estimated cycles
         displayInputsForm(currentInputVariables, data.estimatedCycles);
@@ -266,16 +268,16 @@ async function selectFunction(functionName) {
         currentInputVariables = data.inputVariables || [];
         displayInputsForm(currentInputVariables);
 
-        // Update degree state for the function
-        state.currentDegree = data.currentDegree || 0;
-        state.maxDegree = data.maxDegree || 0;
+        // Update degree state for the function (convert from backend 1-based to display 0-based)
+        const displayCurrentDegree = (data.currentDegree || 1) - 1;
+        const displayMaxDegree = (data.maxDegree || 1) - 1;
+
+        state.setDegreeInfo(displayCurrentDegree, 0, displayMaxDegree);
+
+        // Update UI
+        updateDegreeDisplay(displayCurrentDegree, displayMaxDegree);
+        updateExpandCollapseButtons(displayCurrentDegree, 0, displayMaxDegree);
         state.minDegree = 1;
-
-        // Update degree display
-        updateDegreeDisplay(data.currentDegree || 0, data.maxDegree || 0);
-
-        // Update button states
-        updateExpandCollapseButtons(data.currentDegree || 0, 1, data.maxDegree || 0);
 
         displayInstructions(data.instructions || []);
         displayVariables(data.variables || []);
@@ -285,6 +287,136 @@ async function selectFunction(functionName) {
     } catch (error) {
         console.error('Failed to select function:', error);
         showToast('error', 'Failed to load function');
+    }
+}
+
+/**
+ * Handle expand button click - increases degree by 1
+ */
+async function handleExpand() {
+    console.log('=== HANDLE EXPAND ===');
+    console.log('Current state:', {
+        currentDegree: state.currentDegree,
+        minDegree: state.minDegree,
+        maxDegree: state.maxDegree
+    });
+
+    // Calculate new DISPLAY degree (0-based)
+    const newDisplayDegree = state.currentDegree + 1;
+
+    // Validate against max
+    if (newDisplayDegree > state.maxDegree) {
+        showToast('warning', `Already at maximum degree (${state.maxDegree})`);
+        return;
+    }
+
+    // Convert to BACKEND degree (1-based): backend = display + 1
+    const backendDegree = newDisplayDegree + 1;
+
+    console.log(`Expanding: displayDegree ${state.currentDegree} -> ${newDisplayDegree}, calling backend with degree ${backendDegree}`);
+
+    try {
+        const response = await fetch(`${contextPath}/api/execute/expand`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ degree: backendDegree })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Expansion failed');
+        }
+
+        const data = await response.json();
+        console.log('Expand response:', data);
+
+        if (data.success) {
+            // Backend returns 1-based degree, convert to 0-based for display
+            const displayDegree = data.currentDegree - 1;
+
+            // Update state
+            state.setDegreeInfo(displayDegree, 0, data.maxDegree - 1);
+
+            // Update UI
+            updateDegreeDisplay(displayDegree, data.maxDegree - 1);
+            updateExpandCollapseButtons(displayDegree, 0, data.maxDegree - 1);
+            displayInstructions(data.instructions || []);
+            displayVariables(data.variables || []);
+
+            showToast('success', `Expanded to degree ${displayDegree}`);
+        } else {
+            showToast('error', data.error || 'Expansion failed');
+        }
+
+    } catch (error) {
+        console.error('Expand error:', error);
+        showToast('error', `Failed to expand: ${error.message}`);
+    }
+}
+
+/**
+ * Handle collapse button click - decreases degree by 1
+ */
+async function handleCollapse() {
+    console.log('=== HANDLE COLLAPSE ===');
+    console.log('Current state:', {
+        currentDegree: state.currentDegree,
+        minDegree: state.minDegree,
+        maxDegree: state.maxDegree
+    });
+
+    // Calculate new DISPLAY degree (0-based)
+    const newDisplayDegree = state.currentDegree - 1;
+
+    // Validate against min (which is 0 for display)
+    if (newDisplayDegree < 0) {
+        showToast('warning', 'Already at minimum degree (0)');
+        return;
+    }
+
+    // Convert to BACKEND degree (1-based): backend = display + 1
+    const backendDegree = newDisplayDegree + 1;
+
+    console.log(`Collapsing: displayDegree ${state.currentDegree} -> ${newDisplayDegree}, calling backend with degree ${backendDegree}`);
+
+    try {
+        const response = await fetch(`${contextPath}/api/execute/expand`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ degree: backendDegree })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Collapse failed');
+        }
+
+        const data = await response.json();
+        console.log('Collapse response:', data);
+
+        if (data.success) {
+            // Backend returns 1-based degree, convert to 0-based for display
+            const displayDegree = data.currentDegree - 1;
+
+            // Update state
+            state.setDegreeInfo(displayDegree, 0, data.maxDegree - 1);
+
+            // Update UI
+            updateDegreeDisplay(displayDegree, data.maxDegree - 1);
+            updateExpandCollapseButtons(displayDegree, 0, data.maxDegree - 1);
+            displayInstructions(data.instructions || []);
+            displayVariables(data.variables || []);
+
+            showToast('success', `Collapsed to degree ${displayDegree}`);
+        } else {
+            showToast('error', data.error || 'Collapse failed');
+        }
+
+    } catch (error) {
+        console.error('Collapse error:', error);
+        showToast('error', `Failed to collapse: ${error.message}`);
     }
 }
 
@@ -373,6 +505,7 @@ function setupControls() {
         highlightEnabled = e.target.checked;
         applyHighlight();
     });
+
 }
 
 function goToDashboard() {
@@ -1174,109 +1307,6 @@ function updateUIState(status) {
     }
 
     state.updateExecutionStatus(status);
-}
-
-/**
- * Handle expand button click
- */
-/**
- * Handle expand button click
- */
-async function handleExpand() {
-    if (!state.selectedProgram) {
-        showToast('error', 'Please select a program first');
-        return;
-    }
-
-    const currentDegree = state.currentDegree || 0;
-    const maxDegree = state.maxDegree || 0;
-
-    if (currentDegree >= maxDegree) {
-        showToast('info', 'Already at maximum expansion degree');
-        return;
-    }
-
-    const newDegree = currentDegree + 1;
-
-    try {
-        const response = await expandProgram(newDegree);
-
-        if (response.success) {
-            // Update instructions table
-            displayInstructions(response.instructions);
-
-            // Update variables table
-            displayVariables(response.variables);
-
-            // Update state
-            state.currentDegree = response.currentDegree;
-            state.maxDegree = response.maxDegree;
-            state.minDegree = response.minDegree;
-
-            // Update degree display
-            updateDegreeDisplay(response.currentDegree, response.maxDegree);
-
-            // Update button states
-            updateExpandCollapseButtons(response.currentDegree, response.minDegree, response.maxDegree);
-
-            showToast('success', `Expanded to degree ${response.currentDegree}`);
-        } else {
-            showToast('error', response.error || 'Failed to expand');
-        }
-    } catch (error) {
-        console.error('Expand error:', error);
-        showToast('error', 'Failed to expand: ' + error.message);
-    }
-}
-
-/**
- * Handle collapse button click
- */
-async function handleCollapse() {
-    if (!state.selectedProgram) {
-        showToast('error', 'Please select a program first');
-        return;
-    }
-
-    const currentDegree = state.currentDegree || 0;
-    const minDegree = state.minDegree || 1;
-
-    if (currentDegree <= minDegree) {
-        showToast('info', 'Already at minimum expansion degree');
-        return;
-    }
-
-    const newDegree = currentDegree - 1;
-
-    try {
-        const response = await expandProgram(newDegree);
-
-        if (response.success) {
-            // Update instructions table
-            displayInstructions(response.instructions);
-
-            // Update variables table
-            displayVariables(response.variables);
-
-            // Update state
-            state.currentDegree = response.currentDegree;
-            state.maxDegree = response.maxDegree;
-            state.minDegree = response.minDegree;
-
-            // Update degree display
-            updateDegreeDisplay(response.currentDegree, response.maxDegree);
-
-            // Update button states
-            updateExpandCollapseButtons(response.currentDegree, response.minDegree, response.maxDegree);
-
-            showToast('success', `Collapsed to degree ${response.currentDegree}`);
-        } else {
-            showToast('error', response.error || 'Failed to collapse');
-        }
-    } catch (error) {
-        console.error('Collapse error:', error);
-        showToast('error', 'Failed to collapse: ' + error.message);
-    }
 }
 
 /**

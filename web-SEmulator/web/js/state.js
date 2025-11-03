@@ -54,5 +54,12 @@ export const state = {
         this.selectedProgram = null;
         this.runId = null;
         this.executionStatus = 'idle';
+    },
+
+    setDegreeInfo(currentDegree, minDegree, maxDegree) {
+        this.currentDegree = currentDegree;
+        this.minDegree = minDegree;
+        this.maxDegree = maxDegree;
+        console.log(`[State] Degrees updated: current=${currentDegree}, min=${minDegree}, max=${maxDegree}`);
     }
 };
