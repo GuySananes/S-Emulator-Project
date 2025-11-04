@@ -17,6 +17,7 @@ let currentExecutionId = null;
 let executionMode = null; // 'regular' or 'debug'
 let currentInputVariables = []; // ADD THIS LINE
 let highlightedVariable = null; // ADD THIS LINE for variable highlighting
+let selectedArchitecture = 'IV'; // Default to highest architecture
 
 console.log('=== ADDING DOM LOADED LISTENER ===');
 
@@ -152,6 +153,10 @@ async function selectProgram(programName) {
         console.log('Program selected successfully!');
         console.log('Full response data:', data);
 
+        // ADD THIS DEBUG LOG
+        console.log('Instructions from response:', data.instructions);
+        console.log('Instructions count:', data.instructions ? data.instructions.length : 0);
+
         // Store required input variables
         currentInputVariables = data.inputVariables || [];
         console.log('Required inputs:', currentInputVariables);
@@ -167,13 +172,16 @@ async function selectProgram(programName) {
         // Update degree display
         updateDegreeDisplay(displayCurrentDegree, displayMaxDegree);
 
-// Update button states
+        // Update button states
         updateExpandCollapseButtons(displayCurrentDegree, 0, displayMaxDegree);
 
         // Display the input form WITH estimated cycles
         displayInputsForm(currentInputVariables, data.estimatedCycles);
 
         await loadFunctionsDropdown(data.contextPrograms || []);
+
+        // ADD DEBUG BEFORE DISPLAYING
+        console.log('About to display instructions:', data.instructions || []);
         displayInstructions(data.instructions || []);
         displayVariables(data.variables || []);
 
@@ -215,7 +223,9 @@ function displayInputsForm(inputVariables, estimatedCycles) {
     }
 
     // Determine if user has enough credits
-    const hasEnoughCredits = estimatedCycles ? state.credits >= estimatedCycles : true;
+    const architectureCost = getArchitectureCost(selectedArchitecture);
+    const totalCost = estimatedCycles + architectureCost;
+    const hasEnoughCredits = state.credits >= totalCost;
     const warningColor = hasEnoughCredits ? '#2196F3' : '#f44336';
     const warningText = hasEnoughCredits
         ? `✓ You have enough credits (${state.credits} available)`
@@ -230,8 +240,20 @@ function displayInputsForm(inputVariables, estimatedCycles) {
                 ${inputVariables.map(v => `<span style="display: inline-block; padding: 4px 8px; background: white; border-radius: 4px; margin: 2px; font-family: monospace;">${v}</span>`).join('')}
             </div>
             ${estimatedCycles ? `
-                <div style="margin-top: 12px; padding: 8px; background: white; border-radius: 4px; border: 1px solid #ddd;">
-                    <strong>Estimated Credits Required:</strong> ${estimatedCycles}
+                <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #ddd;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #666;">Execution Credits:</span>
+                        <span style="font-weight: 600;">${estimatedCycles}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #666;">Architecture Cost:</span>
+                        <span style="font-weight: 600;">+${architectureCost}</span>
+                    </div>
+                    <div style="border-top: 2px solid #ddd; margin: 8px 0; padding-top: 8px;"></div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-weight: 700; color: #333;">Total Cost:</span>
+                        <span style="font-weight: 700; color: #1976D2; font-size: 18px;">${totalCost}</span>
+                    </div>
                 </div>
                 <div style="margin-top: 8px; font-size: 13px; color: ${hasEnoughCredits ? '#2e7d32' : '#c62828'}; font-weight: 600;">
                     ${warningText}
@@ -423,12 +445,19 @@ async function handleCollapse() {
 
 
 function displayInstructions(instructions) {
+    console.log('=== DISPLAY INSTRUCTIONS ===');
+    console.log('Instructions received:', instructions);
+    console.log('Instructions count:', instructions ? instructions.length : 0);
+
     const container = document.getElementById('instructionsTableContainer');
 
     if (!instructions || instructions.length === 0) {
+        console.log('No instructions to display - showing empty state');
         container.innerHTML = '<div class="empty-state">No instructions to display</div>';
         return;
     }
+
+    console.log('Creating instructions table with', instructions.length, 'instructions');
 
     // Create table structure
     const table = document.createElement('table');
@@ -487,7 +516,23 @@ function displayInstructions(instructions) {
     container.innerHTML = '';
     container.appendChild(table);
 
+    console.log('Table created and appended to container');
     updateSummary(instructions.length);
+}
+
+// ADD THIS FUNCTION IF IT DOESN'T EXIST
+function updateSummary(instructionCount) {
+    const summaryText = document.getElementById('summaryText');
+    if (summaryText) {
+        summaryText.textContent = `${instructionCount} instruction${instructionCount !== 1 ? 's' : ''}`;
+    }
+}
+
+
+// ADD THIS NEW FUNCTION
+function getArchitectureCost(arch) {
+    const costs = { 'I': 5, 'II': 100, 'III': 500, 'IV': 1000 };
+    return costs[arch] || 1000;
 }
 
 function highlightRow(row) {
@@ -584,6 +629,14 @@ function setupControls() {
             }
         });
     }
+    // Architecture selection
+    const architectureSelector = document.getElementById('architectureSelector');
+    architectureSelector.addEventListener('change', (e) => {
+        selectedArchitecture = e.target.value;
+        updateArchitectureDetails();
+        // Optional: validate against current program
+        validateArchitectureCompatibility();
+    });
 }
 
 function goToDashboard() {
@@ -635,7 +688,8 @@ async function startExecution(mode) {
             functionName: selectedFunctionName,
             mode: mode,
             inputs: inputs,
-            currentDegree: state.currentDegree
+            currentDegree: state.currentDegree,
+            selectedArchitecture
         };
 
         // Pass the currentDegree as a 5th parameter
@@ -644,7 +698,8 @@ async function startExecution(mode) {
             mode,
             inputs,
             selectedFunctionName,
-            state.currentDegree
+            state.currentDegree,
+            selectedArchitecture
         );
         console.log('Execution started:', response);
 
@@ -686,6 +741,19 @@ async function startExecution(mode) {
         console.error('Error message:', error.message);
         console.error('Error data:', error.data);
 
+        // Handle architecture incompatibility FIRST
+        if (error.data && error.data.error === 'architecture_incompatible') {
+            console.log('Architecture incompatible detected');
+            highlightUnsupportedInstructions(error.data.unsupportedInstructions);
+            showArchitectureIncompatibleDialog(
+                error.data.selectedArchitecture,
+                error.data.requiredArchitecture,
+                error.data.unsupportedInstructions
+            );
+            updateUIState('idle');
+            return;
+        }
+
         // Check for insufficient credits - Use error.data
         if (error.name === 'InsufficientCreditsError' && error.data) {
             const creditsRequired = error.data.creditsRequired || null;
@@ -707,6 +775,14 @@ async function startExecution(mode) {
         if (error.message && error.message.includes('insufficient_credits')) {
             console.log('Detected insufficient_credits in message');
             showInsufficientCreditsDialog(null, state.credits, null);
+            updateUIState('idle');
+            return;
+        }
+
+        // Fallback: Check if error message contains architecture_incompatible
+        if (error.message && error.message.includes('architecture_incompatible')) {
+            console.log('Detected architecture_incompatible in message (fallback)');
+            showToast('error', 'Selected architecture is not compatible with this program. Please select a higher architecture.');
             updateUIState('idle');
             return;
         }
@@ -1039,6 +1115,31 @@ function showInputDialog(inputVariables) {
         // Add to page
         document.body.appendChild(overlay);
     });
+}
+
+
+// ADD THIS NEW FUNCTION
+function updateArchitectureDetails() {
+    const detailsElement = document.getElementById('selectedArchDetails');
+    const costs = { 'I': 5, 'II': 100, 'III': 500, 'IV': 1000 };
+    const descriptions = {
+        'I': 'Basic instructions only',
+        'II': 'Basic + Zero/Constant/Goto',
+        'III': 'II + Assignment/Jump variants',
+        'IV': 'All instructions'
+    };
+
+    if (detailsElement) {
+        detailsElement.textContent = `Architecture ${selectedArchitecture} (${costs[selectedArchitecture]} credits) - ${descriptions[selectedArchitecture]}`;
+    }
+}
+
+// ADD THIS NEW FUNCTION
+async function validateArchitectureCompatibility() {
+    if (!selectedProgramName) return;
+
+    // This is optional - you can validate in real-time
+    // For now, we'll validate when execution starts
 }
 
 // NEW FUNCTION: Show insufficient credits dialog
@@ -1486,3 +1587,137 @@ function applyHighlight() {
 window.addEventListener('beforeunload', () => {
     if (pollInterval) clearInterval(pollInterval);
 });
+
+// ADD THIS NEW FUNCTION
+function highlightUnsupportedInstructions(unsupportedInstructions) {
+    const instructionRows = document.querySelectorAll('.instruction-row');
+
+    instructionRows.forEach(row => {
+        // Remove previous highlighting
+        row.classList.remove('architecture-incompatible');
+        row.style.backgroundColor = '';
+        row.style.border = '';
+
+        const instructionData = row._instructionData;
+        if (!instructionData) return;
+
+        const instructionText = instructionData.instruction || '';
+
+        // Check if this instruction uses any unsupported instruction type
+        const isUnsupported = unsupportedInstructions.some(unsupported =>
+            instructionText.includes(unsupported)
+        );
+
+        if (isUnsupported) {
+            row.classList.add('architecture-incompatible');
+            row.style.backgroundColor = '#ffebee';
+            row.style.border = '2px solid #f44336';
+        }
+    });
+}
+
+// ADD THIS NEW FUNCTION
+function showArchitectureIncompatibleDialog(selectedArch, requiredArch, unsupportedInstructions) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        min-width: 500px;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+        background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+        color: white;
+        padding: 24px;
+        text-align: center;
+    `;
+    header.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 8px;">🚫</div>
+        <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Architecture Incompatible</h2>
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        padding: 32px 24px;
+    `;
+
+    content.innerHTML = `
+        <div style="font-size: 16px; color: #333; margin-bottom: 20px; line-height: 1.6; text-align: center;">
+            Architecture <strong>${selectedArch}</strong> does not support all instructions in this program.
+        </div>
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #f44336;">Unsupported Instructions:</strong>
+                <div style="margin-top: 8px;">
+                    ${unsupportedInstructions.map(inst =>
+        `<span style="display: inline-block; padding: 4px 12px; background: #ffebee; color: #f44336; border-radius: 6px; margin: 4px; font-family: monospace; font-size: 13px;">${inst}</span>`
+    ).join('')}
+                </div>
+            </div>
+            <div style="border-top: 2px solid #ddd; padding-top: 16px;">
+                <strong style="color: #4caf50;">Required Architecture:</strong>
+                <span style="display: inline-block; padding: 6px 16px; background: #e8f5e9; color: #4caf50; border-radius: 6px; margin-left: 8px; font-weight: 700; font-size: 16px;">
+                    ${requiredArch}
+                </span>
+            </div>
+        </div>
+        <div style="color: #666; font-size: 14px; text-align: center;">
+            💡 Switch to Architecture <strong>${requiredArch}</strong> or higher to execute this program
+        </div>
+    `;
+
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+        padding: 16px 24px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        background: #f8f9fa;
+    `;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Got it';
+    closeBtn.style.cssText = `
+        padding: 12px 32px;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s;
+        min-width: 140px;
+    `;
+
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+    });
+
+    footer.appendChild(closeBtn);
+    dialog.appendChild(header);
+    dialog.appendChild(content);
+    dialog.appendChild(footer);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+}

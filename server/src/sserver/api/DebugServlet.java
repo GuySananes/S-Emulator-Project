@@ -1,13 +1,16 @@
 package sserver.api;
 
 import com.google.gson.Gson;
-import sserver.ctx.AppContext;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.WebServlet;
-import run.ExecuteProgramDTO;
-import run.DebugProgramDTO;
-import core.logic.execution.DebugResult;
+import core.logic.architecture.Architecture;
 import core.logic.execution.DebugFinalResult;
+import core.logic.execution.DebugResult;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import run.ExecuteProgramDTO;
+import sserver.ctx.AppContext;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -99,7 +102,8 @@ public class DebugServlet extends HttpServlet {
                 execDto.getDebugProgramDTO().setInput(request.inputs);
             }
 
-            String debugId = AppContext.executions().createExecution(request.programName, username, execDto);
+            // Create execution and get the ID
+            String debugId = AppContext.executions().createExecution(request.programName, username, execDto, Architecture.IV);
 
             resp.getWriter().write(gson.toJson(new DebugStartResp(true, null, debugId)));
 

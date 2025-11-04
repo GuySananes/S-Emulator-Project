@@ -143,11 +143,12 @@ export const api = {
     },
 
     // Execution
-    async startExecution(programId, mode, inputs = {}, functionName = null, currentDegree = null) {
+    async startExecution(programId, mode, inputs = {}, functionName = null, currentDegree = null, architecture = 'IV') {
         const body = {
             programId,
             mode,
-            inputs
+            inputs,
+            architecture
         };
 
         // Add functionName if provided

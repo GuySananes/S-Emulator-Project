@@ -1,28 +1,28 @@
 package sserver.api;
 
 import com.google.gson.Gson;
+import core.logic.architecture.Architecture;
+import core.logic.execution.ChangedVariable;
+import core.logic.execution.DebugFinalResult;
+import core.logic.execution.DebugResult;
+import core.logic.execution.ResultCycle;
+import core.logic.variable.Variable;
+import exception.RunInputException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import run.ExecuteProgramDTO;
 import run.DebugProgramDTO;
+import run.ExecuteProgramDTO;
 import run.RunProgramDTO;
-import core.logic.execution.DebugResult;
-import core.logic.execution.DebugFinalResult;
-import core.logic.execution.ResultCycle;
-import core.logic.execution.ChangedVariable;
-import core.logic.variable.Variable;
 import sserver.ctx.AppContext;
 import sserver.registry.ExecutionRegistry;
-import exception.RunInputException;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @WebServlet(name="ExecuteServlet", urlPatterns={
         "/api/execute/start",
@@ -35,18 +35,18 @@ import java.util.stream.Collectors;
 public class ExecuteServlet extends HttpServlet {
     private final Gson gson = new Gson();
 
-
     static class StartExecutionRequest {
         String programId;
         String functionName;
         String mode; // "regular" or "debug"
         Map<String, Long> inputs;
-        Integer currentDegree;  // the expansion degree from frontend
+        Integer currentDegree;
+        String architecture; // ARCHITECTURE FIELD
     }
 
     static class ExecutionResponse {
         String executionId;
-        String status; // "ready", "running", "paused", "completed", "error"
+        String status;
         Map<String, Object> data;
 
         ExecutionResponse(String executionId, String status) {
@@ -69,8 +69,8 @@ public class ExecuteServlet extends HttpServlet {
         Long changedValue;
         Map<String, Long> variables;
         Long result;
-        int creditsConsumed;    // ← ADD THIS LINE
-        int creditsRemaining;   // ← ADD THIS LINE
+        int creditsConsumed;
+        int creditsRemaining;
     }
 
     static class VariablesResponse {
@@ -122,9 +122,6 @@ public class ExecuteServlet extends HttpServlet {
                     resp.setStatus(404);
                     resp.getWriter().write(gson.toJson(Map.of("error", "not found")));
             }
-
-            // REMOVED THE MISPLACED CODE FROM HERE
-
         } catch (Exception e) {
             System.err.println("Execution error: " + e.getMessage());
             e.printStackTrace();
@@ -167,11 +164,12 @@ public class ExecuteServlet extends HttpServlet {
         }
     }
 
+
+
     private void handleStartExecution(HttpServletRequest req, HttpServletResponse resp, String username) throws IOException {
         String body = req.getReader().lines().collect(Collectors.joining());
         StartExecutionRequest request = gson.fromJson(body, StartExecutionRequest.class);
 
-        //program ID verification
         if (request.programId == null || request.programId.trim().isEmpty()) {
             resp.setStatus(400);
             resp.getWriter().write(gson.toJson(Map.of("error", "Program ID required")));
@@ -179,30 +177,99 @@ public class ExecuteServlet extends HttpServlet {
         }
 
         try {
-            // Create execution DTO using Engine - this already has the program loaded
+            // ========== ARCHITECTURE VALIDATION ==========
+            Architecture architecture = Architecture.fromString(request.architecture);
+            if (architecture == null) {
+                architecture = Architecture.IV;
+            }
+            System.out.println("Selected architecture: " + architecture.getName());
+
+            // Get the execution DTO
             ExecuteProgramDTO executeDTO = AppContext.programs().getEngine().executeProgram();
 
-            // ✅ ESTIMATE PROGRAM CYCLES
+            // ========== VALIDATE AGAINST FULL EXPANDED PROGRAM ==========
+            present.program.PresentProgramDTO programToValidate = null;
+            try {
+                // Get the underlying SProgram from RunProgramDTO
+                run.RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
+                core.logic.program.SProgram currentProgram = runDTO.getProgram();
+
+                // Get maximum degree and expand to it
+                int maxDegree = currentProgram.getDegree();
+                System.out.println("Expanding to max degree " + maxDegree + " for validation");
+
+                // Expand to maximum degree to check ALL instructions
+                core.logic.program.SProgram fullProgram = expansion.Expansion.expand(currentProgram, maxDegree);
+                programToValidate = new present.program.PresentProgramDTO(fullProgram);
+
+                System.out.println("Validating against FULL program (degree " + maxDegree + ") with " +
+                        programToValidate.getInstructionList().size() + " instructions");
+
+            } catch (Exception e) {
+                System.err.println("Could not get program for validation: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            // Validate architecture compatibility
+            if (programToValidate != null) {
+                List<String> unsupportedInstructions = architecture.getUnsupportedInstructions(programToValidate);
+
+                if (!unsupportedInstructions.isEmpty()) {
+                    // Find minimum required architecture
+                    List<String> allInstructions = new ArrayList<>();
+
+                    for (present.mostInstructions.PresentInstructionDTO instrDTO : programToValidate.getInstructionList()) {
+                        if (instrDTO.getInstructionData() != null) {
+                            String instrName = instrDTO.getInstructionData().name();
+                            if (!allInstructions.contains(instrName)) {
+                                allInstructions.add(instrName);
+                            }
+                        }
+                    }
+
+                    Architecture minRequired = Architecture.findMinimumRequired(allInstructions);
+
+                    System.out.println("❌ BLOCKING EXECUTION - Architecture incompatible");
+                    System.out.println("   Selected: " + architecture.getName());
+                    System.out.println("   Required: " + minRequired.getName());
+                    System.out.println("   Unsupported: " + unsupportedInstructions);
+
+                    resp.setStatus(400);
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("error", "architecture_incompatible");
+                    errorResponse.put("unsupportedInstructions", unsupportedInstructions);
+                    errorResponse.put("requiredArchitecture", minRequired.getName());
+                    errorResponse.put("selectedArchitecture", architecture.getName());
+                    resp.getWriter().write(gson.toJson(errorResponse));
+                    return;
+                }
+            }
+
+            // ========== CREDIT CHECK WITH ARCHITECTURE COST ==========
             int estimatedCycles = estimateProgramCycles(executeDTO);
+            int architectureCost = architecture.getCreditCost();
+            int totalCreditsRequired = estimatedCycles + architectureCost;
             int currentCredits = AppContext.users().getCredits(username);
 
-            System.out.println("=== CREDIT CHECK ===");
+            System.out.println("=== ARCHITECTURE CREDIT CHECK ===");
             System.out.println("User: " + username);
             System.out.println("Current credits: " + currentCredits);
             System.out.println("Estimated cycles: " + estimatedCycles);
-            System.out.println("Has enough? " + (currentCredits >= estimatedCycles));
+            System.out.println("Architecture cost: " + architectureCost);
+            System.out.println("Total required: " + totalCreditsRequired);
 
-            // ✅ CHECK IF USER HAS ENOUGH CREDITS FOR ESTIMATED CYCLES
-            if (currentCredits < estimatedCycles) {
+            if (currentCredits < totalCreditsRequired) {
                 System.out.println("❌ BLOCKING EXECUTION - Insufficient credits");
                 resp.setStatus(403);
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("error", "insufficient_credits");
                 errorResponse.put("creditsAvailable", currentCredits);
-                errorResponse.put("creditsRequired", estimatedCycles);
+                errorResponse.put("creditsRequired", totalCreditsRequired);
+                errorResponse.put("estimatedCycles", estimatedCycles);
+                errorResponse.put("architectureCost", architectureCost);
                 errorResponse.put("message",
-                        String.format("This program requires approximately %d credits, but you only have %d",
-                                estimatedCycles, currentCredits));
+                        String.format("This execution requires %d credits (%d cycles + %d architecture cost), but you only have %d",
+                                totalCreditsRequired, estimatedCycles, architectureCost, currentCredits));
                 resp.getWriter().write(gson.toJson(errorResponse));
                 return;
             }
@@ -223,32 +290,35 @@ public class ExecuteServlet extends HttpServlet {
             }
 
             // Create execution context
-            String execId = AppContext.executions().createExecution(request.programId, username, executeDTO);
+            String execId = AppContext.executions().createExecution(request.programId, username, executeDTO, architecture);
             ExecutionRegistry.ExecutionContext execCtx = AppContext.executions().getExecution(execId);
 
-            // Check if we're executing a function (from request or from presented program)
+            System.out.println("✅ Architecture stored in context: " + architecture.getName());
+
+            // Deduct architecture cost immediately
+            deductCredits(username, architectureCost);
+            execCtx.addCreditsConsumed(architectureCost);
+            System.out.println("✅ Architecture cost deducted: " + architectureCost);
+
+            // Check if we're executing a function
             try {
                 present.program.PresentProgramDTO presentDTO = AppContext.programs().getEngine().presentProgram();
                 if (presentDTO instanceof present.program.PresentFunctionDTO) {
-                    // This is a function execution
                     present.program.PresentFunctionDTO funcDTO = (present.program.PresentFunctionDTO) presentDTO;
                     execCtx.setFunctionExecution(funcDTO.getUserName());
                 } else if (request.functionName != null && !request.functionName.trim().isEmpty()) {
-                    // Fallback to request parameter
                     execCtx.setFunctionExecution(request.functionName);
                 }
             } catch (Exception e) {
                 System.err.println("Could not determine if function execution: " + e.getMessage());
             }
 
-            // Store the run degree - use the value from request if available
+            // Store the run degree
             int runDegree = 0;
             if (request.currentDegree != null) {
-                // Use the degree from the frontend (expansion level)
                 runDegree = request.currentDegree;
                 System.out.println("✅ Using run degree from request: " + runDegree);
             } else {
-                // Fallback: try to get from PresentDTO
                 try {
                     present.program.PresentProgramDTO presentDTO = AppContext.programs().getEngine().presentProgram();
                     if (presentDTO != null) {
@@ -259,44 +329,39 @@ public class ExecuteServlet extends HttpServlet {
                     System.err.println("Could not get run degree: " + e.getMessage());
                 }
             }
-
             execCtx.setCurrentDegree(runDegree);
-            System.out.println("=== DEGREE STORED: " + runDegree + " ===");
 
-            // If regular mode, execute immediately
+            // Execute based on mode
             if ("regular".equalsIgnoreCase(request.mode)) {
                 RunProgramDTO runDTO = executeDTO.getRunProgramDTO();
                 ResultCycle result = runDTO.runProgram();
 
-                //Deduct credits based on actual cycles used
                 int cyclesUsed = result.getCycles();
                 deductCredits(username, cyclesUsed);
+                execCtx.addCreditsConsumed(cyclesUsed);
                 int remainingCredits = AppContext.users().getCredits(username);
 
-                ExecutionRegistry.ExecutionContext ctx = AppContext.executions().getExecution(execId);
                 AppContext.executions().markCompleted(execId, result);
-
-                // ✅ RECORD EXECUTION STATISTICS HERE (in regular mode)
-                recordProgramExecution(ctx.programName, cyclesUsed);
-
-                // Record user statistics
-                recordUserStatistic(username, ctx.getActualExecutionName(), ctx, result, ctx.isMainProgram());
+                recordProgramExecution(execCtx.programName, execCtx.getCreditsConsumed());
+                recordUserStatistic(username, execCtx.getActualExecutionName(), execCtx, result, execCtx.isMainProgram());
 
                 ExecutionResponse response = new ExecutionResponse(execId, "completed");
                 response.data.put("result", result.getResult());
                 response.data.put("cycles", result.getCycles());
-                response.data.put("creditsConsumed", cyclesUsed);
+                response.data.put("creditsConsumed", execCtx.getCreditsConsumed());
                 response.data.put("creditsRemaining", remainingCredits);
                 response.data.put("variables", getVariablesMap(runDTO));
 
                 resp.getWriter().write(gson.toJson(response));
 
             } else {
-                // Debug mode - return ready status
+                // Debug mode
+                int remainingCredits = AppContext.users().getCredits(username);
+
                 ExecutionResponse response = new ExecutionResponse(execId, "ready");
                 response.data.put("variables", getVariablesMap(executeDTO.getDebugProgramDTO()));
                 response.data.put("cycles", 0);
-                response.data.put("creditsRemaining", currentCredits);
+                response.data.put("creditsRemaining", remainingCredits);
                 response.data.put("estimatedCycles", estimatedCycles);
 
                 resp.getWriter().write(gson.toJson(response));
@@ -321,14 +386,12 @@ public class ExecuteServlet extends HttpServlet {
             return;
         }
 
-        //check if completed
         if (ctx.completed) {
             resp.setStatus(400);
             resp.getWriter().write(gson.toJson(Map.of("error", "Execution already completed")));
             return;
         }
 
-        //Check credits before step
         int currentCredits = AppContext.users().getCredits(username);
         if (currentCredits <= 0) {
             resp.setStatus(403);
@@ -348,7 +411,6 @@ public class ExecuteServlet extends HttpServlet {
             response.success = true;
 
             if (debugResult instanceof DebugFinalResult) {
-                // Execution finished
                 DebugFinalResult finalResult = (DebugFinalResult) debugResult;
 
                 int totalCycles = finalResult.getCycles();
@@ -357,11 +419,7 @@ public class ExecuteServlet extends HttpServlet {
                 ctx.addCreditsConsumed(creditsUsed);
 
                 AppContext.executions().markCompleted(request.executionId, finalResult);
-
-                // ✅ RECORD EXECUTION STATISTICS HERE (debug mode completed)
                 recordProgramExecution(ctx.programName, ctx.getCreditsConsumed());
-
-                // Record user statistics
                 recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
 
                 response.status = "execution_finished";
@@ -371,7 +429,6 @@ public class ExecuteServlet extends HttpServlet {
                 response.creditsRemaining = AppContext.users().getCredits(username);
                 response.variables = getVariablesMap(debugDTO);
             } else {
-                // Deduct 1 credit per step
                 deductCredits(username, 1);
                 ctx.addCreditsConsumed(1);
 
@@ -416,7 +473,6 @@ public class ExecuteServlet extends HttpServlet {
             return;
         }
 
-        //Check credits before resume
         int currentCredits = AppContext.users().getCredits(username);
         if (currentCredits <= 0) {
             resp.setStatus(403);
@@ -432,18 +488,13 @@ public class ExecuteServlet extends HttpServlet {
             DebugProgramDTO debugDTO = ctx.debugDto;
             DebugFinalResult finalResult = debugDTO.runUntilEnd();
 
-            //Deduct remaining credits
             int totalCycles = finalResult.getCycles();
             int creditsUsed = totalCycles - ctx.getCreditsConsumed();
             deductCredits(username, creditsUsed);
             ctx.addCreditsConsumed(creditsUsed);
 
             AppContext.executions().markCompleted(request.executionId, finalResult);
-
-            // ✅ RECORD EXECUTION STATISTICS HERE (debug mode resumed to end)
             recordProgramExecution(ctx.programName, ctx.getCreditsConsumed());
-
-            // Record user statistics
             recordUserStatistic(username, ctx.getActualExecutionName(), ctx, finalResult, ctx.isMainProgram());
 
             StepResponse response = new StepResponse();
@@ -511,15 +562,12 @@ public class ExecuteServlet extends HttpServlet {
 
         DebugProgramDTO debugDTO = ctx.debugDto;
         Map<String, Long> variables = getVariablesMap(debugDTO);
-        int cycles = 0; // You can track this if needed
+        int cycles = 0;
 
         VariablesResponse response = new VariablesResponse(variables, cycles);
         resp.getWriter().write(gson.toJson(response));
     }
 
-    /**
-     * Converts DTO variables to a map using Variable.getRepresentation() for names
-     */
     private Map<String, Long> getVariablesMap(run.AbstractExecuteProgramDTO dto) {
         Map<String, Long> result = new LinkedHashMap<>();
         Set<Variable> variables = dto.getOrderedVariables();
@@ -528,7 +576,6 @@ public class ExecuteServlet extends HttpServlet {
         int i = 0;
         for (Variable var : variables) {
             Long value = (i < values.size()) ? values.get(i) : 0L;
-            // Use getRepresentation() instead of getName() - this is the correct DTO method
             result.put(var.getRepresentation(), value);
             i++;
         }
@@ -548,16 +595,6 @@ public class ExecuteServlet extends HttpServlet {
         return null;
     }
 
-    /**
-     * Check if user has at least 1 credit to start execution
-     */
-    private boolean hasCreditsForExecution(String username) {
-        return AppContext.users().getCredits(username) > 0;
-    }
-
-    /**
-     * Records a program execution for statistics tracking
-     */
     private void recordProgramExecution(String programName, int creditsConsumed) {
         try {
             AppContext.programs().recordExecution(programName, creditsConsumed);
@@ -566,13 +603,9 @@ public class ExecuteServlet extends HttpServlet {
         } catch (Exception e) {
             System.err.println("⚠️ Failed to record program execution: " + e.getMessage());
             e.printStackTrace();
-            // Don't fail the execution if recording fails
         }
     }
 
-    /**
-     * Safely deduct credits from a user (never goes below 0)
-     */
     private synchronized void deductCredits(String username, int credits) {
         if (credits <= 0) return;
 
@@ -585,19 +618,14 @@ public class ExecuteServlet extends HttpServlet {
                 ": " + credits + " credits. Remaining: " + newCredits);
     }
 
-    /**
-     * Estimate the total cycles required for the program.
-     * This returns the sum of all instruction cycles (worst-case scenario).
-     */
     private int estimateProgramCycles(ExecuteProgramDTO executeDTO) {
         try {
-            // Try to get presentation DTO from Engine
             present.program.PresentProgramDTO presentDTO =
                     AppContext.programs().getEngine().presentProgram();
 
             if (presentDTO == null || presentDTO.getInstructionList() == null) {
                 System.out.println("⚠️ PresentDTO is null or has no instructions, estimating minimum cycles");
-                return 1; // Minimum estimate if we can't get instructions
+                return 1;
             }
 
             int totalCycles = 0;
@@ -609,31 +637,25 @@ public class ExecuteServlet extends HttpServlet {
                 if (instr.getInstructionData() != null) {
                     String cycleStr = instr.getInstructionData().getCycleRepresentation();
 
-                    // Handle different cycle representations
                     if (cycleStr != null && !cycleStr.isEmpty()) {
-                        // Try to parse as integer
                         try {
                             int cycles = Integer.parseInt(cycleStr.trim());
                             totalCycles += cycles;
                             continue;
                         } catch (NumberFormatException e1) {
-                            // Not a simple number, might be "n+1" or similar
-                            // Extract numeric part
                             try {
-                                // Remove non-numeric characters and try to parse
                                 String numericPart = cycleStr.replaceAll("[^0-9]", "");
                                 if (!numericPart.isEmpty()) {
                                     totalCycles += Integer.parseInt(numericPart);
                                     continue;
                                 }
                             } catch (NumberFormatException e2) {
-                                // If still fails, assume 1 cycle
+                                // Assume 1 cycle
                             }
                         }
                     }
                 }
 
-                // Default: assume 1 cycle if we couldn't parse
                 totalCycles += 1;
             }
 
@@ -641,31 +663,24 @@ public class ExecuteServlet extends HttpServlet {
             System.out.println("   - Instructions: " + instructionCount);
             System.out.println("   - Estimated cycles: " + totalCycles);
 
-            // Safety: ensure we return at least 1 if program has instructions
             return Math.max(1, totalCycles);
 
         } catch (Exception e) {
             System.err.println("❌ Failed to estimate cycles: " + e.getMessage());
             e.printStackTrace();
-            // Return a conservative estimate if estimation fails
-            return 10; // Assume at least 10 cycles if we can't estimate
+            return 10;
         }
     }
 
-    /**
-     * Records a completed execution in the user's statistics
-     */
     private void recordUserStatistic(String username, String programName,
                                      ExecutionRegistry.ExecutionContext ctx,
                                      Object result, boolean isMainProgram) {
         try {
             statistic.StatisticManager statManager = statistic.StatisticManager.getInstance();
 
-            // Increment user run count
             statManager.incrementUserRunCount(username);
             int runNumber = statManager.getUserRunCount(username);
 
-            // Extract result value and cycles
             long resultValue = 0;
             long cycles = 0;
 
@@ -679,14 +694,15 @@ public class ExecuteServlet extends HttpServlet {
                 cycles = dfr.getCycles();
             }
 
-            // Get architecture type (default if not set)
-            String architectureType = "default"; // You may want to get this from ctx if available
+            // ========== GET ARCHITECTURE TYPE FROM CONTEXT ==========
+            String architectureType = "IV"; // Default
+            if (ctx.getArchitecture() != null) {
+                architectureType = ctx.getArchitecture().getName();
+            }
 
-            // Get input values
             java.util.List<Long> inputValues = new java.util.ArrayList<>();
             if (ctx.dto != null && ctx.dto.getRunProgramDTO() != null) {
                 try {
-                    // Get ordered input values from the run DTO
                     java.util.Set<core.logic.variable.Variable> inputVars = ctx.dto.getRunProgramDTO().getOrderedInputVariables();
                     if (inputVars != null) {
                         for (core.logic.variable.Variable var : inputVars) {
@@ -698,28 +714,26 @@ public class ExecuteServlet extends HttpServlet {
                 }
             }
 
-            // Create statistic record
             statistic.SingleRunStatistic stat = new statistic.SingleRunStatisticImpl(
                     runNumber,
                     isMainProgram,
                     programName,
-                    architectureType,
+                    architectureType, // PASS ARCHITECTURE TYPE HERE
                     ctx.getCurrentDegree(),
                     inputValues,
                     resultValue,
                     cycles
             );
 
-            // Store in StatisticManager
             statManager.addUserRunStatistic(username, stat);
 
             System.out.println("✅ Recorded statistics for user: " + username +
-                    ", run #" + runNumber + ", program: " + programName);
+                    ", run #" + runNumber + ", program: " + programName +
+                    ", architecture: " + architectureType);
 
         } catch (Exception e) {
             System.err.println("⚠️ Failed to record user statistic: " + e.getMessage());
             e.printStackTrace();
-            // Don't fail the execution if statistics recording fails
         }
     }
 }

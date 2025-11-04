@@ -1,10 +1,10 @@
 package run;
 
-import java.util.List;
-
 import core.logic.execution.ProgramExecutor;
 import core.logic.execution.ResultCycle;
 import core.logic.program.SProgram;
+
+import java.util.List;
 
 public class RunProgramDTO extends AbstractExecuteProgramDTO {
 
@@ -29,6 +29,8 @@ public class RunProgramDTO extends AbstractExecuteProgramDTO {
         return programExecutor.run(input);
     }
 
-
+    public SProgram getProgram() {
+        return program;
+    }
 
 }

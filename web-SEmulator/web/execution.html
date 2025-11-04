@@ -88,10 +88,24 @@
         </div>
 
         <div class="card architecture-card">
-            <h3 class="card-title">Architecture Selection</h3>
+            <h3 class="card-title">🏗️ Architecture Selection</h3>
+            <div class="architecture-info" style="margin-bottom: 12px; padding: 12px; background: #f9f9f9; border-radius: 6px;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                    Select the instruction set architecture for execution
+                </div>
+            </div>
             <select id="architectureSelector" class="dropdown">
-                <option value="default">Default</option>
+                <option value="I">Architecture I - 5 credits (Basic only)</option>
+                <option value="II">Architecture II - 100 credits (+ Zero/Constant/Goto)</option>
+                <option value="III">Architecture III - 500 credits (+ Assignment/Jumps)</option>
+                <option value="IV" selected>Architecture IV - 1000 credits (All instructions)</option>
             </select>
+            <div id="architectureWarning" class="architecture-warning" style="display: none; margin-top: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                ⚠ Selected architecture may not support all instructions
+            </div>
+            <div id="architectureDetails" style="margin-top: 12px; padding: 10px; background: #e3f2fd; border-radius: 6px; font-size: 12px; color: #1565c0;">
+                <strong>Selected:</strong> <span id="selectedArchDetails">Architecture IV (1000 credits)</span>
+            </div>
         </div>
 
         <div class="card inputs-card">

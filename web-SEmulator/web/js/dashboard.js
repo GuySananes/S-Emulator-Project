@@ -421,9 +421,13 @@ function renderStatisticsTable(statistics) {
         nameCell.textContent = stat.programName;
         row.appendChild(nameCell);
 
-        // Architecture
+        // Architecture (with styled badge)
         const archCell = document.createElement('td');
-        archCell.textContent = stat.architectureType;
+        const archBadge = document.createElement('span');
+        const archType = stat.architectureType || 'IV'; // Default to IV if not set
+        archBadge.className = `badge badge-arch-${archType}`;
+        archBadge.textContent = archType;
+        archCell.appendChild(archBadge);
         row.appendChild(archCell);
 
         // Degree (this is the run degree)

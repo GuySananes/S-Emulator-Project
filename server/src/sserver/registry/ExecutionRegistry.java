@@ -2,6 +2,7 @@ package sserver.registry;
 
 import run.DebugProgramDTO;
 import run.ExecuteProgramDTO;
+import core.logic.architecture.Architecture;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,16 +22,18 @@ public class ExecutionRegistry {
         public Object result;
         private int creditsConsumed = 0;
         private int currentDegree = 0;
+        private Architecture architecture;
 
-        public ExecutionContext(String programName, String username, ExecuteProgramDTO dto) {
+        public ExecutionContext(String programName, String username, ExecuteProgramDTO dto, Architecture architecture) {
             this.programName = programName;
-            this.actualExecutionName = programName;  // Default to program name
-            this.isMainProgram = true;                // Default to main program
+            this.actualExecutionName = programName;
+            this.isMainProgram = true;
             this.username = username;
             this.dto = dto;
             this.debugDto = dto.getDebugProgramDTO();
             this.startTime = System.currentTimeMillis();
             this.completed = false;
+            this.architecture = architecture != null ? architecture : Architecture.IV;
         }
 
 
@@ -63,11 +66,20 @@ public class ExecutionRegistry {
         public boolean isMainProgram() {
             return isMainProgram;
         }
+
+        public Architecture getArchitecture() {
+            return architecture;
+        }
+
+        public void setArchitecture(Architecture architecture) {
+            this.architecture = architecture;
+        }
     }
 
-    public String createExecution(String programName, String username, ExecuteProgramDTO dto) {
+    public String createExecution(String programName, String username, ExecuteProgramDTO dto, Architecture architecture)
+    {
         String execId = UUID.randomUUID().toString();
-        executions.put(execId, new ExecutionContext(programName, username, dto));
+        executions.put(execId, new ExecutionContext(programName, username, dto, architecture));
         return execId;
     }
 

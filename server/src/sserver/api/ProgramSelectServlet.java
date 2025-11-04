@@ -35,7 +35,9 @@ public class ProgramSelectServlet extends HttpServlet {
         List<Map<String, Object>> instructions;
         List<Map<String, Object>> variables;
         List<String> inputVariables;
+        List<Map<String, Object>> architectures;
     }
+
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -57,6 +59,7 @@ public class ProgramSelectServlet extends HttpServlet {
                 return;
             }
 
+            // Parse request
             SelectProgramRequest request = gson.fromJson(req.getReader(), SelectProgramRequest.class);
 
             if (request == null || request.programName == null) {
@@ -75,11 +78,41 @@ public class ProgramSelectServlet extends HttpServlet {
                 return;
             }
 
-            // Use Engine to load and present the program (just like JavaFX does)
+            // Use Engine to load and present the program
             Engine engine = Engine.getInstance();
             LoadProgramDTO loadDTO = engine.loadProgram(filePath);
-
             PresentProgramDTO presentDTO = loadDTO.getPresentProgramDTO();
+
+            // Build architecture options
+            List<Map<String, Object>> architectures = new ArrayList<>();
+            architectures.add(Map.of(
+                    "name", "I",
+                    "cost", 5,
+                    "description", "Basic instructions only",
+                    "instructions", "NEUTRAL, INCREASE, DECREASE, JUMP_NOT_ZERO"
+            ));
+            architectures.add(Map.of(
+                    "name", "II",
+                    "cost", 100,
+                    "description", "Basic + Zero/Constant/Goto",
+                    "instructions", "I + ZERO_VARIABLE, CONSTANT_ASSIGNMENT, GOTO_LABEL"
+            ));
+            architectures.add(Map.of(
+                    "name", "III",
+                    "cost", 500,
+                    "description", "II + Assignment/Jump variants",
+                    "instructions", "II + ASSIGNMENT, JUMP_ZERO, JUMP_EQUAL_CONSTANT, JUMP_EQUAL_VARIABLE"
+            ));
+            architectures.add(Map.of(
+                    "name", "IV",
+                    "cost", 1000,
+                    "description", "All instructions (Quote/Functions)",
+                    "instructions", "III + QUOTE, JUMP_EQUAL_FUNCTION"
+            ));
+
+            // Get input variables from ExecuteProgramDTO
+            ExecuteProgramDTO executeDTO = engine.executeProgram();
+            List<String> inputVariables = extractInputVariables(executeDTO.getRunProgramDTO());
 
             // Build response
             SelectProgramResponse response = new SelectProgramResponse();
@@ -89,11 +122,10 @@ public class ProgramSelectServlet extends HttpServlet {
             response.currentDegree = presentDTO.getCurrentProgramDegree();
             response.instructions = convertInstructions(presentDTO);
             response.variables = convertVariables(presentDTO);
+            response.inputVariables = inputVariables;
+            response.architectures = architectures;
 
-            // Get input variables from ExecuteProgramDTO
-            ExecuteProgramDTO executeDTO = engine.executeProgram();
-            response.inputVariables = extractInputVariables(executeDTO.getRunProgramDTO());
-
+            // Write response once
             resp.getWriter().write(gson.toJson(response));
 
         } catch (Exception e) {
