@@ -11,29 +11,57 @@
 <body class="page-login">
 <div class="container-center">
     <div class="card login-card">
-        <h1 class="app-title">S-Emulator</h1>
-        <h2>Welcome</h2>
-
-        <div id="loginStatus" class="hidden">
-            <p>Logged in as: <strong id="currentUser"></strong></p>
-            <p>Credits: <strong id="userCredits"></strong></p>
+        <!-- Header Section -->
+        <div class="login-header">
+            <h1 class="app-title">S-Emulator</h1>
+            <p class="subtitle">Welcome to S-Emulator System</p>
         </div>
 
-        <form id="loginForm">
+        <!-- Login Status (Hidden by default) -->
+        <div id="loginStatus" class="login-status hidden">
+            <div class="status-item">
+                <span class="status-label">Logged in as:</span>
+                <strong id="currentUser" class="status-value"></strong>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Credits:</span>
+                <strong id="userCredits" class="status-value badge badge-credits"></strong>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="login-form">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter username" required>
+                <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your username"
+                        required
+                        autocomplete="username"
+                >
             </div>
+
             <div id="loginError" class="error-message hidden"></div>
-            <button type="submit" id="loginBtn" class="btn btn-primary btn-full-width">Login</button>
+
+            <button type="submit" id="loginBtn" class="btn btn-primary btn-full-width">
+                Login
+            </button>
         </form>
 
-        <div class="card" style="margin-top: 2rem;">
-            <h3 class="card-title">Live Users</h3>
+        <!-- Live Users Section -->
+        <div class="live-users-section">
+            <h3 class="section-title">
+                <span class="title-icon">👥</span>
+                Live Users
+            </h3>
             <div id="usersTableContainer" class="table-container">
-                <div class="empty-state">Loading...</div>
+                <div class="empty-state">Loading users...</div>
             </div>
-            <p class="text-muted">Last updated: <span id="lastUpdated">Never</span></p>
+            <p class="text-muted text-center">
+                Last updated: <span id="lastUpdated">Never</span>
+            </p>
         </div>
     </div>
 </div>

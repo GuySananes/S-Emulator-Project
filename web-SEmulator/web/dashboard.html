@@ -11,140 +11,175 @@
 </head>
 <body class="page-dashboard">
 
-<!-- Header -->
-<div class="topbar">
+<!-- Top Navigation Bar -->
+<header class="topbar">
     <div class="topbar-left">
         <h1 class="app-title">🚀 S-Emulator Dashboard</h1>
-        <span class="user-display">Logged in as: <strong id="currentUser"></strong></span>
+        <span class="user-display">
+            Logged in as: <strong id="currentUser"></strong>
+        </span>
     </div>
     <div class="topbar-right">
         <div id="creditsDisplay" class="badge badge-credits">💰 Credits: 0</div>
         <button id="chargeCreditsBtn" class="btn btn-accent">⚡ Charge Credits</button>
         <button id="logoutBtn" class="btn btn-secondary btn-small">🚪 Logout</button>
     </div>
-</div>
+</header>
 
-<div class="container">
-
-    <!-- Quick Actions Section -->
-    <div class="controls-row">
-        <div class="control-group" style="flex: 1;">
-            <h3 style="margin: 0 0 10px 0; color: var(--color-primary);">📂 Load Program File</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
+<main class="container">
+    <!-- File Upload Section -->
+    <section class="file-upload-section">
+        <div class="card">
+            <h3 class="section-title">
+                <span class="title-icon">📂</span>
+                Load Program File
+            </h3>
+            <div class="file-upload-controls">
                 <input type="file" id="fileInput" accept=".xml" style="display:none">
                 <button id="loadFileBtn" class="btn btn-primary">Choose File</button>
-                <input type="text" id="loadedFilePath" class="filepath-display" readonly placeholder="No file loaded" style="flex: 1;">
+                <input
+                        type="text"
+                        id="loadedFilePath"
+                        class="filepath-display"
+                        readonly
+                        placeholder="No file loaded"
+                >
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Main 2-Column Layout: Users & Programs -->
-    <div class="main-grid">
-        <div class="grid-left">
+    <!-- Users and Programs Grid -->
+    <section class="main-content-grid">
+        <!-- Users Panel -->
+        <div class="panel-users">
             <div class="card">
-                <h3 class="card-title">👥 Available Users</h3>
-                <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
-                    Select a user to view their statistics
+                <h3 class="card-title">
+                    <span class="title-icon">👥</span>
+                    Available Users
+                </h3>
+                <p class="card-description">
+                    Select a user to view their execution statistics
                 </p>
                 <div id="usersTableContainer" class="table-container">
                     <div class="spinner" id="usersSpinner"></div>
                 </div>
-                <button id="unselectUserBtn" class="btn btn-secondary btn-full-width" disabled>Clear Selection</button>
+                <button id="unselectUserBtn" class="btn btn-secondary btn-full-width" disabled>
+                    Clear Selection
+                </button>
             </div>
         </div>
 
-        <div class="grid-right">
+        <!-- Programs Panel -->
+        <div class="panel-programs">
             <div class="card">
-                <h3 class="card-title">📋 Your Programs</h3>
-                <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
-                    Load a file or click a program to execute
+                <h3 class="card-title">
+                    <span class="title-icon">📋</span>
+                    Your Programs
+                </h3>
+                <p class="card-description">
+                    Load a file or select a program to execute
                 </p>
                 <div id="programsTableContainer" class="table-container">
                     <div class="empty-state">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">📁</div>
-                        <div>No programs loaded yet</div>
-                        <div style="font-size: 0.85rem; color: var(--color-text-light); margin-top: 8px;">
+                        <div class="empty-icon">📁</div>
+                        <div class="empty-title">No programs loaded yet</div>
+                        <div class="empty-hint">
                             Click "Choose File" above to load a program
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Bottom 3-Column Layout: Statistics, Chat, Functions -->
-    <div style="display: grid; grid-template-columns: 1fr 400px 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
-
-        <!-- User Statistics -->
-        <div class="card">
-            <h3 class="card-title">📊 Execution Statistics</h3>
-            <div class="statistics-info" style="margin-bottom: 12px; padding: 8px; background: #f0f7ff; border-radius: 6px;">
-                <strong>Viewing:</strong> <span id="statisticsUsername" class="badge badge-accent">yourself</span>
-            </div>
-            <div id="statisticsTableContainer" class="table-container" style="max-height: 400px;">
-                <table id="statisticsTable" class="data-table" style="display:none;">
-                    <thead>
-                    <tr>
-                        <th>Run #</th>
-                        <th>Type</th>
-                        <th>Name</th>
-                        <th>Architecture</th>
-                        <th>Degree</th>
-                        <th>Result</th>
-                        <th>Cycles</th>
-                    </tr>
-                    </thead>
-                    <tbody id="statisticsTableBody"></tbody>
-                </table>
-                <div class="empty-state" id="statisticsEmptyState">
-                    <div style="font-size: 2.5rem; margin-bottom: 10px;">📈</div>
-                    <div>No execution history yet</div>
+    <!-- Statistics, Chat, and Functions Grid -->
+    <section class="bottom-content-grid">
+        <!-- Statistics Panel -->
+        <div class="panel-statistics">
+            <div class="card">
+                <h3 class="card-title">
+                    <span class="title-icon">📊</span>
+                    Execution Statistics
+                </h3>
+                <div class="statistics-info">
+                    <strong>Viewing:</strong>
+                    <span id="statisticsUsername" class="badge badge-accent">yourself</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Chat Room -->
-        <div class="chat-container" style="margin: 0;">
-            <div class="chat-header">
-                <h3>💬 Chat Room</h3>
-                <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;">
-                    Chat with other users in real-time
-                </div>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="empty-state" style="padding: 40px 20px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 10px;">💭</div>
-                    <div style="color: #999;">No messages yet</div>
-                    <div style="font-size: 0.85rem; color: #bbb; margin-top: 8px;">
-                        Be the first to say hello!
-                    </div>
-                </div>
-            </div>
-            <div class="chat-input-container">
-                <input type="text" id="chatInput" placeholder="Type your message..." maxlength="500">
-                <button id="sendButton" onclick="sendMessage()">📤 Send</button>
-            </div>
-        </div>
-
-        <!-- All Functions -->
-        <div class="card">
-            <h3 class="card-title">⚙️ Available Functions</h3>
-            <p style="color: var(--color-text-light); font-size: 0.9rem; margin-bottom: 12px;">
-                All functions available in the system
-            </p>
-            <div id="functionsTableContainer" class="table-container" style="max-height: 400px;">
-                <div class="empty-state">
-                    <div style="font-size: 2.5rem; margin-bottom: 10px;">🔧</div>
-                    <div>No functions available</div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-light); margin-top: 8px;">
-                        Load a program to see available functions
+                <div id="statisticsTableContainer" class="table-container">
+                    <table id="statisticsTable" class="data-table" style="display:none;">
+                        <thead>
+                        <tr>
+                            <th>Run #</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Architecture</th>
+                            <th>Degree</th>
+                            <th>Result</th>
+                            <th>Cycles</th>
+                        </tr>
+                        </thead>
+                        <tbody id="statisticsTableBody"></tbody>
+                    </table>
+                    <div class="empty-state" id="statisticsEmptyState">
+                        <div class="empty-icon">📈</div>
+                        <div class="empty-title">No execution history yet</div>
                     </div>
                 </div>
             </div>
         </div>
 
-    </div>
-</div>
+        <!-- Chat Panel -->
+        <div class="panel-chat">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>
+                        <span class="title-icon">💬</span>
+                        Chat Room
+                    </h3>
+                    <p class="chat-subtitle">Chat with other users in real-time</p>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state">
+                        <div class="empty-icon">💭</div>
+                        <div class="empty-title">No messages yet</div>
+                        <div class="empty-hint">Be the first to say hello!</div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input
+                            type="text"
+                            id="chatInput"
+                            placeholder="Type your message..."
+                            maxlength="500"
+                    >
+                    <button id="sendButton" onclick="sendMessage()">📤 Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Functions Panel -->
+        <div class="panel-functions">
+            <div class="card">
+                <h3 class="card-title">
+                    <span class="title-icon">⚙️</span>
+                    Available Functions
+                </h3>
+                <p class="card-description">
+                    All functions available in the system
+                </p>
+                <div id="functionsTableContainer" class="table-container">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔧</div>
+                        <div class="empty-title">No functions available</div>
+                        <div class="empty-hint">
+                            Load a program to see available functions
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
 <div id="toastContainer" class="toast-container"></div>
 

@@ -603,6 +603,8 @@ select.dropdown:focus {
     font-size: 12px;
 }
 
+/* ... existing code ... */
+
 .badge-arch-IV {
     background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
     color: white;
@@ -610,4 +612,159 @@ select.dropdown:focus {
     border-radius: 6px;
     font-weight: 600;
     font-size: 12px;
+}
+
+/* ============================================
+   NEW STYLES FOR REORGANIZED HTML
+   ============================================ */
+
+/* Enhanced empty state styles */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--color-text-light);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.empty-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    margin-top: 0.5rem;
+}
+
+/* Title icon styles */
+.title-icon {
+    margin-right: 0.5rem;
+    display: inline-block;
+}
+
+/* Section title styles */
+.section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+}
+
+/* Card description */
+.card-description {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+/* Status display improvements */
+.status-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--color-hover);
+    border-radius: var(--border-radius);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-label {
+    font-weight: 500;
+    color: var(--color-text-light);
+    min-width: 60px;
+}
+
+.status-value {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* Architecture info box */
+.architecture-info {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f0f7ff;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.architecture-details {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #e3f2fd;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    color: #1565c0;
+}
+
+/* Statistics info box */
+.statistics-info {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f0f7ff;
+    border-radius: var(--border-radius);
+}
+
+/* Control group for buttons */
+.control-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Selector item */
+.selector-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.selector-item label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+/* File upload controls */
+.file-upload-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filepath-display {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-hover);
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+}
+
+/* Text utilities */
+.text-muted {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+}
+
+.text-center {
+    text-align: center;
 }

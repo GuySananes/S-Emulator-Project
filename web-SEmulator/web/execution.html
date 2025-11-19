@@ -9,90 +9,150 @@
     <link rel="stylesheet" href="css/pages.css">
 </head>
 <body class="page-execute">
-<div class="topbar">
+
+<!-- Top Navigation Bar -->
+<header class="topbar">
     <div class="topbar-left">
-        <h1 class="app-title">S-Emulator – Execution</h1>
+        <h1 class="app-title">⚙️ S-Emulator – Execution</h1>
     </div>
     <div class="topbar-right">
-        <div id="creditsDisplay" class="badge badge-credits">Available Credits: 0</div>
-        <button id="backToDashboardBtn" class="btn btn-secondary btn-small">Back to Dashboard</button>
+        <div id="creditsDisplay" class="badge badge-credits">💰 Credits: 0</div>
+        <button id="backToDashboardBtn" class="btn btn-secondary btn-small">
+            ← Back to Dashboard
+        </button>
     </div>
-</div>
+</header>
 
-<div class="header-controls">
+<!-- Control Bar -->
+<section class="header-controls">
     <div class="selector-group">
-        <label for="programSelector">Program:</label>
-        <select id="programSelector" class="dropdown">
-            <option value="">Select program...</option>
-        </select>
-        <label for="functionSelector">Function:</label>
-        <select id="functionSelector" class="dropdown" disabled>
-            <option value="">Select function...</option>
-        </select>
+        <div class="selector-item">
+            <label for="programSelector">Program:</label>
+            <select id="programSelector" class="dropdown">
+                <option value="">Select program...</option>
+            </select>
+        </div>
+        <div class="selector-item">
+            <label for="functionSelector">Function:</label>
+            <select id="functionSelector" class="dropdown" disabled>
+                <option value="">Select function...</option>
+            </select>
+        </div>
     </div>
+
     <div class="view-controls">
-        <button id="collapseBtn" class="btn btn-icon" title="Collapse">−</button>
-        <button id="expandBtn" class="btn btn-icon" title="Expand">+</button>
+        <div class="control-group">
+            <button id="collapseBtn" class="btn btn-icon" title="Collapse Tree">−</button>
+            <button id="expandBtn" class="btn btn-icon" title="Expand Tree">+</button>
+        </div>
+
         <div class="degree-display">
             <span class="degree-label">Degree:</span>
             <span id="degreeValue" class="degree-value">- / -</span>
         </div>
+
         <label class="toggle-switch">
             <input type="checkbox" id="highlightToggle">
             <span class="toggle-label">Highlight selection</span>
         </label>
+
         <div class="variable-highlight-controls">
-            <input type="text" id="variableHighlightInput" class="input-field" placeholder="Variable (e.g., x1, y)" style="width: 120px;">
-            <button id="highlightVariableBtn" class="btn btn-primary btn-small">Highlight</button>
-            <button id="clearHighlightBtn" class="btn btn-secondary btn-small" style="display: none;">Clear</button>
+            <input
+                    type="text"
+                    id="variableHighlightInput"
+                    class="input-field"
+                    placeholder="Variable (e.g., x1, y)"
+            >
+            <button id="highlightVariableBtn" class="btn btn-primary btn-small">
+                Highlight
+            </button>
+            <button id="clearHighlightBtn" class="btn btn-secondary btn-small" style="display: none;">
+                Clear
+            </button>
         </div>
     </div>
-</div>
+</section>
 
-<div class="execution-layout">
-    <div class="left-panel">
-        <div class="card instructions-card">
-            <h3 class="card-title">Instructions</h3>
+<main class="execution-layout">
+    <!-- Left Panel: Instructions & History -->
+    <aside class="left-panel">
+        <!-- Instructions Table -->
+        <article class="card instructions-card">
+            <h3 class="card-title">
+                <span class="title-icon">📜</span>
+                Instructions
+            </h3>
             <div id="instructionsTableContainer" class="table-container table-virtualized">
                 <div class="empty-state">Start execution to load instructions</div>
             </div>
             <div class="summary-line" id="summaryLine">
                 Summary: <span id="summaryText">-</span>
             </div>
-        </div>
+        </article>
 
-        <div class="card history-card">
-            <h3 class="card-title">Selected Instruction History Chain</h3>
+        <!-- History Chain -->
+        <article class="card history-card">
+            <h3 class="card-title">
+                <span class="title-icon">🔗</span>
+                Selected Instruction History Chain
+            </h3>
             <div id="historyChainContainer" class="chain-container">
                 <div class="empty-state">Click an instruction to view history</div>
             </div>
-        </div>
-    </div>
+        </article>
+    </aside>
 
-    <div class="right-panel">
-        <div class="card debugger-card">
-            <h3 class="card-title">Debugger \ Execution</h3>
+    <!-- Right Panel: Controls & State -->
+    <aside class="right-panel">
+        <!-- Debugger Controls -->
+        <article class="card debugger-card">
+            <h3 class="card-title">
+                <span class="title-icon">🐛</span>
+                Debugger & Execution
+            </h3>
             <div class="button-grid">
-                <button id="startExecutionBtn" class="btn btn-primary" disabled>Start Execution</button>
-                <button id="startRegularBtn" class="btn btn-primary">Start Regular</button>
-                <button id="startDebugBtn" class="btn btn-primary">Start Debug</button>
-                <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
-                <button id="resumeBtn" class="btn btn-success" disabled>Resume</button>
-                <button id="stepForwardBtn" class="btn btn-secondary" disabled>Step Forward</button>
-                <button id="stepBackwardBtn" class="btn btn-secondary" disabled>Step Backward</button>
+                <button id="startExecutionBtn" class="btn btn-primary" disabled>
+                    ▶️ Start Execution
+                </button>
+                <button id="startRegularBtn" class="btn btn-primary">
+                    ▶️ Start Regular
+                </button>
+                <button id="startDebugBtn" class="btn btn-primary">
+                    🐛 Start Debug
+                </button>
+                <button id="stopBtn" class="btn btn-danger" disabled>
+                    ⏹️ Stop
+                </button>
+                <button id="resumeBtn" class="btn btn-success" disabled>
+                    ▶️ Resume
+                </button>
+                <button id="stepForwardBtn" class="btn btn-secondary" disabled>
+                    ⏭️ Step Forward
+                </button>
+                <button id="stepBackwardBtn" class="btn btn-secondary" disabled>
+                    ⏮️ Step Backward
+                </button>
             </div>
             <div class="status-display">
-                Status: <span id="executionStatus" class="badge badge-idle">idle</span>
-                <br>Step: <span id="executionStep">0</span>
-            </div>
-        </div>
-
-        <div class="card architecture-card">
-            <h3 class="card-title">🏗️ Architecture Selection</h3>
-            <div class="architecture-info" style="margin-bottom: 12px; padding: 12px; background: #f9f9f9; border-radius: 6px;">
-                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
-                    Select the instruction set architecture for execution
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="executionStatus" class="badge badge-idle">idle</span>
                 </div>
+                <div class="status-item">
+                    <span class="status-label">Step:</span>
+                    <span id="executionStep" class="status-value">0</span>
+                </div>
+            </div>
+        </article>
+
+        <!-- Architecture Selection -->
+        <article class="card architecture-card">
+            <h3 class="card-title">
+                <span class="title-icon">🏗️</span>
+                Architecture Selection
+            </h3>
+            <div class="architecture-info">
+                Select the instruction set architecture for execution
             </div>
             <select id="architectureSelector" class="dropdown">
                 <option value="I">Architecture I - 5 credits (Basic only)</option>
@@ -100,42 +160,56 @@
                 <option value="III">Architecture III - 500 credits (+ Assignment/Jumps)</option>
                 <option value="IV" selected>Architecture IV - 1000 credits (All instructions)</option>
             </select>
-            <div id="architectureWarning" class="architecture-warning" style="display: none; margin-top: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
-                ⚠ Selected architecture may not support all instructions
+            <div id="architectureWarning" class="architecture-warning" style="display: none;">
+                ⚠️ Selected architecture may not support all instructions
             </div>
-            <div id="architectureDetails" style="margin-top: 12px; padding: 10px; background: #e3f2fd; border-radius: 6px; font-size: 12px; color: #1565c0;">
-                <strong>Selected:</strong> <span id="selectedArchDetails">Architecture IV (1000 credits)</span>
+            <div id="architectureDetails" class="architecture-details">
+                <strong>Selected:</strong>
+                <span id="selectedArchDetails">Architecture IV (1000 credits)</span>
             </div>
-        </div>
+        </article>
 
-        <div class="card inputs-card">
-            <h3 class="card-title">Execution Inputs</h3>
+        <!-- Execution Inputs -->
+        <article class="card inputs-card">
+            <h3 class="card-title">
+                <span class="title-icon">📥</span>
+                Execution Inputs
+            </h3>
             <form id="inputsForm" class="inputs-form">
                 <div class="empty-state">No inputs required</div>
             </form>
-        </div>
+        </article>
 
-        <div class="card variables-card">
-            <h3 class="card-title">Variables</h3>
+        <!-- Variables -->
+        <article class="card variables-card">
+            <h3 class="card-title">
+                <span class="title-icon">🔢</span>
+                Variables
+            </h3>
             <div id="variablesTableContainer" class="table-container">
                 <div class="empty-state">No variables</div>
             </div>
-        </div>
+        </article>
 
-        <div class="card cycles-card">
-            <h3 class="card-title">Cycles</h3>
+        <!-- Cycles Counter -->
+        <article class="card cycles-card">
+            <h3 class="card-title">
+                <span class="title-icon">⏱️</span>
+                Cycles
+            </h3>
             <div class="cycles-meter">
                 <div class="cycles-value" id="cyclesValue">0</div>
                 <div class="cycles-label">Total Cycles</div>
             </div>
-        </div>
+        </article>
 
-        <button id="backToDashboard2Btn" class="btn btn-secondary btn-full-width">Back to Dashboard</button>
-    </div>
-</div>
+        <button id="backToDashboard2Btn" class="btn btn-secondary btn-full-width">
+            ← Back to Dashboard
+        </button>
+    </aside>
+</main>
 
 <div id="toastContainer" class="toast-container"></div>
-
 
 <script type="module" src="js/execute.js"></script>
 </body>

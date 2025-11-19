@@ -1,3 +1,4 @@
+
 /* Login page */
 .page-login .container {
     max-width: 1200px;
@@ -6,6 +7,95 @@
     gap: var(--spacing-lg);
     margin-top: var(--spacing-xl);
 }
+
+/* ============================================
+   NEW LAYOUT STYLES FOR REORGANIZED PAGES
+   ============================================ */
+
+/* Login Page Improvements */
+.page-login .container-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-lg);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.login-header .subtitle {
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.login-status {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-hover);
+    border-radius: var(--border-radius);
+}
+
+.login-form {
+    margin-bottom: var(--spacing-lg);
+}
+
+.live-users-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+/* Dashboard Page Improvements */
+.file-upload-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.bottom-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px 1fr;
+    gap: var(--spacing-lg);
+}
+
+/* Chat container adjustments for dashboard */
+.panel-chat .chat-container {
+    margin: 0;
+}
+
+/* Execution Page Improvements */
+.page-execute .selector-group {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .bottom-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-chat .chat-container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ... existing code ... */
 
 .login-card {
     height: fit-content;
@@ -278,3 +368,4 @@
     text-align: center;
     color: var(--color-text-light, #b0b0b0);
 }
+
